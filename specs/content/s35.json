@@ -1,0 +1,31 @@
+{
+  "slide": 35,
+  "node": "511:30712",
+  "pattern": "product-hero",
+  "product": "order-book",
+  "texts": {
+    "eyebrow": "Products and Pricing",
+    "title": "Order Book",
+    "tagline": "Tight spreads. Deep liquidity."
+  },
+  "assets": {
+    "hero": "/figma/s35/hero.png"
+  },
+  "imageSlot": {
+    "x": 646.0,
+    "y": 89.0,
+    "w": 1274.0,
+    "h": 927.0
+  },
+  "imageVariant": "mockup",
+  "heroPx": [
+    2548,
+    1854
+  ],
+  "textColumn": {
+    "x": 79,
+    "y": 452,
+    "w": 733,
+    "h": 176
+  }
+}

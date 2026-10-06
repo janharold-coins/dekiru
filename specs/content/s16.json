@@ -1,0 +1,38 @@
+{
+  "slide": 16,
+  "node": "511:29721",
+  "pattern": "product-flow",
+  "product": "virtual-accounts",
+  "texts": {
+    "eyebrow": "Products and Pricing",
+    "titleBold": "Virtual Accounts",
+    "titleRegular": "Product Flow"
+  },
+  "steps": [
+    {
+      "n": "01",
+      "title": "A new seller signs up",
+      "caption": "On your platform,\nsame as always."
+    },
+    {
+      "n": "02",
+      "title": "You create\ntheir account",
+      "caption": "One API call,\none VA created."
+    },
+    {
+      "n": "03",
+      "title": "Their buyers\npay in",
+      "caption": "Fiat or crypto,\nright into the VA."
+    },
+    {
+      "n": "04",
+      "title": "You see every deposit",
+      "caption": "Webhook fires\nthe second it lands."
+    },
+    {
+      "n": "05",
+      "title": "You pay\nthe seller out",
+      "caption": "On your schedule.\nBooks stay clean."
+    }
+  ]
+}

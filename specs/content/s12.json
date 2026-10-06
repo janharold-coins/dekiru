@@ -1,0 +1,53 @@
+{
+  "slide": 12,
+  "node": "511:29617",
+  "pattern": "product-detail",
+  "product": "qrph-webpay",
+  "texts": {
+    "eyebrow": "Products and Pricing",
+    "title": "QRPh and WebPay",
+    "tagline": "Accept every payment in the Philippines",
+    "description": "Online. In-store. In crypto. One integration.",
+    "whoLabel": "Who is it for",
+    "who": "Online merchants, in-store merchants, and aggregators accepting payments from any Philippine wallet, bank, or crypto holder.",
+    "whatLabel": "What it is",
+    "keyApisLabel": "Key APIs",
+    "pricingLabel": "PRICING"
+  },
+  "what": [
+    "Hosted and API based checkout\nfor web and app.",
+    "In-store QR codes, plus credit card acceptance through POS terminals.",
+    "Checkout in PHP, USDT, USDC, BTC, ETH. One-tap repeat buying via WebPay."
+  ],
+  "keyApis": [
+    "Create Checkout,\nStatus Check, Webhook Notify.",
+    "Tokenized Payments\nfor one-tap repeat.",
+    "Static or Dynamic QR codes.",
+    "Multi-Asset Payment."
+  ],
+  "pricing": {
+    "kind": "chips",
+    "chips": [
+      {
+        "label": "QRPh",
+        "value": "1.2",
+        "unit": "%",
+        "caption": null
+      },
+      {
+        "label": "WebPay",
+        "value": "1.0",
+        "unit": "%",
+        "caption": null
+      },
+      {
+        "label": "Crypto spread",
+        "value": "< 1.0",
+        "unit": "%",
+        "caption": null
+      }
+    ],
+    "text": null,
+    "subtext": null
+  }
+}

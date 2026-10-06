@@ -1,0 +1,2188 @@
+{
+ "id": "sales",
+ "title": "Coins.ph — Sales deck",
+ "version": "figma-511:28902",
+ "slides": [
+  {
+   "id": "s01",
+   "pattern": "cover",
+   "props": {
+    "title": "Global money. \nFaster. Always on.",
+    "subtitle": "Accept payments   ·   Move cross-border   ·   Trade crypto"
+   },
+   "source": {
+    "figmaNode": "511:28904",
+    "slide": 1
+   }
+  },
+  {
+   "id": "s02",
+   "pattern": "agenda",
+   "props": {
+    "title": "What\nwe’ll cover.",
+    "items": [
+     {
+      "number": "01",
+      "title": "About us",
+      "description": "Who we are, key numbers, licensing, and partners"
+     },
+     {
+      "number": "02",
+      "title": "Products and Pricing",
+      "description": "Accept payments, move money cross-border, and trade crypto"
+     },
+     {
+      "number": "03",
+      "title": "Why Coins",
+      "description": "What makes us the right infrastructure partner"
+     }
+    ]
+   },
+   "source": {
+    "figmaNode": "511:28911",
+    "slide": 2
+   }
+  },
+  {
+   "id": "s03",
+   "pattern": "section",
+   "props": {
+    "level": 1,
+    "number": "01",
+    "title": "About Coins.ph",
+    "subtitle": "Who we are, key numbers, licensing, and partners",
+    "figma": {
+     "titleWeight": 500,
+     "subtitleLineHeight": 1.15,
+     "subtitleTracking": -1.92,
+     "titleTop": 432,
+     "subtitleTop": 588,
+     "cage": {
+      "x": -40,
+      "width": 1201,
+      "ys": [
+       458,
+       511,
+       549
+      ],
+      "stroke": 1,
+      "vLeft": {
+       "x": 279,
+       "top": 431,
+       "height": 140
+      },
+      "vRight": []
+     }
+    }
+   },
+   "source": {
+    "figmaNode": "511:28920",
+    "slide": 3
+   }
+  },
+  {
+   "id": "s04",
+   "pattern": "key-numbers",
+   "props": {
+    "title": "At a glance",
+    "subtitle": "Two sides of the same platform. You plug into both with one integration.",
+    "callout": {
+     "lead": "One integration, full coverage:",
+     "lines": [
+      "Collect from 5M+ wallets,",
+      "disburse to any bank or e-wallet,",
+      "accept at merchant points,",
+      "settle instantly."
+     ]
+    },
+    "statCards": [
+     {
+      "icon": "/figma/s04/icon-verified-user.svg",
+      "tone": "orange",
+      "value": "5M+",
+      "valueRuns": [
+       {
+        "text": "5",
+        "font": "TWK Everett",
+        "weight": 400
+       },
+       {
+        "text": "M+",
+        "font": "Cns Manrope",
+        "weight": 600
+       }
+      ],
+      "eyebrow": "CONSUMER SIDE",
+      "label": "Verified Coins.ph\napp users",
+      "description": "The Philippines' most established crypto and payments app. A ready wallet base that pays, moves, and trades on our platform every day.",
+      "variant": "consumer"
+     },
+     {
+      "icon": "/figma/s04/icon-verified-business.svg",
+      "tone": "blue",
+      "value": "2,000+",
+      "valueRuns": [
+       {
+        "text": "2,000+",
+        "font": "TWK Everett",
+        "weight": 400
+       }
+      ],
+      "eyebrow": "ENTERPRISE SIDE",
+      "label": "Verified businesses \non the platform",
+      "description": "KYB'd enterprises across payments, lending, remittance, and trading. Building on Coins infrastructure.",
+      "variant": "enterprise"
+     }
+    ],
+    "primaryStats": [
+     {
+      "value": "~90%",
+      "valueSize": 60,
+      "valueWeight": 600,
+      "label": "PH market share",
+      "note": "Similarweb average DAU for Android users in 2025",
+      "noteWidth": 169,
+      "itemWidth": 354
+     },
+     {
+      "value": "26",
+      "valueSize": 70,
+      "valueWeight": 700,
+      "label": "Licenses",
+      "note": "Includes approved and in-progress regulatory applications.",
+      "noteWidth": 195
+     },
+     {
+      "value": "$28B+",
+      "valueSize": 60,
+      "valueWeight": 700,
+      "label": "Total volume processed in 2025",
+      "labelWidth": 206.55
+     }
+    ],
+    "secondaryStats": [
+     {
+      "value": "$12B",
+      "label": "Local payments volume processed in 2025",
+      "labelWidth": 211.48
+     },
+     {
+      "value": "$8.5B",
+      "label": "Stablecoins volume processed in 2025",
+      "labelWidth": 182
+     },
+     {
+      "value": "$7.5B",
+      "label": "Trading volume\nprocessed in 2025",
+      "labelWidth": null,
+      "itemWidth": 289
+     }
+    ]
+   },
+   "source": {
+    "figmaNode": "556:35037",
+    "slide": 4
+   }
+  },
+  {
+   "id": "s05",
+   "pattern": "timeline",
+   "props": {
+    "title": "Our story",
+    "subtitle": "A decade of building the infrastructure that moves money across borders.",
+    "items": [
+     {
+      "year": "2026",
+      "yearColor": "#474747",
+      "side": "right",
+      "text": "First and only app with\nQRPh multi-asset payments",
+      "caption": "Accelerating global license acquisition",
+      "captionTracking": 2.16,
+      "y": 142,
+      "markerY": 154
+     },
+     {
+      "year": "2025",
+      "side": "right",
+      "text": "QRPh, stablecoin,\nand new products",
+      "caption": "Expansion to Brazil and Australia",
+      "captionTracking": 1.44,
+      "y": 267,
+      "markerY": 278
+     },
+     {
+      "year": "2024",
+      "side": "left",
+      "text": "Launch of Coins.xyz\nglobal platform",
+      "y": 333,
+      "markerY": 341
+     },
+     {
+      "year": "2022",
+      "side": "both",
+      "leftText": "Acquisition by Wei Zhou\nand Joffre Capital",
+      "text": "Complete tech stack rebuild\nand app/web revamp",
+      "y": 473,
+      "markerY": 483
+     },
+     {
+      "year": "2021",
+      "side": "right-bracket",
+      "bracketGroup": "2018-2021",
+      "text": "Pivot to fiat\npayment solutions",
+      "y": 633,
+      "markerY": 640,
+      "markerSize": 13
+     },
+     {
+      "year": "2019",
+      "side": "left",
+      "text": "Acquired by Gojek",
+      "y": 675,
+      "markerY": 685
+     },
+     {
+      "year": "2018",
+      "side": "bracket-end",
+      "bracketGroup": "2018-2021",
+      "y": 717,
+      "markerY": 727,
+      "markerSize": 13
+     },
+     {
+      "year": "2015",
+      "side": "right",
+      "text": "First crypto\nexchange license",
+      "caption": "Philippines and Thailand",
+      "captionTracking": 2.16,
+      "y": 804,
+      "markerY": 814
+     },
+     {
+      "year": "2014",
+      "side": "left",
+      "text": "Coins.ph founded",
+      "y": 841,
+      "markerY": 851
+     }
+    ],
+    "flags": [
+     {
+      "code": "eu",
+      "file": "/figma/s05/flag-eu.png",
+      "x": 1305,
+      "y": 146
+     },
+     {
+      "code": "sg",
+      "file": "/figma/s05/flag-sg.png",
+      "x": 1305,
+      "y": 190
+     },
+     {
+      "code": "hk",
+      "file": "/figma/s05/flag-hk.png",
+      "x": 1305,
+      "y": 234
+     },
+     {
+      "code": "br",
+      "file": "/figma/s05/flag-br.png",
+      "x": 1305,
+      "y": 286
+     },
+     {
+      "code": "ar",
+      "file": "/figma/s05/flag-ar.png",
+      "x": 1305,
+      "y": 330
+     },
+     {
+      "code": "au",
+      "file": "/figma/s05/flag-au.png",
+      "x": 1305,
+      "y": 374
+     },
+     {
+      "code": "ph",
+      "file": "/figma/s05/flag-ph.png",
+      "x": 1305,
+      "y": 440
+     },
+     {
+      "code": "th",
+      "file": "/figma/s05/flag-th.png",
+      "x": 1305,
+      "y": 484
+     }
+    ]
+   },
+   "source": {
+    "figmaNode": "511:28977",
+    "slide": 5
+   }
+  },
+  {
+   "id": "s06",
+   "pattern": "logo-wall",
+   "props": {
+    "title": "Infrastructure",
+    "body": "We operate a global payments network spanning remittance providers, PSPs, stablecoin issuers, and payment networks. Through a unified infrastructure layer, partners enable collections, disbursements, and cross-border settlement across fiat and stablecoin rails — faster, lower cost, and 24/7.",
+    "groups": [
+     {
+      "group": "cross-border",
+      "header": "Cross-border Partners",
+      "panel": "/figma/s06/panel-cross-border.svg",
+      "logos": [
+       {
+        "name": "Remitly",
+        "file": "/figma/s06/partner-remitly.svg",
+        "w": 160.25,
+        "h": 36.39,
+        "fit": "fill"
+       },
+       {
+        "name": "MoneyGram",
+        "file": "/figma/s06/partner-moneygram-composite.png",
+        "w": 199.06,
+        "h": 44,
+        "composite": [
+         {
+          "file": "/figma/s06/partner-moneygram-icon.png",
+          "x": 0,
+          "y": 0,
+          "w": 45.06,
+          "h": 44,
+          "crop": {
+           "w": "565.4%",
+           "h": "122.89%",
+           "left": "-79.76%",
+           "top": "-6.02%"
+          }
+         },
+         {
+          "file": "/figma/s06/partner-moneygram-wordmark.png",
+          "x": 48.24,
+          "y": 2.39,
+          "w": 150.819,
+          "h": 41.614,
+          "crop": {
+           "w": "130%",
+           "h": "100%",
+           "left": "-29.94%",
+           "top": "0%"
+          }
+         }
+        ]
+       },
+       {
+        "name": "Thunes",
+        "file": "/figma/s06/partner-thunes.png",
+        "w": 134,
+        "h": 30,
+        "fit": "cover"
+       },
+       {
+        "name": "veem",
+        "file": "/figma/s06/partner-veem.png",
+        "w": 136,
+        "h": 30,
+        "crop": {
+         "w": "110.29%",
+         "h": "147.46%",
+         "left": "-5.15%",
+         "top": "-23.73%"
+        }
+       },
+       {
+        "name": "LuLu Money",
+        "file": "/figma/s06/partner-lulu-money.png",
+        "w": 154,
+        "h": 59,
+        "crop": {
+         "w": "100.61%",
+         "h": "125%",
+         "left": "-0.64%",
+         "top": "-12.5%"
+        }
+       },
+       {
+        "name": "bcremit",
+        "file": "/figma/s06/partner-bcremit.png",
+        "w": 172.627,
+        "h": 62.068,
+        "fit": "cover"
+       },
+       {
+        "name": "stables",
+        "file": "/figma/s06/partner-stables.png",
+        "w": 92,
+        "h": 20,
+        "fit": "cover"
+       },
+       {
+        "name": "WorldRemit",
+        "file": "/figma/s06/partner-worldremit.png",
+        "w": 254,
+        "h": 59,
+        "fit": "cover",
+        "objectPosition": "bottom"
+       },
+       {
+        "name": "TALA",
+        "file": "/figma/s06/partner-tala.png",
+        "w": 88,
+        "h": 26,
+        "fit": "cover"
+       },
+       {
+        "name": "SBI Remit",
+        "file": "/figma/s06/partner-sbi-remit.png",
+        "w": 127.5,
+        "h": 38.25,
+        "fit": "cover"
+       },
+       {
+        "name": "ALMOND FINTECH",
+        "file": "/figma/s06/partner-almond-composite.png",
+        "w": 191.45,
+        "h": 52.85,
+        "composite": [
+         {
+          "text": "ALMOND",
+          "font": "Encode Sans Semi Expanded",
+          "weight": 400,
+          "size": 31.5,
+          "lineHeight": 1.4,
+          "tracking": -0.4725,
+          "color": "#ffffff",
+          "x": 0,
+          "y": 0
+         },
+         {
+          "text": "FINTECH",
+          "font": "Encode Sans Semi Expanded",
+          "weight": 400,
+          "size": 12.6,
+          "lineHeight": 1.4,
+          "tracking": -0.189,
+          "color": "#ffffff",
+          "x": 84.7,
+          "y": 35
+         },
+         {
+          "file": "/figma/s06/partner-almond-icon.png",
+          "x": 144.2,
+          "y": 0,
+          "w": 47.25,
+          "h": 52.85,
+          "crop": {
+           "w": "637.04%",
+           "h": "382.12%",
+           "left": "-417.04%",
+           "top": "-143.05%"
+          }
+         }
+        ]
+       },
+       {
+        "name": "xendit",
+        "file": "/figma/s06/partner-xendit.png",
+        "w": 187.5,
+        "h": 47.5,
+        "crop": {
+         "w": "100%",
+         "h": "167.63%",
+         "left": "-0.07%",
+         "top": "-33.61%"
+        }
+       },
+       {
+        "name": "FAZZ",
+        "file": "/figma/s06/partner-fazz.svg",
+        "w": 96,
+        "h": 45,
+        "fit": "fill"
+       },
+       {
+        "name": "index",
+        "file": "/figma/s06/partner-index.png",
+        "w": 121,
+        "h": 50,
+        "fit": "cover"
+       },
+       {
+        "name": "LIGHTNET",
+        "file": "/figma/s06/partner-lightnet.png",
+        "w": 154,
+        "h": 34,
+        "crop": {
+         "w": "118.18%",
+         "h": "176.47%",
+         "left": "-8.54%",
+         "top": "-37.64%"
+        }
+       },
+       {
+        "name": "TransFi",
+        "file": "/figma/s06/partner-transfi.png",
+        "w": 186,
+        "h": 34,
+        "fit": "cover",
+        "objectPosition": "bottom"
+       },
+       {
+        "name": "ria Money Transfer",
+        "file": "/figma/s06/partner-ria.png",
+        "w": 156,
+        "h": 50,
+        "crop": {
+         "w": "100%",
+         "h": "121.25%",
+         "left": "-0.1%",
+         "top": "-10.58%"
+        }
+       }
+      ]
+     },
+     {
+      "group": "networks",
+      "header": "Global & Local Payment Networks",
+      "panel": "/figma/s06/panel-networks.svg",
+      "logos": [
+       {
+        "name": "Swift",
+        "file": "/figma/s06/network-swift.svg",
+        "w": 106.25,
+        "h": 36.656,
+        "fit": "fill"
+       },
+       {
+        "name": "SEPA",
+        "file": "/figma/s06/network-sepa.svg",
+        "w": 106.052,
+        "h": 28.981,
+        "fit": "fill"
+       },
+       {
+        "name": "PayID",
+        "file": "/figma/s06/network-payid.png",
+        "w": 121.856,
+        "h": 67.027,
+        "fit": "cover"
+       },
+       {
+        "name": "Pix",
+        "file": "/figma/s06/network-pix.svg",
+        "w": 99.3,
+        "h": 35.192,
+        "fit": "fill",
+        "note": "inner layer inset 0 0.64% 0 0, img inset 0 -0.63% 0 0 (effectively full width)"
+       },
+       {
+        "name": "InstaPay",
+        "file": "/figma/s06/network-instapay.png",
+        "w": 91.917,
+        "h": 24.152,
+        "crop": {
+         "w": "108.67%",
+         "h": "127.18%",
+         "left": "-5.1%",
+         "top": "-17.48%"
+        },
+        "note": "inner box aspect 108.138/28.414, full width, vertically centered"
+       },
+       {
+        "name": "PESONet",
+        "file": "/figma/s06/network-pesonet.png",
+        "w": 105.4,
+        "h": 19.499,
+        "fit": "cover",
+        "note": "inner box aspect 124/23, full height, horizontally centered (=104.86 wide)"
+       },
+       {
+        "name": "NIBSS",
+        "file": "/figma/s06/network-nibss.png",
+        "w": 86.7,
+        "h": 54.425,
+        "crop": {
+         "w": "131.75%",
+         "h": "209.88%",
+         "left": "-15.69%",
+         "top": "-55.81%"
+        }
+       }
+      ]
+     },
+     {
+      "group": "stablecoin",
+      "header": "Stablecoin Issuers",
+      "panel": "/figma/s06/panel-stablecoin.svg",
+      "logos": [
+       {
+        "name": "Circle",
+        "file": "/figma/s06/stablecoin-circle-composite.png",
+        "w": 124.935,
+        "h": 32,
+        "composite": [
+         {
+          "file": "/figma/s06/stablecoin-circle-icon.png",
+          "x": 0,
+          "y": 0,
+          "w": 124.533,
+          "h": 32,
+          "fit": "cover"
+         },
+         {
+          "file": "/figma/s06/stablecoin-circle-wordmark.png",
+          "x": 36.17,
+          "y": 0,
+          "w": 88.765,
+          "h": 32,
+          "crop": {
+           "w": "140.68%",
+           "h": "100.38%",
+           "left": "-40.7%",
+           "top": "-0.19%"
+          }
+         }
+        ]
+       },
+       {
+        "name": "tether",
+        "file": "/figma/s06/stablecoin-tether.svg",
+        "w": 125,
+        "h": 40,
+        "fit": "fill"
+       },
+       {
+        "name": "PAXOS",
+        "file": "/figma/s06/stablecoin-paxos.png",
+        "w": 126,
+        "h": 36,
+        "fit": "cover"
+       },
+       {
+        "name": "First Digital",
+        "file": "/figma/s06/stablecoin-first-digital.png",
+        "w": 112.5,
+        "h": 44.1,
+        "fit": "cover"
+       }
+      ]
+     },
+     {
+      "group": "psp",
+      "header": "Payment Service Providers",
+      "panel": "/figma/s06/panel-psp.svg",
+      "logos": [
+       {
+        "name": "BDO",
+        "file": "/figma/s06/psp-bdo.svg",
+        "w": 62.316,
+        "h": 21.773,
+        "fit": "fill"
+       },
+       {
+        "name": "Mastercard",
+        "file": "/figma/s06/psp-mastercard.svg",
+        "w": 49.96,
+        "h": 38.8,
+        "fit": "fill"
+       },
+       {
+        "name": "VISA",
+        "file": "/figma/s06/psp-visa.svg",
+        "w": 62.503,
+        "h": 20.228,
+        "fit": "fill"
+       },
+       {
+        "name": "Alipay",
+        "file": "/figma/s06/psp-alipay.svg",
+        "w": 112.909,
+        "h": 28.47,
+        "fit": "fill"
+       },
+       {
+        "name": "PayPal",
+        "file": "/figma/s06/psp-paypal.svg",
+        "w": 124,
+        "h": 33,
+        "fit": "fill"
+       },
+       {
+        "name": "xendit",
+        "file": "/figma/s06/partner-xendit.png",
+        "w": 159.375,
+        "h": 40.375,
+        "crop": {
+         "w": "100%",
+         "h": "167.63%",
+         "left": "-0.07%",
+         "top": "-33.61%"
+        }
+       },
+       {
+        "name": "paymongo",
+        "file": "/figma/s06/psp-paymongo.png",
+        "w": 167.4,
+        "h": 28.772,
+        "fit": "cover"
+       },
+       {
+        "name": "paynamics",
+        "file": "/figma/s06/psp-paynamics.png",
+        "w": 93.075,
+        "h": 29.75,
+        "fit": "cover"
+       },
+       {
+        "name": "MPay",
+        "file": "/figma/s06/psp-mpay.png",
+        "chip": {
+         "w": 77,
+         "h": 30,
+         "bg": "#ffffff",
+         "radius": 4,
+         "padding": 4
+        },
+        "w": 69,
+        "h": 19.44,
+        "fit": "cover",
+        "note": "image is full chip inner width (69), aspect 1920/541, centered"
+       },
+       {
+        "name": "QPay",
+        "file": "/figma/s06/psp-qpay.png",
+        "chip": {
+         "w": 77,
+         "h": 30,
+         "bg": "#ffffff",
+         "radius": 4,
+         "padding": 4
+        },
+        "w": 48.8,
+        "h": 22.4,
+        "crop": {
+         "w": "99.18%",
+         "h": "107.14%",
+         "left": "0.41%",
+         "top": "-0.05%"
+        }
+       },
+       {
+        "name": "GCash",
+        "file": "/figma/s06/psp-gcash.svg",
+        "w": 122,
+        "h": 29,
+        "fit": "fill"
+       },
+       {
+        "name": "PayNet",
+        "file": "/figma/s06/psp-paynet.png",
+        "w": 108,
+        "h": 36.96,
+        "fit": "cover"
+       }
+      ]
+     }
+    ]
+   },
+   "source": {
+    "figmaNode": "511:29022",
+    "slide": 6
+   }
+  },
+  {
+   "id": "s07",
+   "pattern": "statement-highlights",
+   "props": {
+    "title": "We're building the infrastructure \nto reach you, wherever you do business.",
+    "body": "Coins.ph started in the Philippines and is expanding across multiple corridors in Asia Pacific, Europe, the Americas, the Middle East. Licensed in every corridor we serve, so your expansion doesn't wait on regulators. Largest digital asset exchange in the Philippines. The country's most established crypto and payments company. Pay, move, trade, all through one regulated stack.",
+    "highlights": [
+     {
+      "title": "Stablecoin-native",
+      "description": "Official Circle \nand Tether partner"
+     },
+     {
+      "title": "8 corridors",
+      "description": "PH live, 7 more \nrolling through 2026"
+     },
+     {
+      "title": "Built for enterprise",
+      "description": "Payments, trading, and treasury in one stack"
+     }
+    ]
+   },
+   "source": {
+    "figmaNode": "511:29425",
+    "slide": 7
+   }
+  },
+  {
+   "id": "s08",
+   "pattern": "section",
+   "props": {
+    "level": 1,
+    "number": "02",
+    "title": "Products and Pricing",
+    "subtitle": "Accept payments, move money cross-border,\nand trade crypto",
+    "figma": {
+     "titleWeight": 600,
+     "subtitleLineHeight": 1.4,
+     "subtitleTracking": -1.28,
+     "titleTop": 432,
+     "subtitleTop": 588,
+     "cage": {
+      "x": -40,
+      "width": 1456,
+      "ys": [
+       458,
+       511,
+       549
+      ],
+      "stroke": 1,
+      "vLeft": {
+       "x": 279,
+       "top": 431,
+       "height": 140
+      },
+      "vRight": [
+       {
+        "x": 1389,
+        "top": 431,
+        "height": 140
+       }
+      ]
+     }
+    }
+   },
+   "source": {
+    "figmaNode": "511:29441",
+    "slide": 8
+   }
+  },
+  {
+   "id": "s09",
+   "pattern": "product-index",
+   "props": {
+    "titleRuns": [
+     {
+      "text": "Pay. ",
+      "color": "#204680"
+     },
+     {
+      "text": "Move. ",
+      "color": "#1f7aff"
+     },
+     {
+      "text": "Trade",
+      "color": "#fa7312"
+     }
+    ],
+    "subtitle": "Eight products. Three pillars. Pick what fits your business. We plug in the rest.",
+    "pillars": [
+     {
+      "number": "01",
+      "title": "Accept  /  Payments",
+      "color": "#204680",
+      "products": [
+       {
+        "name": "QRPh and WebPay",
+        "description": "Accept payments, online and in store"
+       },
+       {
+        "name": "Virtual Accounts",
+        "description": "Accept fiat and crypto, sorted by sellert"
+       },
+       {
+        "name": "Scan and Pay",
+        "description": "Send white-labelled QRPh payments"
+       },
+       {
+        "name": "Business Portal",
+        "description": "The control center for your money"
+       },
+       {
+        "name": "Disbursement",
+        "description": "Pay anyone, anywhere, right now"
+       }
+      ]
+     },
+     {
+      "number": "02",
+      "title": "Move  /  Cross Border",
+      "color": "#1f7aff",
+      "products": [
+       {
+        "name": "Multi-Currency",
+        "description": "Any currency. One wallet. Zero friction"
+       }
+      ]
+     },
+     {
+      "number": "03",
+      "title": "Trade  /  Institutional Crypto",
+      "color": "#fa7312",
+      "products": [
+       {
+        "name": "OTC RFQ",
+        "description": "Lock your price before you trade"
+       },
+       {
+        "name": "Order Book",
+        "description": "Live spot trading at tight spreads"
+       }
+      ]
+     }
+    ]
+   },
+   "source": {
+    "figmaNode": "511:29454",
+    "slide": 9
+   }
+  },
+  {
+   "id": "s10",
+   "pattern": "section",
+   "props": {
+    "level": 2,
+    "number": "02",
+    "parentTitle": "Products and Pricing",
+    "title": "Pay / Payments",
+    "subtitle": "Receive, send, and manage. Every payment through one platform."
+   },
+   "source": {
+    "figmaNode": "511:29476",
+    "slide": 10
+   }
+  },
+  {
+   "id": "s11",
+   "pattern": "product-hero",
+   "props": {
+    "product": "qrph-webpay",
+    "eyebrow": "Products and Pricing",
+    "title": "QRPh and WebPay",
+    "tagline": "Accept every payment in the Philippines",
+    "image": {
+     "src": "/figma/s11/hero.png",
+     "variant": "mockup",
+     "x": 837.0,
+     "y": 69.0,
+     "w": 1027.0,
+     "h": 1000.0
+    }
+   },
+   "source": {
+    "figmaNode": "511:29490",
+    "slide": 11
+   }
+  },
+  {
+   "id": "s12",
+   "pattern": "product-detail",
+   "props": {
+    "product": "qrph-webpay",
+    "eyebrow": "Products and Pricing",
+    "title": "QRPh and WebPay",
+    "tagline": "Accept every payment in the Philippines",
+    "description": "Online. In-store. In crypto. One integration.",
+    "whoLabel": "Who is it for",
+    "who": "Online merchants, in-store merchants, and aggregators accepting payments from any Philippine wallet, bank, or crypto holder.",
+    "whatLabel": "What it is",
+    "what": [
+     "Hosted and API based checkout\nfor web and app.",
+     "In-store QR codes, plus credit card acceptance through POS terminals.",
+     "Checkout in PHP, USDT, USDC, BTC, ETH. One-tap repeat buying via WebPay."
+    ],
+    "keyApisLabel": "Key APIs",
+    "keyApis": [
+     "Create Checkout,\nStatus Check, Webhook Notify.",
+     "Tokenized Payments\nfor one-tap repeat.",
+     "Static or Dynamic QR codes.",
+     "Multi-Asset Payment."
+    ],
+    "pricingLabel": "PRICING",
+    "pricing": {
+     "kind": "chips",
+     "chips": [
+      {
+       "label": "QRPh",
+       "value": "1.2",
+       "unit": "%",
+       "caption": null
+      },
+      {
+       "label": "WebPay",
+       "value": "1.0",
+       "unit": "%",
+       "caption": null
+      },
+      {
+       "label": "Crypto spread",
+       "value": "< 1.0",
+       "unit": "%",
+       "caption": null
+      }
+     ],
+     "text": null,
+     "subtext": null
+    }
+   },
+   "source": {
+    "figmaNode": "511:29617",
+    "slide": 12
+   }
+  },
+  {
+   "id": "s13",
+   "pattern": "product-flow",
+   "props": {
+    "product": "qrph-webpay",
+    "eyebrow": "Products and Pricing",
+    "titleBold": "QRPh and WebPay",
+    "titleRegular": "Product Flow",
+    "steps": [
+     {
+      "n": "01",
+      "title": "Your customer\nis ready to buy",
+      "caption": "Cart's full, checkout time."
+     },
+     {
+      "n": "02",
+      "title": "They choose how to pay",
+      "caption": "Any wallet, bank,\nor crypto app."
+     },
+     {
+      "n": "03",
+      "title": "They tap\nor scan",
+      "caption": "Select from\nmultiple payment."
+     },
+     {
+      "n": "04",
+      "title": "The payment clears",
+      "caption": "We confirm it\nthe second it's done."
+     },
+     {
+      "n": "05",
+      "title": "You get the money",
+      "caption": "Straight into your Coins account,  T+0 Settlement."
+     }
+    ]
+   },
+   "source": {
+    "figmaNode": "511:29652",
+    "slide": 13
+   }
+  },
+  {
+   "id": "s14",
+   "pattern": "product-hero",
+   "props": {
+    "product": "virtual-accounts",
+    "eyebrow": "Products and Pricing",
+    "title": "Virtual Accounts",
+    "tagline": "Accept fiat and crypto.\nKnow exactly who got paid.",
+    "image": {
+     "src": "/figma/s14/hero.png",
+     "variant": "mockup",
+     "x": 614.0,
+     "y": 33.0,
+     "w": 1306.0,
+     "h": 1036.0
+    }
+   },
+   "source": {
+    "figmaNode": "511:29671",
+    "slide": 14
+   }
+  },
+  {
+   "id": "s15",
+   "pattern": "product-detail",
+   "props": {
+    "product": "virtual-accounts",
+    "eyebrow": "Products and Pricing",
+    "title": "Virtual Accounts",
+    "tagline": "Accept fiat and crypto.\nKnow exactly who got paid.",
+    "description": "Every seller gets their own account that takes pesos, dollars, or crypto. Deposits tag themselves automatically. You never sort a transaction again.",
+    "whoLabel": "Who is it for",
+    "who": "Marketplaces, platforms, and wallets handling money for multiple sellers who want both fiat and crypto inflows, with every deposit attributed automatically.",
+    "whatLabel": "What it is",
+    "what": [
+     "Accept both fiat and crypto: PHP via InstaPay and PESONet, major crypto and chains.",
+     "Unique receiving account for every seller. One-time or multi-use.",
+     "Auto-credit to your master account with a real-time webhook on every deposit."
+    ],
+    "keyApisLabel": "Key APIs",
+    "keyApis": [
+     "Create, Update, Deactivate, Reactivate VA.",
+     "Retrieve VA Details.",
+     "Webhook: real-time deposit alert."
+    ],
+    "pricingLabel": "PRICING",
+    "pricing": {
+     "kind": "text",
+     "chips": [],
+     "text": "Set per partner, by transaction and currency.",
+     "subtext": "Contact sales for your rate."
+    }
+   },
+   "source": {
+    "figmaNode": "511:29686",
+    "slide": 15
+   }
+  },
+  {
+   "id": "s16",
+   "pattern": "product-flow",
+   "props": {
+    "product": "virtual-accounts",
+    "eyebrow": "Products and Pricing",
+    "titleBold": "Virtual Accounts",
+    "titleRegular": "Product Flow",
+    "steps": [
+     {
+      "n": "01",
+      "title": "A new seller signs up",
+      "caption": "On your platform,\nsame as always."
+     },
+     {
+      "n": "02",
+      "title": "You create\ntheir account",
+      "caption": "One API call,\none VA created."
+     },
+     {
+      "n": "03",
+      "title": "Their buyers\npay in",
+      "caption": "Fiat or crypto,\nright into the VA."
+     },
+     {
+      "n": "04",
+      "title": "You see every deposit",
+      "caption": "Webhook fires\nthe second it lands."
+     },
+     {
+      "n": "05",
+      "title": "You pay\nthe seller out",
+      "caption": "On your schedule.\nBooks stay clean."
+     }
+    ]
+   },
+   "source": {
+    "figmaNode": "511:29721",
+    "slide": 16
+   }
+  },
+  {
+   "id": "s17",
+   "pattern": "product-hero",
+   "props": {
+    "product": "qrph-scan-pay",
+    "eyebrow": "Products and Pricing",
+    "title": "QRPh Scan and Pay",
+    "tagline": "Payments by your brand.\nBacked by our platform.",
+    "image": {
+     "src": "/figma/s17/hero.jpg",
+     "variant": "photo",
+     "x": 711.0,
+     "y": 0.0,
+     "w": 1209.0,
+     "h": 1080.0
+    }
+   },
+   "source": {
+    "figmaNode": "511:29724",
+    "slide": 17
+   }
+  },
+  {
+   "id": "s18",
+   "pattern": "product-detail",
+   "props": {
+    "product": "scan-and-pay",
+    "eyebrow": "Products and Pricing",
+    "title": "QRPh Scan and Pay",
+    "tagline": "Payments by your brand.\nBacked by our platform.",
+    "description": "White-labelled QRPh payments that live inside\nyour app. Your users never leave, and your brand\nstays front and centre.",
+    "whoLabel": "Who is it for",
+    "who": "Any platform that wants access to the QRPh merchant network. Pay millions of merchants on behalf of your users, under your own brand.",
+    "whatLabel": "What it is",
+    "what": [
+     "White-labelled QRPh. Your brand, end to end.",
+     "Compliance handled. API-based 1 time KYC,, no app switch.",
+     "Real-time settlement through Instapay."
+    ],
+    "keyApisLabel": "Key APIs",
+    "keyApis": [
+     "Create Account and\nPayment Preview.",
+     "Payment Execution and\nGet Payment Result.",
+     "Webhook push for final state."
+    ],
+    "pricingLabel": "PRICING",
+    "pricing": {
+     "kind": "text",
+     "chips": [],
+     "text": "1 to 5 PHP per successful transactions",
+     "subtext": "Charged on successful transactions only. Pending and failed are free."
+    }
+   },
+   "source": {
+    "figmaNode": "511:29737",
+    "slide": 18
+   }
+  },
+  {
+   "id": "s19",
+   "pattern": "product-flow",
+   "props": {
+    "product": "scan-and-pay",
+    "eyebrow": "Products and Pricing",
+    "titleBold": "QRPh Scan and Pay",
+    "titleRegular": "Product Flow",
+    "steps": [
+     {
+      "n": "01",
+      "title": "Your user\nhits pay",
+      "caption": "Inside your app,\nwearing your brand."
+     },
+     {
+      "n": "02",
+      "title": "We quote\nthe payment",
+      "caption": "Fees and merchant details upfront."
+     },
+     {
+      "n": "03",
+      "title": "We charge\nthe account",
+      "caption": "InstaPay moves the money, real time"
+     },
+     {
+      "n": "04",
+      "title": "The merchant gets paid",
+      "caption": "Straight to their\nwallet or bank"
+     },
+     {
+      "n": "05",
+      "title": "Both sides\nget the news",
+      "caption": "Webhook to you,\nreceipt to the user"
+     }
+    ]
+   },
+   "source": {
+    "figmaNode": "511:29740",
+    "slide": 19
+   }
+  },
+  {
+   "id": "s20",
+   "pattern": "product-hero",
+   "props": {
+    "product": "business-portal",
+    "eyebrow": "Products and Pricing",
+    "title": "Business Portal",
+    "tagline": "Your entire business, powered by Coins.",
+    "image": {
+     "src": "/figma/s20/hero.png",
+     "variant": "mockup",
+     "x": 431.0,
+     "y": 0.0,
+     "w": 1489.0,
+     "h": 1069.0
+    }
+   },
+   "source": {
+    "figmaNode": "511:29743",
+    "slide": 20
+   },
+   "chrome": {
+    "footer": null
+   }
+  },
+  {
+   "id": "s21",
+   "pattern": "product-detail",
+   "props": {
+    "product": "business-portal",
+    "eyebrow": "Products and Pricing",
+    "title": "Business Portal",
+    "tagline": "Your entire business, powered by Coins.",
+    "description": "The control center for every peso, payout,\nand trade moving through Coins.",
+    "whoLabel": "Who is it for",
+    "who": "Operations, finance, and product teams who need full visibility and control across every Coins product without writing a single line of code.",
+    "whatLabel": "What it is",
+    "what": [
+     "One dashboard for QR PH,\nWebPay, VAs, payouts, and trading.",
+     "Every transaction, wallet, and partner in a single view.",
+     "Roles, KYB, reporting, and webhook setup built in."
+    ],
+    "keyApisLabel": null,
+    "keyApis": [],
+    "pricingLabel": "PRICING",
+    "pricing": {
+     "kind": "text",
+     "chips": [],
+     "text": "Included with any Coins product.",
+     "subtext": "No additional license cost."
+    }
+   },
+   "source": {
+    "figmaNode": "511:29760",
+    "slide": 21
+   }
+  },
+  {
+   "id": "s22",
+   "pattern": "product-flow",
+   "props": {
+    "product": "business-portal",
+    "eyebrow": "Products and Pricing",
+    "titleBold": "Business Portal",
+    "titleRegular": "Product Flow",
+    "steps": [
+     {
+      "n": "01",
+      "title": "You get the business on",
+      "caption": "Sign up,\nsubmit KYB, go live."
+     },
+     {
+      "n": "02",
+      "title": "You bring\nyour team in",
+      "caption": "Invite people,\nset who does what."
+     },
+     {
+      "n": "03",
+      "title": "You turn products on",
+      "caption": "QR PH, VAs, Payouts,\npick your mix."
+     },
+     {
+      "n": "04",
+      "title": "You run the whole show",
+      "caption": "Every transaction,\none dashboard."
+     },
+     {
+      "n": "05",
+      "title": "You close\nout the day",
+      "caption": "Export clean reports\nfor finance."
+     }
+    ]
+   },
+   "source": {
+    "figmaNode": "511:29762",
+    "slide": 22
+   }
+  },
+  {
+   "id": "s23",
+   "pattern": "product-hero",
+   "props": {
+    "product": "disbursement",
+    "eyebrow": "Products and Pricing",
+    "title": "Disbursement",
+    "tagline": "Pay anyone. Anywhere. Right now.",
+    "image": {
+     "src": "/figma/s23/hero.png",
+     "variant": "mockup",
+     "x": 699.0,
+     "y": 24.0,
+     "w": 1221.0,
+     "h": 1045.0
+    }
+   },
+   "source": {
+    "figmaNode": "511:29765",
+    "slide": 23
+   }
+  },
+  {
+   "id": "s24",
+   "pattern": "product-detail",
+   "props": {
+    "product": "disbursement",
+    "eyebrow": "Products and Pricing",
+    "title": "Disbursement",
+    "tagline": "Pay anyone. Anywhere. Right now.",
+    "description": "Send money to any bank or wallet, local or cross-border. Stablecoin in, local currency out, delivered on arrival.",
+    "whoLabel": "Who is it for",
+    "who": "Platforms, marketplaces, and payroll providers that need to pay people fast, whether across the street or across\nthe world.",
+    "whatLabel": "What it is",
+    "what": [
+     "Real-time PHP payouts to any bank or e-wallet via InstaPay.",
+     "Cross-border payouts across 4+ corridors, and growing.",
+     "Settle with stablecoins or pre-fund with fiat. Either way, same-day"
+    ],
+    "keyApisLabel": "Key APIs",
+    "keyApis": [
+     "Create payout, account validation.",
+     "Get payout status, Balance query.",
+     "Webhook: real-time\nsettlement alert."
+    ],
+    "pricingLabel": "PRICING",
+    "pricing": {
+     "kind": "chips+text",
+     "chips": [
+      {
+       "label": "InstaPay",
+       "value": "10",
+       "unit": "PHP",
+       "caption": null
+      },
+      {
+       "label": "PESONet",
+       "value": "5",
+       "unit": "PHP",
+       "caption": null
+      }
+     ],
+     "text": "Cross-border payments:",
+     "subtext": "Contact sales for corridor rates."
+    }
+   },
+   "source": {
+    "figmaNode": "511:29782",
+    "slide": 24
+   }
+  },
+  {
+   "id": "s25",
+   "pattern": "product-flow",
+   "props": {
+    "product": "disbursement",
+    "eyebrow": "Products and Pricing",
+    "titleBold": "Disbursement",
+    "titleRegular": "Product Flow",
+    "steps": [
+     {
+      "n": "01",
+      "title": "You've got people to pay",
+      "caption": "Staff, sellers, suppliers, anywhere."
+     },
+     {
+      "n": "02",
+      "title": "You send us\nthe list",
+      "caption": "One batch file,\nor one API call"
+     },
+     {
+      "n": "03",
+      "title": "We route\neach payout",
+      "caption": "To their bank, wallet,\nor phone"
+     },
+     {
+      "n": "04",
+      "title": "Money lands\nthe same day",
+      "caption": "InstaPay at home.\nLocal rails abroad"
+     },
+     {
+      "n": "05",
+      "title": "You see\nit all settle",
+      "caption": "Live webhook and one clean report"
+     }
+    ]
+   },
+   "source": {
+    "figmaNode": "511:29784",
+    "slide": 25
+   }
+  },
+  {
+   "id": "s26",
+   "pattern": "section",
+   "props": {
+    "level": 2,
+    "number": "02",
+    "parentTitle": "Products and Pricing",
+    "title": "Move / Cross-border",
+    "subtitle": "Multi-currency wallets and corridor infrastructure."
+   },
+   "source": {
+    "figmaNode": "511:29787",
+    "slide": 26
+   }
+  },
+  {
+   "id": "s27",
+   "pattern": "product-hero",
+   "props": {
+    "product": "multi-currency",
+    "eyebrow": "Products and Pricing",
+    "title": "Multi-Currency",
+    "tagline": "Any currency. One wallet. Zero friction.",
+    "image": {
+     "src": "/figma/s27/hero.png",
+     "variant": "mockup",
+     "x": 794.0,
+     "y": 97.0,
+     "w": 1126.0,
+     "h": 972.0
+    }
+   },
+   "source": {
+    "figmaNode": "511:29790",
+    "slide": 27
+   }
+  },
+  {
+   "id": "s28",
+   "pattern": "product-detail",
+   "props": {
+    "product": "multi-currency",
+    "eyebrow": "Products and Pricing",
+    "title": "Multi-Currency",
+    "tagline": "Any currency. One wallet. Zero friction.",
+    "description": "Hold, convert, and move money across currencies without juggling multiple providers or bank accounts.",
+    "whoLabel": "Who is it for",
+    "who": "Cross-border platforms, global payroll,\nand remittance flows that need\nsame-day delivery in the recipient's\nlocal currency, anywhere.",
+    "whatLabel": "What it is",
+    "what": [
+     "Pay-in and pay-out in any supported currency, fiat or stablecoin.",
+     "Fund once, move anywhere. Convert and settle on local rails in each corridor.",
+     "Plugs directly into Disbursement and Virtual Accounts capabilities."
+    ],
+    "keyApisLabel": "Key APIs",
+    "keyApis": [
+     "Create wallet, get balance, convert.",
+     "Get FX Quote per corridor.",
+     "Webhook for balance and conversion events."
+    ],
+    "pricingLabel": "PRICING",
+    "pricing": {
+     "kind": "text",
+     "chips": [],
+     "text": "FX spread on conversion. Rate by corridor.",
+     "subtext": "Local rail fees per disbursement."
+    }
+   },
+   "source": {
+    "figmaNode": "511:30382",
+    "slide": 28
+   }
+  },
+  {
+   "id": "s29",
+   "pattern": "product-flow",
+   "props": {
+    "product": "multi-currency",
+    "eyebrow": "Products and Pricing",
+    "titleBold": "Multi-currency",
+    "titleRegular": "Product Flow",
+    "steps": [
+     {
+      "n": "01",
+      "title": "You fund\nyour account",
+      "caption": "Top up with\nUSDT or USDC."
+     },
+     {
+      "n": "02",
+      "title": "Pick your corridor",
+      "caption": "8 corridors live\nor launching."
+     },
+     {
+      "n": "03",
+      "title": "We lock\nthe FX rate",
+      "caption": "Live quote,\nready to send."
+     },
+     {
+      "n": "04",
+      "title": "We move it\non local rails",
+      "caption": "Settled on the country's own payment network."
+     },
+     {
+      "n": "05",
+      "title": "They get\npaid at home",
+      "caption": "Same day,\nin their own currency"
+     }
+    ]
+   },
+   "source": {
+    "figmaNode": "511:30384",
+    "slide": 29
+   }
+  },
+  {
+   "id": "s30",
+   "pattern": "card-grid",
+   "props": {
+    "eyebrow": "Products and Pricing",
+    "title": "Corridor Readiness",
+    "subtitle": "Where we are live. Where we are next.",
+    "body": "Asia Pacific, Middle East, Europe, and the Americas. Philippines is live today, with seven more corridors rolling through 2026, each plugged straight into the country's national payment rail.",
+    "cards": [
+     {
+      "country": "Philippines",
+      "flag": "/figma/s30/flag-ph.png",
+      "rail": "InstaPay / PESONet",
+      "speed": "Real-time / Batch",
+      "statuses": [
+       {
+        "label": "Collections",
+        "status": "LIVE",
+        "variant": "live"
+       },
+       {
+        "label": "Disbursements",
+        "status": "LIVE",
+        "variant": "live"
+       }
+      ]
+     },
+     {
+      "country": "Thailand",
+      "flag": "/figma/s30/flag-th.png",
+      "rail": "PromptPay",
+      "speed": "Real-time",
+      "statuses": [
+       {
+        "label": "Collections",
+        "status": "2026Q3",
+        "variant": "q3"
+       },
+       {
+        "label": "Disbursements",
+        "status": "2026Q2",
+        "variant": "q2"
+       }
+      ]
+     },
+     {
+      "country": "Singapore",
+      "flag": "/figma/s30/flag-sg.png",
+      "rail": "FAST",
+      "speed": "Real-time",
+      "statuses": [
+       {
+        "label": "Collections",
+        "status": "2026Q2",
+        "variant": "q2"
+       },
+       {
+        "label": "Disbursements",
+        "status": "2026Q2",
+        "variant": "q2"
+       }
+      ]
+     },
+     {
+      "country": "Hong Kong",
+      "flag": "/figma/s30/flag-hk.png",
+      "rail": "FPS",
+      "speed": "Real-time",
+      "statuses": [
+       {
+        "label": "Collections",
+        "status": "2026Q3",
+        "variant": "q3"
+       },
+       {
+        "label": "Disbursements",
+        "status": "2026Q3",
+        "variant": "q3"
+       }
+      ]
+     },
+     {
+      "country": "UAE",
+      "flag": "/figma/s30/flag-ae.png",
+      "rail": "IPI / UAEFTS",
+      "speed": "Real-time / Banking hours",
+      "statuses": [
+       {
+        "label": "Collections",
+        "status": "2026Q2",
+        "variant": "q2"
+       },
+       {
+        "label": "Disbursements",
+        "status": "2026Q2",
+        "variant": "q2"
+       }
+      ]
+     },
+     {
+      "country": "Europe",
+      "flag": "/figma/s30/flag-eu.png",
+      "rail": "SEPA Instant / Standard SEPA",
+      "speed": "Real-time / Batch",
+      "statuses": [
+       {
+        "label": "Collections",
+        "status": "2026Q2",
+        "variant": "q2"
+       },
+       {
+        "label": "Disbursements",
+        "status": "2026Q2",
+        "variant": "q2"
+       }
+      ]
+     },
+     {
+      "country": "Brazil",
+      "flag": "/figma/s30/flag-br.png",
+      "rail": "PIX",
+      "speed": "Real-time",
+      "statuses": [
+       {
+        "label": "Collections",
+        "status": "2026Q2",
+        "variant": "q2"
+       },
+       {
+        "label": "Disbursements",
+        "status": "2026Q2",
+        "variant": "q2"
+       }
+      ]
+     },
+     {
+      "country": "Australia",
+      "flag": "/figma/s30/flag-au.png",
+      "rail": "NPP (PayID)",
+      "speed": "Real-time ",
+      "statuses": [
+       {
+        "label": "Collections",
+        "status": "2026Q3",
+        "variant": "q3"
+       },
+       {
+        "label": "Disbursements",
+        "status": "2026Q3",
+        "variant": "q3"
+       }
+      ]
+     }
+    ]
+   },
+   "source": {
+    "figmaNode": "511:30387",
+    "slide": 30
+   }
+  },
+  {
+   "id": "s31",
+   "pattern": "section",
+   "props": {
+    "level": 2,
+    "number": "02",
+    "parentTitle": "Products and Pricing",
+    "title": "Trade  /  Institutional Crypto",
+    "subtitle": "Trade at scale. Lock-in for big tickets, or go live against the order book."
+   },
+   "source": {
+    "figmaNode": "511:30406",
+    "slide": 31
+   }
+  },
+  {
+   "id": "s32",
+   "pattern": "product-hero",
+   "props": {
+    "product": "otc-rfq",
+    "eyebrow": "Products and Pricing",
+    "title": "OTC RFQ",
+    "tagline": "Lock your price before you trade.\nNo surprises.",
+    "image": {
+     "src": "/figma/s32/hero.png",
+     "variant": "mockup",
+     "x": 658.0,
+     "y": 98.0,
+     "w": 1262.0,
+     "h": 950.0
+    }
+   },
+   "source": {
+    "figmaNode": "511:30409",
+    "slide": 32
+   }
+  },
+  {
+   "id": "s33",
+   "pattern": "product-detail",
+   "props": {
+    "product": "otc-rfq",
+    "eyebrow": "Products and Pricing",
+    "title": "OTC RFQ",
+    "tagline": "Lock your price before you trade.\nNo surprises.",
+    "description": "Moving large amounts? Get a guaranteed rate upfront. What you see is exactly what you get.",
+    "whoLabel": "Who is it for",
+    "who": "Treasuries, funds, and institutional desks trading at scale who need price certainty before committing.",
+    "whatLabel": "What it is",
+    "what": [
+     "Firm rate on any supported pair.\n7, 10, or 20 second lock.",
+     "Instant or deferred settlement. Manual or automatic.",
+     "Accessed via Business Portal.\nFull history on tap."
+    ],
+    "keyApisLabel": "Key APIs",
+    "keyApis": [
+     "Apply for OTC Access,\nRequest for quote.",
+     "Submit order, manual settle.",
+     "Order query: pending,\nsettled, failed."
+    ],
+    "pricingLabel": "PRICING",
+    "pricing": {
+     "kind": "text",
+     "chips": [],
+     "text": "No hidden fees. Fixed spread only.",
+     "subtext": null
+    }
+   },
+   "source": {
+    "figmaNode": "511:30672",
+    "slide": 33
+   },
+   "chrome": {
+    "footer": "bottom-left"
+   }
+  },
+  {
+   "id": "s34",
+   "pattern": "product-flow",
+   "props": {
+    "product": "otc-rfq",
+    "eyebrow": "Products and Pricing",
+    "titleBold": "OTC RFQ",
+    "titleRegular": "Product Flow",
+    "steps": [
+     {
+      "n": "01",
+      "title": "You've got\na big trade",
+      "caption": "Size that needs\na firm price."
+     },
+     {
+      "n": "02",
+      "title": "You ask\nfor a quote",
+      "caption": "Pick the pair,\npick the amount."
+     },
+     {
+      "n": "03",
+      "title": "You hold\nthe rate",
+      "caption": "Live quote,\nready to send."
+     },
+     {
+      "n": "04",
+      "title": "You confirm\nthe trade",
+      "caption": "One click.\nPrice is locked in."
+     },
+     {
+      "n": "05",
+      "title": "You settle it",
+      "caption": "Now, or when\nyou're ready"
+     }
+    ]
+   },
+   "source": {
+    "figmaNode": "511:30709",
+    "slide": 34
+   }
+  },
+  {
+   "id": "s35",
+   "pattern": "product-hero",
+   "props": {
+    "product": "order-book",
+    "eyebrow": "Products and Pricing",
+    "title": "Order Book",
+    "tagline": "Tight spreads. Deep liquidity.",
+    "image": {
+     "src": "/figma/s35/hero.png",
+     "variant": "mockup",
+     "x": 646.0,
+     "y": 89.0,
+     "w": 1274.0,
+     "h": 927.0
+    }
+   },
+   "source": {
+    "figmaNode": "511:30712",
+    "slide": 35
+   }
+  },
+  {
+   "id": "s36",
+   "pattern": "product-detail",
+   "props": {
+    "product": "order-book",
+    "eyebrow": "Products and Pricing",
+    "title": "Order Book",
+    "tagline": "Tight spreads. Deep liquidity.",
+    "description": "Live spot trading against the Coins order book,\nbuilt for scale.",
+    "whoLabel": "Who is it for",
+    "who": "Traders, market makers, and businesses needing direct spot exchange access across major pairs.",
+    "whatLabel": "What it is",
+    "what": [
+     "Spot exchange against the live\norder book. Major pairs.",
+     "API-first. Also available through Business Portal.",
+     "VIP fees by 30-day volume.\nTrade more, pay less."
+    ],
+    "keyApisLabel": null,
+    "keyApis": [],
+    "pricingLabel": "VIP PRICING",
+    "pricing": {
+     "kind": "tiers",
+     "chips": [],
+     "text": null,
+     "subtext": null,
+     "tiers": [
+      {
+       "tierLabel": "VIP",
+       "tier": "LEVEL 0",
+       "value": "0.10-0.15",
+       "unit": "%",
+       "caption": "w/ less than 5M PHP\n30-day transaction volume",
+       "conditionPrefix": "w/ less than ",
+       "conditionAmount": "5M PHP",
+       "volumeNote": "30-day transaction volume",
+       "highlight": false
+      },
+      {
+       "tierLabel": "VIP",
+       "tier": "LEVEL 3",
+       "value": "0.07-0.11",
+       "unit": "%",
+       "caption": "w/ ≥ 5M PHP\n30-day transaction volume",
+       "conditionPrefix": "w/ ≥ ",
+       "conditionAmount": "5M PHP",
+       "volumeNote": "30-day transaction volume",
+       "highlight": false
+      },
+      {
+       "tierLabel": "VIP",
+       "tier": "LEVEL 5",
+       "value": "0.05-0.09",
+       "unit": "%",
+       "caption": "w/ ≥ 100M PHP\n30-day transaction volume",
+       "conditionPrefix": "w/ ≥ ",
+       "conditionAmount": "100M PHP",
+       "volumeNote": "30-day transaction volume",
+       "highlight": false,
+       "figmaBoldSplit": [
+        "w/ ≥ 100",
+        "M PHP"
+       ]
+      },
+      {
+       "tierLabel": "VIP",
+       "tier": "LEVEL 7",
+       "value": "0.04-0.07",
+       "unit": "%",
+       "caption": "w/ ≥ 1B PHP\n30-day transaction volume",
+       "conditionPrefix": "w/ ≥ ",
+       "conditionAmount": "1B PHP",
+       "volumeNote": "30-day transaction volume",
+       "highlight": false,
+       "figmaBoldSplit": [
+        "w/ ≥ 1",
+        "B PHP"
+       ]
+      },
+      {
+       "tierLabel": "VIP",
+       "tier": "LEVEL 9",
+       "value": "0.03-0.05",
+       "unit": "%",
+       "caption": "w/ ≥ 5B PHP\n30-day transaction volume",
+       "conditionPrefix": "w/ ≥ ",
+       "conditionAmount": "5B PHP",
+       "volumeNote": "30-day transaction volume",
+       "highlight": true,
+       "figmaBoldSplit": [
+        "w/ ≥ 5",
+        "B PHP"
+       ]
+      }
+     ]
+    }
+   },
+   "source": {
+    "figmaNode": "511:31567",
+    "slide": 36
+   }
+  },
+  {
+   "id": "s37",
+   "pattern": "section",
+   "props": {
+    "level": 1,
+    "number": "03",
+    "title": "Why businesses\nchoose Coins.",
+    "subtitle": "What makes us the right infrastructure partner.",
+    "figma": {
+     "titleWeight": 500,
+     "subtitleLineHeight": 1.15,
+     "subtitleTracking": -1.92,
+     "titleTop": 357,
+     "subtitleTop": 686,
+     "cage": {
+      "x": -40,
+      "width": 1297,
+      "ys": [
+       383,
+       436,
+       474,
+       521,
+       574,
+       612
+      ],
+      "stroke": 1,
+      "vLeft": {
+       "x": 279,
+       "top": 356,
+       "height": 267
+      },
+      "vRight": [
+       {
+        "x": 1150,
+        "top": 374,
+        "height": 140
+       },
+       {
+        "x": 1027,
+        "top": 504,
+        "height": 140
+       }
+      ]
+     }
+    }
+   },
+   "source": {
+    "figmaNode": "511:31603",
+    "slide": 37
+   }
+  },
+  {
+   "id": "s38",
+   "pattern": "feature-cards",
+   "props": {
+    "title": "Why Businesses chooses Coins.",
+    "cards": [
+     {
+      "number": "01",
+      "title": "Regulated everywhere\nyou operate",
+      "body": "Licensed in every corridor we serve. The regulatory work is done before you get there, so compliance is never your problem."
+     },
+     {
+      "number": "02",
+      "title": "Stablecoin settlement live",
+      "body": "Official Circle and Tether partner. Exclusive issuer of PHPC. Stablecoin settlement wired directly into local payment rails in every corridor."
+     },
+     {
+      "number": "03",
+      "title": "Multi-currency reach",
+      "body": "Accept in one currency, pay out in another.\nFiat or stablecoin.\nOne integration covers every corridor we serve, and we keep adding more."
+     },
+     {
+      "number": "04",
+      "title": "One API.\nEvery product.",
+      "body": "Payments, disbursements, trading, and virtual accounts through a single API. One partner, one contract, one dashboard for everything."
+     },
+     {
+      "number": "05",
+      "title": "Built to scale with you",
+      "body": "Philippines live today.\n7 more corridors rolling through 2026. As your business grows into new markets, we're already there or on the way."
+     }
+    ],
+    "decoration": "coins"
+   },
+   "source": {
+    "figmaNode": "511:31619",
+    "slide": 38
+   }
+  },
+  {
+   "id": "s39",
+   "pattern": "cta-contact",
+   "props": {
+    "title": "Let’s get you\nset up.",
+    "subtitle": "Pick the products that fit your business.\nWe integrate the rest.",
+    "contacts": [
+     {
+      "label": "For cross-border and local payments, remittances, and QR Ph:",
+      "email": "payments-business@coins.ph"
+     },
+     {
+      "label": "For Crypto and all things Web3:",
+      "email": "crypto-business@coins.ph"
+     }
+    ],
+    "figma": {
+     "cage": {
+      "x": -168,
+      "width": 1052,
+      "ys": [
+       336,
+       389,
+       427,
+       474,
+       527,
+       565
+      ],
+      "stroke": 1,
+      "vLeft": {
+       "x": 151,
+       "top": 309,
+       "height": 267
+      },
+      "vRight": [
+       {
+        "x": 813,
+        "top": 320,
+        "height": 128
+       },
+       {
+        "x": 504,
+        "top": 457,
+        "height": 140
+       }
+      ]
+     }
+    }
+   },
+   "source": {
+    "figmaNode": "511:31637",
+    "slide": 39
+   },
+   "chrome": {
+    "background": "dark-navy"
+   }
+  },
+  {
+   "id": "s40",
+   "pattern": "closing",
+   "props": {
+    "title": "Thank you",
+    "figma": {
+     "cage": {
+      "x": -385,
+      "width": 2104,
+      "ys": [
+       473,
+       579,
+       655
+      ],
+      "stroke": 2,
+      "vLeft": {
+       "x": 253,
+       "top": 419,
+       "height": 278
+      },
+      "vRight": [
+       {
+        "x": 1319,
+        "top": 441,
+        "height": 256
+       }
+      ]
+     }
+    }
+   },
+   "source": {
+    "figmaNode": "511:31657",
+    "slide": 40
+   },
+   "chrome": {
+    "background": "dark-navy"
+   }
+  }
+ ]
+}

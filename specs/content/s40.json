@@ -1,0 +1,38 @@
+{
+  "slide": 40,
+  "node": "511:31657",
+  "pattern": "closing",
+  "texts": {
+    "title": "Thank you",
+    "footer": "Strictly Private And Confidential"
+  },
+  "assets": {
+    "background": "/figma/shared/bg-dark.svg",
+    "logo": "/figma/shared/logo-white-sm.svg",
+    "lineH": "/figma/s40/line-h.svg",
+    "lineVLeft": "/figma/s40/line-v-a.svg",
+    "lineVRight": "/figma/s40/line-v-b.svg"
+  },
+  "layout": {
+    "rulesX": -385,
+    "rulesWidth": 2104,
+    "strokeWidth": 2,
+    "rulesY": [
+      473,
+      579,
+      655
+    ],
+    "vLeft": {
+      "x": 253,
+      "top": 419,
+      "height": 278
+    },
+    "vRight": [
+      {
+        "x": 1319,
+        "top": 441,
+        "height": 256
+      }
+    ]
+  }
+}

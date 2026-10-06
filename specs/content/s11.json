@@ -1,0 +1,31 @@
+{
+  "slide": 11,
+  "node": "511:29490",
+  "pattern": "product-hero",
+  "product": "qrph-webpay",
+  "texts": {
+    "eyebrow": "Products and Pricing",
+    "title": "QRPh and WebPay",
+    "tagline": "Accept every payment in the Philippines"
+  },
+  "assets": {
+    "hero": "/figma/s11/hero.png"
+  },
+  "imageSlot": {
+    "x": 837.0,
+    "y": 69.0,
+    "w": 1027.0,
+    "h": 1000.0
+  },
+  "imageVariant": "mockup",
+  "heroPx": [
+    2054,
+    2000
+  ],
+  "textColumn": {
+    "x": 79,
+    "y": 452.5,
+    "w": 751,
+    "h": 176
+  }
+}

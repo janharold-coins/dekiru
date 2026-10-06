@@ -1,0 +1,36 @@
+{
+  "slide": 5,
+  "node": "511:28977",
+  "pattern": "timeline",
+  "texts": {
+    "title": "Our story",
+    "subtitle": "A decade of building the infrastructure that moves money across borders."
+  },
+  "items": [
+    { "year": "2026", "yearColor": "#474747", "side": "right", "text": "First and only app with\nQRPh multi-asset payments", "caption": "Accelerating global license acquisition", "captionTracking": 2.16, "y": 142, "markerY": 154 },
+    { "year": "2025", "side": "right", "text": "QRPh, stablecoin,\nand new products", "caption": "Expansion to Brazil and Australia", "captionTracking": 1.44, "y": 267, "markerY": 278 },
+    { "year": "2024", "side": "left", "text": "Launch of Coins.xyz\nglobal platform", "y": 333, "markerY": 341 },
+    { "year": "2022", "side": "both", "leftText": "Acquisition by Wei Zhou\nand Joffre Capital", "text": "Complete tech stack rebuild\nand app/web revamp", "y": 473, "markerY": 483 },
+    { "year": "2021", "side": "right-bracket", "bracketGroup": "2018-2021", "text": "Pivot to fiat\npayment solutions", "y": 633, "markerY": 640, "markerSize": 13 },
+    { "year": "2019", "side": "left", "text": "Acquired by Gojek", "y": 675, "markerY": 685 },
+    { "year": "2018", "side": "bracket-end", "bracketGroup": "2018-2021", "y": 717, "markerY": 727, "markerSize": 13 },
+    { "year": "2015", "side": "right", "text": "First crypto\nexchange license", "caption": "Philippines and Thailand", "captionTracking": 2.16, "y": 804, "markerY": 814 },
+    { "year": "2014", "side": "left", "text": "Coins.ph founded", "y": 841, "markerY": 851 }
+  ],
+  "flagTrack": [
+    { "code": "eu", "file": "/figma/s05/flag-eu.png", "x": 1305, "y": 146 },
+    { "code": "sg", "file": "/figma/s05/flag-sg.png", "x": 1305, "y": 190 },
+    { "code": "hk", "file": "/figma/s05/flag-hk.png", "x": 1305, "y": 234 },
+    { "code": "br", "file": "/figma/s05/flag-br.png", "x": 1305, "y": 286 },
+    { "code": "ar", "file": "/figma/s05/flag-ar.png", "x": 1305, "y": 330 },
+    { "code": "au", "file": "/figma/s05/flag-au.png", "x": 1305, "y": 374 },
+    { "code": "ph", "file": "/figma/s05/flag-ph.png", "x": 1305, "y": 440 },
+    { "code": "th", "file": "/figma/s05/flag-th.png", "x": 1305, "y": 484 }
+  ],
+  "assets": {
+    "axisLine": "/figma/s05/timeline-axis-line.svg",
+    "marker": "/figma/s05/marker-dot.svg",
+    "bracket": "/figma/s05/bracket-2018-2021.svg",
+    "flags": "/figma/s05/flag-*.png (see flagTrack)"
+  }
+}

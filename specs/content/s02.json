@@ -1,0 +1,32 @@
+{
+  "slide": 2,
+  "node": "511:28911",
+  "pattern": "agenda",
+  "texts": {
+    "title": "What\nwe’ll cover.",
+    "footer": "Strictly Private And Confidential"
+  },
+  "items": {
+    "agenda": [
+      {
+        "number": "01",
+        "title": "About us",
+        "description": "Who we are, key numbers, licensing, and partners"
+      },
+      {
+        "number": "02",
+        "title": "Products and Pricing",
+        "description": "Accept payments, move money cross-border, and trade crypto"
+      },
+      {
+        "number": "03",
+        "title": "Why Coins",
+        "description": "What makes us the right infrastructure partner"
+      }
+    ]
+  },
+  "assets": {
+    "logo": "/figma/shared/logo-dark.svg",
+    "accentBar": "/figma/shared/accent-bar.svg"
+  }
+}

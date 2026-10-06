@@ -1,0 +1,45 @@
+{
+  "slide": 8,
+  "node": "511:29441",
+  "pattern": "section-l1",
+  "texts": {
+    "number": "02",
+    "title": "Products and Pricing",
+    "subtitle": "Accept payments, move money cross-border,\nand trade crypto",
+    "footer": "Strictly Private And Confidential"
+  },
+  "assets": {
+    "background": "/figma/shared/bg-dark.svg",
+    "logo": "/figma/shared/logo-white-sm.svg",
+    "lineH": "/figma/s08/line-h.svg",
+    "lineV": "/figma/s08/line-v.svg"
+  },
+  "style": {
+    "titleWeight": 600,
+    "subtitleLineHeight": 1.4,
+    "subtitleTracking": -1.28,
+    "titleTop": 432,
+    "subtitleTop": 588
+  },
+  "layout": {
+    "rulesX": -40,
+    "rulesWidth": 1456,
+    "rulesY": [
+      458,
+      511,
+      549
+    ],
+    "vLeft": {
+      "x": 279,
+      "top": 431,
+      "height": 140
+    },
+    "vRight": [
+      {
+        "x": 1389,
+        "top": 431,
+        "height": 140
+      }
+    ]
+  }
+}

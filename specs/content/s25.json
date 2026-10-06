@@ -1,0 +1,38 @@
+{
+  "slide": 25,
+  "node": "511:29784",
+  "pattern": "product-flow",
+  "product": "disbursement",
+  "texts": {
+    "eyebrow": "Products and Pricing",
+    "titleBold": "Disbursement",
+    "titleRegular": "Product Flow"
+  },
+  "steps": [
+    {
+      "n": "01",
+      "title": "You've got people to pay",
+      "caption": "Staff, sellers, suppliers, anywhere."
+    },
+    {
+      "n": "02",
+      "title": "You send us\nthe list",
+      "caption": "One batch file,\nor one API call"
+    },
+    {
+      "n": "03",
+      "title": "We route\neach payout",
+      "caption": "To their bank, wallet,\nor phone"
+    },
+    {
+      "n": "04",
+      "title": "Money lands\nthe same day",
+      "caption": "InstaPay at home.\nLocal rails abroad"
+    },
+    {
+      "n": "05",
+      "title": "You see\nit all settle",
+      "caption": "Live webhook and one clean report"
+    }
+  ]
+}

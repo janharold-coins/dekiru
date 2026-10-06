@@ -1,0 +1,86 @@
+{
+  "slide": 4,
+  "node": "556:35037",
+  "pattern": "key-numbers",
+  "texts": {
+    "title": "At a glance",
+    "subtitle": "Two sides of the same platform. You plug into both with one integration.",
+    "calloutLead": "One integration, full coverage:  ",
+    "calloutLines": [
+      "Collect from 5M+ wallets, ",
+      "disburse to any bank or e-wallet, ",
+      "accept at merchant points, ",
+      "settle instantly."
+    ]
+  },
+  "items": {
+    "statCards": [
+      {
+        "id": "consumer",
+        "icon": "icon-verified-user.svg",
+        "value": "5M+",
+        "valueRuns": [
+          { "text": "5", "font": "TWK Everett", "weight": 400 },
+          { "text": "M+", "font": "Cns Manrope", "weight": 600 }
+        ],
+        "valueColor": "#fa7312",
+        "eyebrow": "CONSUMER SIDE",
+        "label": "Verified Coins.ph\napp users",
+        "description": "The Philippines' most established crypto and payments app. A ready wallet base that pays, moves, and trades on our platform every day."
+      },
+      {
+        "id": "enterprise",
+        "icon": "icon-verified-business.svg",
+        "value": "2,000+",
+        "valueRuns": [
+          { "text": "2,000+", "font": "TWK Everett", "weight": 400 }
+        ],
+        "valueColor": "#1f7aff",
+        "eyebrow": "ENTERPRISE SIDE",
+        "label": "Verified businesses \non the platform",
+        "description": "KYB'd enterprises across payments, lending, remittance, and trading. Building on Coins infrastructure."
+      }
+    ],
+    "inlineStatsPrimary": [
+      { "value": "~90%", "valueSize": 60, "valueWeight": 600, "label": "PH market share", "note": "Similarweb average DAU for Android users in 2025", "noteWidth": 169, "itemWidth": 354 },
+      { "value": "26", "valueSize": 70, "valueWeight": 700, "label": "Licenses", "note": "Includes approved and in-progress regulatory applications.", "noteWidth": 195 },
+      { "value": "$28B+", "valueSize": 60, "valueWeight": 700, "label": "Total volume processed in 2025", "labelWidth": 206.55 }
+    ],
+    "inlineStatsSecondary": [
+      { "value": "$12B", "label": "Local payments volume processed in 2025", "labelWidth": 211.48 },
+      { "value": "$8.5B", "label": "Stablecoins volume processed in 2025", "labelWidth": 182 },
+      { "value": "$7.5B", "label": "Trading volume\nprocessed in 2025", "labelWidth": null, "itemWidth": 289 }
+    ]
+  },
+  "assets": {
+    "iconConsumer": "/figma/s04/icon-verified-user.svg",
+    "iconEnterprise": "/figma/s04/icon-verified-business.svg",
+    "calloutBar": "/figma/s04/divider-vertical-line.svg"
+  },
+  "variants": {
+    "560:35123": {
+      "note": "Alternative $28B+ version. Only differences vs 556:35037 listed; everything else identical.",
+      "inlineStatsPrimary[0].note": "similarweb average DAU for Android users in 2025",
+      "inlineStatsPrimary[1].note": "includes approved and in-progress regulatory applications.",
+      "inlineStatsSecondary": [
+        { "value": "$12B", "label": "Local payments volume", "note": "fiat collections and disbursements" },
+        { "value": "$8.5B", "label": "Stablecoins volume", "note": "trading and on-chain flows" },
+        { "value": "$7.5B", "label": "Trading volume", "note": "non-stablecoin trading and on-chain flows" }
+      ]
+    },
+    "511:28932": {
+      "note": "Older layout reference (not approved content). Same geometry, different values/typography.",
+      "inlineStatsPrimary": [
+        { "value": "Largest", "label": "Digital asset \nexchange in Philippines" },
+        { "value": "26", "label": "Licenses", "note": "Includes approved and in-progress regulatory applications." },
+        { "value": "$42B+", "label": "Total volume processed in 2025" }
+      ],
+      "inlineStatsSecondary": [
+        { "value": "$12B+", "label": "Local payments volume processed in 2025" },
+        { "value": "$7B+", "label": "Stablecoin volume processed in 2025" },
+        { "value": "$5B+", "label": "Trading volume processed in 2025" }
+      ],
+      "statCards[1].value": "1,800+"
+    }
+  }
+}

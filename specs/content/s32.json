@@ -1,0 +1,31 @@
+{
+  "slide": 32,
+  "node": "511:30409",
+  "pattern": "product-hero",
+  "product": "otc-rfq",
+  "texts": {
+    "eyebrow": "Products and Pricing",
+    "title": "OTC RFQ",
+    "tagline": "Lock your price before you trade.\nNo surprises."
+  },
+  "assets": {
+    "hero": "/figma/s32/hero.png"
+  },
+  "imageSlot": {
+    "x": 658.0,
+    "y": 98.0,
+    "w": 1262.0,
+    "h": 950.0
+  },
+  "imageVariant": "mockup",
+  "heroPx": [
+    2524,
+    1900
+  ],
+  "textColumn": {
+    "x": 79,
+    "y": 424,
+    "w": 733,
+    "h": 232
+  }
+}

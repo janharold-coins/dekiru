@@ -1,0 +1,38 @@
+{
+  "slide": 19,
+  "node": "511:29740",
+  "pattern": "product-flow",
+  "product": "scan-and-pay",
+  "texts": {
+    "eyebrow": "Products and Pricing",
+    "titleBold": "QRPh Scan and Pay",
+    "titleRegular": "Product Flow"
+  },
+  "steps": [
+    {
+      "n": "01",
+      "title": "Your user\nhits pay",
+      "caption": "Inside your app,\nwearing your brand."
+    },
+    {
+      "n": "02",
+      "title": "We quote\nthe payment",
+      "caption": "Fees and merchant details upfront."
+    },
+    {
+      "n": "03",
+      "title": "We charge\nthe account",
+      "caption": "InstaPay moves the money, real time"
+    },
+    {
+      "n": "04",
+      "title": "The merchant gets paid",
+      "caption": "Straight to their\nwallet or bank"
+    },
+    {
+      "n": "05",
+      "title": "Both sides\nget the news",
+      "caption": "Webhook to you,\nreceipt to the user"
+    }
+  ]
+}

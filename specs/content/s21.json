@@ -1,0 +1,29 @@
+{
+  "slide": 21,
+  "node": "511:29760",
+  "pattern": "product-detail",
+  "product": "business-portal",
+  "texts": {
+    "eyebrow": "Products and Pricing",
+    "title": "Business Portal",
+    "tagline": "Your entire business, powered by Coins.",
+    "description": "The control center for every peso, payout,\nand trade moving through Coins.",
+    "whoLabel": "Who is it for",
+    "who": "Operations, finance, and product teams who need full visibility and control across every Coins product without writing a single line of code.",
+    "whatLabel": "What it is",
+    "keyApisLabel": null,
+    "pricingLabel": "PRICING"
+  },
+  "what": [
+    "One dashboard for QR PH,\nWebPay, VAs, payouts, and trading.",
+    "Every transaction, wallet, and partner in a single view.",
+    "Roles, KYB, reporting, and webhook setup built in."
+  ],
+  "keyApis": [],
+  "pricing": {
+    "kind": "text",
+    "chips": [],
+    "text": "Included with any Coins product.",
+    "subtext": "No additional license cost."
+  }
+}

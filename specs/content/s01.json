@@ -1,0 +1,14 @@
+{
+  "slide": 1,
+  "node": "511:28904",
+  "pattern": "cover",
+  "texts": {
+    "title": "Global money. \nFaster. Always on.",
+    "subtitle": "Accept payments   ·   Move cross-border   ·   Trade crypto",
+    "footer": "Strictly Private And Confidential"
+  },
+  "assets": {
+    "background": "/figma/shared/bg-dark.svg",
+    "logo": "/figma/shared/logo-white.svg"
+  }
+}

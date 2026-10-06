@@ -1,0 +1,31 @@
+{
+  "slide": 20,
+  "node": "511:29743",
+  "pattern": "product-hero",
+  "product": "business-portal",
+  "texts": {
+    "eyebrow": "Products and Pricing",
+    "title": "Business Portal",
+    "tagline": "Your entire business, powered by Coins."
+  },
+  "assets": {
+    "hero": "/figma/s20/hero.png"
+  },
+  "imageSlot": {
+    "x": 431.0,
+    "y": 0.0,
+    "w": 1489.0,
+    "h": 1069.0
+  },
+  "imageVariant": "mockup",
+  "heroPx": [
+    2978,
+    2138
+  ],
+  "textColumn": {
+    "x": 79,
+    "y": 452,
+    "w": 733,
+    "h": 176
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "slide": 28,
+  "node": "511:30382",
+  "pattern": "product-detail",
+  "product": "multi-currency",
+  "texts": {
+    "eyebrow": "Products and Pricing",
+    "title": "Multi-Currency",
+    "tagline": "Any currency. One wallet. Zero friction.",
+    "description": "Hold, convert, and move money across currencies without juggling multiple providers or bank accounts.",
+    "whoLabel": "Who is it for",
+    "who": "Cross-border platforms, global payroll,\nand remittance flows that need\nsame-day delivery in the recipient's\nlocal currency, anywhere.",
+    "whatLabel": "What it is",
+    "keyApisLabel": "Key APIs",
+    "pricingLabel": "PRICING"
+  },
+  "what": [
+    "Pay-in and pay-out in any supported currency, fiat or stablecoin.",
+    "Fund once, move anywhere. Convert and settle on local rails in each corridor.",
+    "Plugs directly into Disbursement and Virtual Accounts capabilities."
+  ],
+  "keyApis": [
+    "Create wallet, get balance, convert.",
+    "Get FX Quote per corridor.",
+    "Webhook for balance and conversion events."
+  ],
+  "pricing": {
+    "kind": "text",
+    "chips": [],
+    "text": "FX spread on conversion. Rate by corridor.",
+    "subtext": "Local rail fees per disbursement."
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "slide": 14,
+  "node": "511:29671",
+  "pattern": "product-hero",
+  "product": "virtual-accounts",
+  "texts": {
+    "eyebrow": "Products and Pricing",
+    "title": "Virtual Accounts",
+    "tagline": "Accept fiat and crypto.\nKnow exactly who got paid."
+  },
+  "assets": {
+    "hero": "/figma/s14/hero.png"
+  },
+  "imageSlot": {
+    "x": 614.0,
+    "y": 33.0,
+    "w": 1306.0,
+    "h": 1036.0
+  },
+  "imageVariant": "mockup",
+  "heroPx": [
+    2612,
+    2072
+  ],
+  "textColumn": {
+    "x": 79,
+    "y": 424.5,
+    "w": 733,
+    "h": 232
+  }
+}

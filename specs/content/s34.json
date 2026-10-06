@@ -1,0 +1,38 @@
+{
+  "slide": 34,
+  "node": "511:30709",
+  "pattern": "product-flow",
+  "product": "otc-rfq",
+  "texts": {
+    "eyebrow": "Products and Pricing",
+    "titleBold": "OTC RFQ",
+    "titleRegular": "Product Flow"
+  },
+  "steps": [
+    {
+      "n": "01",
+      "title": "You've got\na big trade",
+      "caption": "Size that needs\na firm price."
+    },
+    {
+      "n": "02",
+      "title": "You ask\nfor a quote",
+      "caption": "Pick the pair,\npick the amount."
+    },
+    {
+      "n": "03",
+      "title": "You hold\nthe rate",
+      "caption": "Live quote,\nready to send."
+    },
+    {
+      "n": "04",
+      "title": "You confirm\nthe trade",
+      "caption": "One click.\nPrice is locked in."
+    },
+    {
+      "n": "05",
+      "title": "You settle it",
+      "caption": "Now, or when\nyou're ready"
+    }
+  ]
+}

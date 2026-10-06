@@ -1,0 +1,59 @@
+{
+  "slide": 39,
+  "node": "511:31637",
+  "pattern": "cta-contact",
+  "texts": {
+    "title": "Let’s get you\nset up.",
+    "subtitle": "Pick the products that fit your business.\nWe integrate the rest.",
+    "footer": "Strictly Private And Confidential"
+  },
+  "items": {
+    "contacts": [
+      {
+        "label": "For cross-border and local payments, remittances, and QR Ph:",
+        "email": "payments-business@coins.ph"
+      },
+      {
+        "label": "For Crypto and all things Web3:",
+        "email": "crypto-business@coins.ph"
+      }
+    ]
+  },
+  "assets": {
+    "background": "/figma/shared/bg-dark.svg",
+    "logo": "/figma/shared/logo-white-sm.svg",
+    "lineH": "/figma/s39/line-h.svg",
+    "lineVLeft": "/figma/s39/line-v-a.svg",
+    "lineVRight1": "/figma/s39/line-v-b.svg",
+    "lineVRight2": "/figma/s39/line-v-c.svg"
+  },
+  "layout": {
+    "rulesX": -168,
+    "rulesWidth": 1052,
+    "rulesY": [
+      336,
+      389,
+      427,
+      474,
+      527,
+      565
+    ],
+    "vLeft": {
+      "x": 151,
+      "top": 309,
+      "height": 267
+    },
+    "vRight": [
+      {
+        "x": 813,
+        "top": 320,
+        "height": 128
+      },
+      {
+        "x": 504,
+        "top": 457,
+        "height": 140
+      }
+    ]
+  }
+}

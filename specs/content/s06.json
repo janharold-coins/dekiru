@@ -1,0 +1,93 @@
+{
+  "slide": 6,
+  "node": "511:29022",
+  "pattern": "logo-wall",
+  "texts": {
+    "title": "Infrastructure",
+    "body": "We operate a global payments network spanning remittance providers, PSPs, stablecoin issuers, and payment networks. Through a unified infrastructure layer, partners enable collections, disbursements, and cross-border settlement across fiat and stablecoin rails — faster, lower cost, and 24/7."
+  },
+  "items": [
+    {
+      "group": "cross-border",
+      "header": "Cross-border Partners",
+      "panel": "/figma/s06/panel-cross-border.svg",
+      "logos": [
+        { "name": "Remitly", "file": "/figma/s06/partner-remitly.svg", "w": 160.25, "h": 36.39, "fit": "fill" },
+        { "name": "MoneyGram", "file": "/figma/s06/partner-moneygram-composite.png", "w": 199.06, "h": 44, "composite": [
+            { "file": "/figma/s06/partner-moneygram-icon.png", "x": 0, "y": 0, "w": 45.06, "h": 44, "crop": { "w": "565.4%", "h": "122.89%", "left": "-79.76%", "top": "-6.02%" } },
+            { "file": "/figma/s06/partner-moneygram-wordmark.png", "x": 48.24, "y": 2.39, "w": 150.819, "h": 41.614, "crop": { "w": "130%", "h": "100%", "left": "-29.94%", "top": "0%" } }
+        ] },
+        { "name": "Thunes", "file": "/figma/s06/partner-thunes.png", "w": 134, "h": 30, "fit": "cover" },
+        { "name": "veem", "file": "/figma/s06/partner-veem.png", "w": 136, "h": 30, "crop": { "w": "110.29%", "h": "147.46%", "left": "-5.15%", "top": "-23.73%" } },
+        { "name": "LuLu Money", "file": "/figma/s06/partner-lulu-money.png", "w": 154, "h": 59, "crop": { "w": "100.61%", "h": "125%", "left": "-0.64%", "top": "-12.5%" } },
+        { "name": "bcremit", "file": "/figma/s06/partner-bcremit.png", "w": 172.627, "h": 62.068, "fit": "cover" },
+        { "name": "stables", "file": "/figma/s06/partner-stables.png", "w": 92, "h": 20, "fit": "cover" },
+        { "name": "WorldRemit", "file": "/figma/s06/partner-worldremit.png", "w": 254, "h": 59, "fit": "cover", "objectPosition": "bottom" },
+        { "name": "TALA", "file": "/figma/s06/partner-tala.png", "w": 88, "h": 26, "fit": "cover" },
+        { "name": "SBI Remit", "file": "/figma/s06/partner-sbi-remit.png", "w": 127.5, "h": 38.25, "fit": "cover" },
+        { "name": "ALMOND FINTECH", "file": "/figma/s06/partner-almond-composite.png", "w": 191.45, "h": 52.85, "composite": [
+            { "text": "ALMOND", "font": "Encode Sans Semi Expanded", "weight": 400, "size": 31.5, "lineHeight": 1.4, "tracking": -0.4725, "color": "#ffffff", "x": 0, "y": 0 },
+            { "text": "FINTECH", "font": "Encode Sans Semi Expanded", "weight": 400, "size": 12.6, "lineHeight": 1.4, "tracking": -0.189, "color": "#ffffff", "x": 84.7, "y": 35 },
+            { "file": "/figma/s06/partner-almond-icon.png", "x": 144.2, "y": 0, "w": 47.25, "h": 52.85, "crop": { "w": "637.04%", "h": "382.12%", "left": "-417.04%", "top": "-143.05%" } }
+        ] },
+        { "name": "xendit", "file": "/figma/s06/partner-xendit.png", "w": 187.5, "h": 47.5, "crop": { "w": "100%", "h": "167.63%", "left": "-0.07%", "top": "-33.61%" } },
+        { "name": "FAZZ", "file": "/figma/s06/partner-fazz.svg", "w": 96, "h": 45, "fit": "fill" },
+        { "name": "index", "file": "/figma/s06/partner-index.png", "w": 121, "h": 50, "fit": "cover" },
+        { "name": "LIGHTNET", "file": "/figma/s06/partner-lightnet.png", "w": 154, "h": 34, "crop": { "w": "118.18%", "h": "176.47%", "left": "-8.54%", "top": "-37.64%" } },
+        { "name": "TransFi", "file": "/figma/s06/partner-transfi.png", "w": 186, "h": 34, "fit": "cover", "objectPosition": "bottom" },
+        { "name": "ria Money Transfer", "file": "/figma/s06/partner-ria.png", "w": 156, "h": 50, "crop": { "w": "100%", "h": "121.25%", "left": "-0.1%", "top": "-10.58%" } }
+      ]
+    },
+    {
+      "group": "networks",
+      "header": "Global & Local Payment Networks",
+      "panel": "/figma/s06/panel-networks.svg",
+      "logos": [
+        { "name": "Swift", "file": "/figma/s06/network-swift.svg", "w": 106.25, "h": 36.656, "fit": "fill" },
+        { "name": "SEPA", "file": "/figma/s06/network-sepa.svg", "w": 106.052, "h": 28.981, "fit": "fill" },
+        { "name": "PayID", "file": "/figma/s06/network-payid.png", "w": 121.856, "h": 67.027, "fit": "cover" },
+        { "name": "Pix", "file": "/figma/s06/network-pix.svg", "w": 99.3, "h": 35.192, "fit": "fill", "note": "inner layer inset 0 0.64% 0 0, img inset 0 -0.63% 0 0 (effectively full width)" },
+        { "name": "InstaPay", "file": "/figma/s06/network-instapay.png", "w": 91.917, "h": 24.152, "crop": { "w": "108.67%", "h": "127.18%", "left": "-5.1%", "top": "-17.48%" }, "note": "inner box aspect 108.138/28.414, full width, vertically centered" },
+        { "name": "PESONet", "file": "/figma/s06/network-pesonet.png", "w": 105.4, "h": 19.499, "fit": "cover", "note": "inner box aspect 124/23, full height, horizontally centered (=104.86 wide)" },
+        { "name": "NIBSS", "file": "/figma/s06/network-nibss.png", "w": 86.7, "h": 54.425, "crop": { "w": "131.75%", "h": "209.88%", "left": "-15.69%", "top": "-55.81%" } }
+      ]
+    },
+    {
+      "group": "stablecoin",
+      "header": "Stablecoin Issuers",
+      "panel": "/figma/s06/panel-stablecoin.svg",
+      "logos": [
+        { "name": "Circle", "file": "/figma/s06/stablecoin-circle-composite.png", "w": 124.935, "h": 32, "composite": [
+            { "file": "/figma/s06/stablecoin-circle-icon.png", "x": 0, "y": 0, "w": 124.533, "h": 32, "fit": "cover" },
+            { "file": "/figma/s06/stablecoin-circle-wordmark.png", "x": 36.17, "y": 0, "w": 88.765, "h": 32, "crop": { "w": "140.68%", "h": "100.38%", "left": "-40.7%", "top": "-0.19%" } }
+        ] },
+        { "name": "tether", "file": "/figma/s06/stablecoin-tether.svg", "w": 125, "h": 40, "fit": "fill" },
+        { "name": "PAXOS", "file": "/figma/s06/stablecoin-paxos.png", "w": 126, "h": 36, "fit": "cover" },
+        { "name": "First Digital", "file": "/figma/s06/stablecoin-first-digital.png", "w": 112.5, "h": 44.1, "fit": "cover" }
+      ]
+    },
+    {
+      "group": "psp",
+      "header": "Payment Service Providers",
+      "panel": "/figma/s06/panel-psp.svg",
+      "logos": [
+        { "name": "BDO", "file": "/figma/s06/psp-bdo.svg", "w": 62.316, "h": 21.773, "fit": "fill" },
+        { "name": "Mastercard", "file": "/figma/s06/psp-mastercard.svg", "w": 49.96, "h": 38.8, "fit": "fill" },
+        { "name": "VISA", "file": "/figma/s06/psp-visa.svg", "w": 62.503, "h": 20.228, "fit": "fill" },
+        { "name": "Alipay", "file": "/figma/s06/psp-alipay.svg", "w": 112.909, "h": 28.47, "fit": "fill" },
+        { "name": "PayPal", "file": "/figma/s06/psp-paypal.svg", "w": 124, "h": 33, "fit": "fill" },
+        { "name": "xendit", "file": "/figma/s06/partner-xendit.png", "w": 159.375, "h": 40.375, "crop": { "w": "100%", "h": "167.63%", "left": "-0.07%", "top": "-33.61%" } },
+        { "name": "paymongo", "file": "/figma/s06/psp-paymongo.png", "w": 167.4, "h": 28.772, "fit": "cover" },
+        { "name": "paynamics", "file": "/figma/s06/psp-paynamics.png", "w": 93.075, "h": 29.75, "fit": "cover" },
+        { "name": "MPay", "file": "/figma/s06/psp-mpay.png", "chip": { "w": 77, "h": 30, "bg": "#ffffff", "radius": 4, "padding": 4 }, "w": 69, "h": 19.44, "fit": "cover", "note": "image is full chip inner width (69), aspect 1920/541, centered" },
+        { "name": "QPay", "file": "/figma/s06/psp-qpay.png", "chip": { "w": 77, "h": 30, "bg": "#ffffff", "radius": 4, "padding": 4 }, "w": 48.8, "h": 22.4, "crop": { "w": "99.18%", "h": "107.14%", "left": "0.41%", "top": "-0.05%" } },
+        { "name": "GCash", "file": "/figma/s06/psp-gcash.svg", "w": 122, "h": 29, "fit": "fill" },
+        { "name": "PayNet", "file": "/figma/s06/psp-paynet.png", "w": 108, "h": 36.96, "fit": "cover" }
+      ]
+    }
+  ],
+  "assets": {
+    "dir": "/figma/s06/",
+    "panels": ["panel-cross-border.svg", "panel-networks.svg", "panel-stablecoin.svg", "panel-psp.svg"]
+  }
+}

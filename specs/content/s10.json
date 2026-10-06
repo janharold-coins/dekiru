@@ -1,0 +1,41 @@
+{
+  "slide": 10,
+  "node": "511:29476",
+  "pattern": "section-l2",
+  "texts": {
+    "parentNumber": "02",
+    "parentTitle": "Products and Pricing",
+    "title": "Pay / Payments",
+    "subtitle": "Receive, send, and manage. Every payment through one platform.",
+    "footer": "Strictly Private And Confidential"
+  },
+  "assets": {
+    "background": "/figma/shared/bg-dark.svg",
+    "logo": "/figma/shared/logo-white-sm.svg",
+    "lineH": "/figma/s10/line-h.svg",
+    "lineHMid": "/figma/s10/line-h-mid.svg",
+    "lineV": "/figma/s10/line-v.svg"
+  },
+  "layout": {
+    "rulesX": 0,
+    "rulesWidth": 728,
+    "strokeWidth": 0.5,
+    "rulesY": [
+      265.5,
+      292,
+      311
+    ],
+    "vLeft": {
+      "x": 159.5,
+      "top": 252,
+      "height": 70
+    },
+    "vRight": [
+      {
+        "x": 728,
+        "top": 252,
+        "height": 70
+      }
+    ]
+  }
+}

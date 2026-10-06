@@ -1,0 +1,38 @@
+{
+  "slide": 22,
+  "node": "511:29762",
+  "pattern": "product-flow",
+  "product": "business-portal",
+  "texts": {
+    "eyebrow": "Products and Pricing",
+    "titleBold": "Business Portal",
+    "titleRegular": "Product Flow"
+  },
+  "steps": [
+    {
+      "n": "01",
+      "title": "You get the business on",
+      "caption": "Sign up,\nsubmit KYB, go live."
+    },
+    {
+      "n": "02",
+      "title": "You bring\nyour team in",
+      "caption": "Invite people,\nset who does what."
+    },
+    {
+      "n": "03",
+      "title": "You turn products on",
+      "caption": "QR PH, VAs, Payouts,\npick your mix."
+    },
+    {
+      "n": "04",
+      "title": "You run the whole show",
+      "caption": "Every transaction,\none dashboard."
+    },
+    {
+      "n": "05",
+      "title": "You close\nout the day",
+      "caption": "Export clean reports\nfor finance."
+    }
+  ]
+}

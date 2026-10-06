@@ -1,0 +1,40 @@
+{
+  "slide": 3,
+  "node": "511:28920",
+  "pattern": "section-l1",
+  "texts": {
+    "number": "01",
+    "title": "About Coins.ph",
+    "subtitle": "Who we are, key numbers, licensing, and partners",
+    "footer": "Strictly Private And Confidential"
+  },
+  "assets": {
+    "background": "/figma/shared/bg-dark.svg",
+    "logo": "/figma/shared/logo-white-sm.svg",
+    "lineH": "/figma/s03/line-h.svg",
+    "lineV": "/figma/s03/line-v-a.svg"
+  },
+  "style": {
+    "titleWeight": 500,
+    "subtitleLineHeight": 1.15,
+    "subtitleTracking": -1.92,
+    "titleTop": 432,
+    "subtitleTop": 588
+  },
+  "layout": {
+    "rulesX": -40,
+    "rulesWidth": 1201,
+    "rulesY": [
+      458,
+      511,
+      549
+    ],
+    "vLeft": {
+      "x": 279,
+      "top": 431,
+      "height": 140
+    },
+    "vRight": null,
+    "note": "Right vertical rule (node 511:28929, x=1094) exports empty and is not visible on this slide"
+  }
+}

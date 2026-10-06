@@ -1,0 +1,33 @@
+{
+  "slide": 15,
+  "node": "511:29686",
+  "pattern": "product-detail",
+  "product": "virtual-accounts",
+  "texts": {
+    "eyebrow": "Products and Pricing",
+    "title": "Virtual Accounts",
+    "tagline": "Accept fiat and crypto.\nKnow exactly who got paid.",
+    "description": "Every seller gets their own account that takes pesos, dollars, or crypto. Deposits tag themselves automatically. You never sort a transaction again.",
+    "whoLabel": "Who is it for",
+    "who": "Marketplaces, platforms, and wallets handling money for multiple sellers who want both fiat and crypto inflows, with every deposit attributed automatically.",
+    "whatLabel": "What it is",
+    "keyApisLabel": "Key APIs",
+    "pricingLabel": "PRICING"
+  },
+  "what": [
+    "Accept both fiat and crypto: PHP via InstaPay and PESONet, major crypto and chains.",
+    "Unique receiving account for every seller. One-time or multi-use.",
+    "Auto-credit to your master account with a real-time webhook on every deposit."
+  ],
+  "keyApis": [
+    "Create, Update, Deactivate, Reactivate VA.",
+    "Retrieve VA Details.",
+    "Webhook: real-time deposit alert."
+  ],
+  "pricing": {
+    "kind": "text",
+    "chips": [],
+    "text": "Set per partner, by transaction and currency.",
+    "subtext": "Contact sales for your rate."
+  }
+}

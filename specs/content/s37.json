@@ -1,0 +1,54 @@
+{
+  "slide": 37,
+  "node": "511:31603",
+  "pattern": "section-l1",
+  "texts": {
+    "number": "03",
+    "title": "Why businesses\nchoose Coins.",
+    "subtitle": "What makes us the right infrastructure partner.",
+    "footer": "Strictly Private And Confidential"
+  },
+  "assets": {
+    "background": "/figma/shared/bg-dark.svg",
+    "logo": "/figma/shared/logo-white-sm.svg",
+    "lineH": "/figma/s37/line-h.svg",
+    "lineVLeft": "/figma/s37/line-v-a.svg",
+    "lineVRight": "/figma/s37/line-v-b.svg"
+  },
+  "style": {
+    "titleWeight": 500,
+    "subtitleLineHeight": 1.15,
+    "subtitleTracking": -1.92,
+    "titleTop": 357,
+    "subtitleTop": 686
+  },
+  "layout": {
+    "rulesX": -40,
+    "rulesWidth": 1297,
+    "rulesY": [
+      383,
+      436,
+      474,
+      521,
+      574,
+      612
+    ],
+    "vLeft": {
+      "x": 279,
+      "top": 356,
+      "height": 267
+    },
+    "vRight": [
+      {
+        "x": 1150,
+        "top": 374,
+        "height": 140
+      },
+      {
+        "x": 1027,
+        "top": 504,
+        "height": 140
+      }
+    ]
+  }
+}

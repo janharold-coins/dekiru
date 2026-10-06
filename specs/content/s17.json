@@ -1,0 +1,31 @@
+{
+ "slide": 17,
+ "node": "511:29724",
+ "pattern": "product-hero",
+ "product": "qrph-scan-pay",
+ "texts": {
+  "eyebrow": "Products and Pricing",
+  "title": "QRPh Scan and Pay",
+  "tagline": "Payments by your brand.\nBacked by our platform."
+ },
+ "assets": {
+  "hero": "/figma/s17/hero.jpg"
+ },
+ "imageSlot": {
+  "x": 711.0,
+  "y": 0.0,
+  "w": 1209.0,
+  "h": 1080.0
+ },
+ "imageVariant": "photo",
+ "heroPx": [
+  2418,
+  2160
+ ],
+ "textColumn": {
+  "x": 79,
+  "y": 424.5,
+  "w": 751,
+  "h": 232
+ }
+}
