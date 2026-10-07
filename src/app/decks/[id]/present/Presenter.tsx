@@ -2,10 +2,12 @@
 import { useCallback, useEffect, useLayoutEffect, useState, type ReactNode } from "react";
 
 /** Full-screen presenter: ← → / space / PageUp-Down, Home/End, F for fullscreen. Slide index lives in the URL hash. */
-export function Presenter({ slides }: { slides: ReactNode[] }) {
+export function Presenter({ slides, onSlide }: { slides: ReactNode[]; onSlide?: (index: number) => void }) {
   const n = slides.length;
   const [i, setI] = useState(0);
   const [scale, setScale] = useState(0);
+
+  useEffect(() => { onSlide?.(i); }, [i, onSlide]);
 
   useLayoutEffect(() => {
     const fit = () => setScale(Math.min(window.innerWidth / 1920, window.innerHeight / 1080));

@@ -51,11 +51,17 @@ async function LinkList({ deckId, origin, userId, canRevokeAll }: { deckId: stri
       <tbody>
         {links.map((l) => (
           <tr key={l.id} className={l.status === "live" ? "" : "dead"}>
-            <td>{l.label ?? <span className="mono">—</span>}{l.hasPassword ? "" : <span className="tag warn" style={{ marginLeft: 6 }}>no password</span>}</td>
+            <td>
+              <Link href={`/decks/${deckId}/share/${l.id}`} className="ul">{l.label ?? "Untitled link"}</Link>
+              {l.hasPassword ? "" : <span className="tag warn" style={{ marginLeft: 6 }}>no password</span>}
+            </td>
             <td><code>/s/{l.slug}</code> {l.status === "live" && <CopyButton text={`${origin}/s/${l.slug}`} label="Copy" />}</td>
             <td>v{l.versionNumber} <span className="mono">· {l.slideCount} slides</span></td>
             <td>{l.creatorName || l.creatorEmail || <span className="mono">local</span>}<div className="mono">{fmt(l.createdAt)}</div></td>
-            <td>{l.opens}</td>
+            <td>
+              <Link href={`/decks/${deckId}/share/${l.id}`} className="ul">{l.opens}</Link>
+              {l.lastOpened && <div className="mono">last {fmt(l.lastOpened)}</div>}
+            </td>
             <td>
               {l.status === "live" ? <span className="tag">Live</span> : <span className="tag warn">{l.status === "revoked" ? "Revoked" : "Expired"}</span>}
               {l.status === "live" && <div className="mono">{l.expiresAt ? `until ${fmt(l.expiresAt)}` : "no expiry"}</div>}

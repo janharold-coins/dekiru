@@ -8,9 +8,10 @@
  */
 import { createHmac, randomBytes, randomInt, scrypt as scryptCb, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
-import { and, count, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { deckVersions, decks, shareLinks, users, viewSessions } from "@/db/schema";
+import { deckVersions, decks, shareLinks, users } from "@/db/schema";
+import { opensByLink } from "./analytics";
 import { resolveSlides } from "@/content/resolve";
 import type { SignedInUser } from "./auth";
 
@@ -123,13 +124,10 @@ export async function listShareLinks(deckId: string) {
     .innerJoin(deckVersions, eq(deckVersions.id, shareLinks.versionId))
     .where(eq(shareLinks.deckId, deckId))
     .orderBy(desc(shareLinks.createdAt));
-  const opens = await q.select({ linkId: viewSessions.linkId, n: count() }).from(viewSessions)
-    .innerJoin(shareLinks, eq(shareLinks.id, viewSessions.linkId))
-    .where(eq(shareLinks.deckId, deckId)).groupBy(viewSessions.linkId);
-  const openBy = new Map(opens.map((o) => [o.linkId, o.n]));
+  const opens = await opensByLink(rows.map((r) => r.id));
   return rows.map(({ hasPassword, slideCount, ...r }) => ({
     ...r, hasPassword: Boolean(hasPassword), slideCount,
-    status: linkStatus(r), opens: openBy.get(r.id) ?? 0,
+    status: linkStatus(r), opens: opens.get(r.id)?.opens ?? 0, lastOpened: opens.get(r.id)?.lastOpened ?? null,
   }));
 }
 

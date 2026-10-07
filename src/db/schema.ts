@@ -135,12 +135,17 @@ export const shareLinks = pgTable("share_links", {
   revokedAt: timestamp("revoked_at", { withTimezone: true }),
 });
 
-/** One open of a share link (a visit). Time per deck = lastSeenAt − startedAt. No IPs stored. */
+/**
+ * One open of a share link (a visit). Time per deck = sum of its slide_views (visible time only).
+ * `internal` = opened by someone signed in to Dekiru (a rep checking their own link); kept out of the counts.
+ * No IPs or viewer identities stored.
+ */
 export const viewSessions = pgTable(
   "view_sessions",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     linkId: uuid("link_id").notNull().references(() => shareLinks.id, { onDelete: "cascade" }),
+    internal: boolean("internal").notNull().default(false),
     startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
   },

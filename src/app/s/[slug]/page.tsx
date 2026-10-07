@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { hasDb } from "@/db/client";
 import { RenderSlide } from "@/deck/RenderSlide";
 import { getShareLink, isUnlocked, linkStatus, unlockCookieName } from "@/lib/share";
-import { Presenter } from "../../decks/[id]/present/Presenter";
+import { TrackedPresenter } from "./TrackedPresenter";
 import { PasswordForm } from "./PasswordForm";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -41,7 +41,13 @@ export default async function SharedDeck({ params }: Props) {
     );
   }
 
-  return <Presenter slides={link.slides.map((s) => <RenderSlide key={s.id} slide={s} />)} />;
+  return (
+    <TrackedPresenter
+      slug={slug}
+      slideIds={link.slides.map((s) => s.id)}
+      slides={link.slides.map((s) => <RenderSlide key={s.id} slide={s} />)}
+    />
+  );
 }
 
 function Gate({ title, children }: { title: string; children: React.ReactNode }) {

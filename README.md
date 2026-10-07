@@ -26,10 +26,7 @@ Google client redirect URIs: `http://localhost:3000/api/auth/callback/google` an
 
 Without these settings, sign-in is off: local development runs open; deployments on Vercel refuse every page.
 
-| Command | What |
-|---|---|
-| `npm run user:role` | List everyone who has signed in, with roles |
-| `npm run user:role -- name@coins.ph manager` | Change a role (`admin`, `manager`, `member`) |
+Admins change roles on the **People** page (`/people`). There's always at least one admin. From a terminal: `npm run user:role -- name@coins.ph manager`.
 
 Code: `src/lib/auth.ts` (server: config, `requireUser()` at the top of every private page), `src/proxy.ts` (fast redirect when there's no session cookie), `src/app/sign-in/`.
 
@@ -40,9 +37,10 @@ Deck page → **Share** (`/decks/<id>/share`). A link is a public URL (`/s/<slug
 - **Frozen.** The link stores a snapshot of the newest published version (shared slides resolved), so later edits — even to a shared Sales slide — never change a sent link. Make a new link to send an update.
 - **Password by default.** Generated (`abcd-efgh`, shown once to the creator) or set by hand; "no password" is allowed with a warning. Stored as a scrypt hash. Unlocking sets a cookie for that link only (7 days); revoking the link locks it again.
 - **Expiry** 7 / 30 (default) / 90 days or never. **Revoke** any time: the creator, admins and managers can.
-- The list shows who made each link, for whom, which version, and how many times it was opened (view tracking is the next step).
+- The list shows who made each link, for whom, which version, how many times it was opened and when last.
+- **Report per link** (click the name or the opens count): opens, total and average time viewed, last opened, time per slide with how many visits reached it, and each visit. Only time the tab is visible counts; visits by anyone signed in to Dekiru (reps checking their own link) are left out. No viewer identity or IP is stored.
 
-Code: `src/lib/share.ts`, `src/app/decks/[id]/share/`, `src/app/s/[slug]/`.
+Code: `src/lib/share.ts`, `src/lib/analytics.ts`, `src/app/decks/[id]/share/`, `src/app/s/[slug]/` (tracking beacon: `s/[slug]/track`).
 
 ## Database (Neon)
 
@@ -111,4 +109,4 @@ public/figma/          assets exported from Figma (+ ref/ screenshots for /compa
 
 ## Not built yet (later milestones)
 
-Role-based editing and approvals, view analytics (opens, time per slide), image uploads, the Claude connector (remote MCP) for generation, the block picker.
+Role-based editing and approvals, image uploads, the Claude connector (remote MCP) for generation, the block picker.

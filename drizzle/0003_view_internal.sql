@@ -1,0 +1,1 @@
+ALTER TABLE "view_sessions" ADD COLUMN "internal" boolean DEFAULT false NOT NULL;
