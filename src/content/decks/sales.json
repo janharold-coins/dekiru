@@ -807,7 +807,7 @@
      },
      {
       "title": "8 corridors",
-      "description": "PH live, 7 more \nrolling through 2026"
+      "description": "PH, TH, BR live,\nrest by Q3 2026"
      },
      {
       "title": "Built for enterprise",
@@ -1609,7 +1609,7 @@
     "eyebrow": "Products and Pricing",
     "title": "Corridor Readiness",
     "subtitle": "Where we are live. Where we are next.",
-    "body": "Asia Pacific, Middle East, Europe, and the Americas. Philippines is live today, with seven more corridors rolling through 2026, each plugged straight into the country's national payment rail.",
+    "body": "Fully live in the Philippines. Payouts already running in Thailand and Brazil. Every other corridor opens in Q3 2026, plugged straight into its national payment rail.",
     "cards": [
      {
       "country": "Philippines",
@@ -1816,7 +1816,7 @@
     "what": [
      "Firm rate on any supported pair.\n7, 10, or 20 second lock.",
      "Instant or deferred settlement. Manual or automatic.",
-     "Available via API or web.\nFull history on tap."
+     "Available via API or Coins Pro.\nFull history on tap."
     ],
     "keyApisLabel": "Key APIs",
     "keyApis": [
@@ -1917,7 +1917,7 @@
     "whatLabel": "What it is",
     "what": [
      "Spot exchange against the live\norder book. Major pairs.",
-     "API-first. Also available on the web.",
+     "API-first. Also available on Coins Pro.",
      "VIP fees by 30-day volume.\nTrade more, pay less."
     ],
     "keyApisLabel": null,
@@ -2084,7 +2084,7 @@
      {
       "number": "05",
       "title": "Built to scale with you",
-      "body": "Philippines live today.\n7 more corridors rolling through 2026. As your business grows into new markets, we're already there or on the way."
+      "body": "Live in the Philippines, Thailand, and Brazil.\nThe rest open in Q3 2026. As your business grows into new markets, we're already there or on the way."
      }
     ],
     "decoration": "coins"

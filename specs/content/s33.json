@@ -17,7 +17,7 @@
  "what": [
   "Firm rate on any supported pair.\n7, 10, or 20 second lock.",
   "Instant or deferred settlement. Manual or automatic.",
-  "Available via API or web.\nFull history on tap."
+  "Available via API or Coins Pro.\nFull history on tap."
  ],
  "keyApis": [
   "Apply for OTC Access,\nRequest for quote.",

@@ -44,7 +44,7 @@ export default function LibraryPage() {
                   <Link href={`/decks/${u.deck.id}`} className="frame" style={{ display: "block" }}>
                     <ScaledSlide><RenderSlide slide={u.slide} /></ScaledSlide>
                   </Link>
-                  <figcaption>{u.deck.id} · slide {u.index + 1}{u.slide.hidden ? " · hidden" : ""}</figcaption>
+                  <figcaption>{u.deck.id} · {u.slide.hidden ? "hidden" : `slide ${u.deck.slides.slice(0, u.index).filter((x) => !x.hidden).length + 1}`} · fig {u.slide.source?.slide ?? u.index + 1}</figcaption>
                 </figure>
               ))}
             </div>

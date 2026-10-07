@@ -38,8 +38,9 @@ export default async function DeckPage({ params }: { params: Promise<{ id: strin
                 </ScaledSlide>
               </Link>
               <div className="meta">
-                <b>{String(i + 1).padStart(2, "0")}</b>
+                <b>{s.hidden ? "—" : String(presentIndex).padStart(2, "0")}</b>
                 <span>{patterns[s.pattern]?.meta.name ?? s.pattern}</span>
+                <span className="mono" title="Position in the Figma file">fig {s.source?.slide ?? i + 1}</span>
                 <span className="spacer" style={{ flex: 1 }} />
                 {s.hidden && <span className="tag">Hidden</span>}
                 {warnings.length > 0 && <span className="tag warn">{warnings.length} overflow</span>}

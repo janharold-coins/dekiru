@@ -22,7 +22,8 @@ export default async function ComparePage({ params }: { params: Promise<{ id: st
       {deck.slides.map((s, i) => (
         <div key={s.id} className="compare">
           <div className="slidehead">
-            <span>{String(i + 1).padStart(2, "0")}</span>
+            <span>{s.hidden ? "—" : String(deck.slides.slice(0, i).filter((x) => !x.hidden).length + 1).padStart(2, "0")}</span>
+            <span className="mono">fig {s.source?.slide ?? i + 1}</span>
             <span className="tag">{patterns[s.pattern]?.meta.name ?? s.pattern}</span>
             {s.hidden && <span className="tag">Hidden</span>}
             <span className="mono">figma {s.source?.figmaNode}{s.source?.visualNode ? ` · visual ${s.source.visualNode}` : ""}</span>
