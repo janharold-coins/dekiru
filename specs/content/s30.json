@@ -1,29 +1,187 @@
 {
-  "slide": 30,
-  "node": "511:30387",
-  "pattern": "card-grid",
-  "texts": {
-    "sectionLabel": "Products and Pricing",
-    "title": "Corridor Readiness",
-    "subtitle": "Where we are live. Where we are next.",
-    "body": "Asia Pacific, Middle East, Europe, and the Americas. Philippines is live today, with seven more corridors rolling through 2026, each plugged straight into the country's national payment rail."
+ "slide": 30,
+ "node": "511:30387",
+ "pattern": "card-grid",
+ "texts": {
+  "sectionLabel": "Products and Pricing",
+  "title": "Corridor Readiness",
+  "subtitle": "Where we are live. Where we are next.",
+  "body": "Asia Pacific, Middle East, Europe, and the Americas. Philippines is live today, with seven more corridors rolling through 2026, each plugged straight into the country's national payment rail."
+ },
+ "items": [
+  {
+   "country": "Philippines",
+   "flag": "/figma/s30/flag-ph.png",
+   "rail": "InstaPay / PESONet",
+   "speed": "Real-time / Batch",
+   "statuses": [
+    {
+     "label": "Collections",
+     "status": "ACTIVE",
+     "variant": "active"
+    },
+    {
+     "label": "Disbursements",
+     "status": "ACTIVE",
+     "variant": "active"
+    }
+   ]
   },
-  "items": [
-    { "country": "Philippines", "flag": "/figma/s30/flag-ph.png", "rail": "InstaPay / PESONet", "speed": "Real-time / Batch", "statuses": [ { "label": "Collections", "status": "LIVE", "variant": "live" }, { "label": "Disbursements", "status": "LIVE", "variant": "live" } ] },
-    { "country": "Thailand", "flag": "/figma/s30/flag-th.png", "rail": "PromptPay", "speed": "Real-time", "statuses": [ { "label": "Collections", "status": "2026Q3", "variant": "q3" }, { "label": "Disbursements", "status": "2026Q2", "variant": "q2" } ] },
-    { "country": "Singapore", "flag": "/figma/s30/flag-sg.png", "rail": "FAST", "speed": "Real-time", "statuses": [ { "label": "Collections", "status": "2026Q2", "variant": "q2" }, { "label": "Disbursements", "status": "2026Q2", "variant": "q2" } ] },
-    { "country": "Hong Kong", "flag": "/figma/s30/flag-hk.png", "rail": "FPS", "speed": "Real-time", "statuses": [ { "label": "Collections", "status": "2026Q3", "variant": "q3" }, { "label": "Disbursements", "status": "2026Q3", "variant": "q3" } ] },
-    { "country": "UAE", "flag": "/figma/s30/flag-ae.png", "rail": "IPI / UAEFTS", "speed": "Real-time / Banking hours", "statuses": [ { "label": "Collections", "status": "2026Q2", "variant": "q2" }, { "label": "Disbursements", "status": "2026Q2", "variant": "q2" } ] },
-    { "country": "Europe", "flag": "/figma/s30/flag-eu.png", "rail": "SEPA Instant / Standard SEPA", "speed": "Real-time / Batch", "statuses": [ { "label": "Collections", "status": "2026Q2", "variant": "q2" }, { "label": "Disbursements", "status": "2026Q2", "variant": "q2" } ] },
-    { "country": "Brazil", "flag": "/figma/s30/flag-br.png", "rail": "PIX", "speed": "Real-time", "statuses": [ { "label": "Collections", "status": "2026Q2", "variant": "q2" }, { "label": "Disbursements", "status": "2026Q2", "variant": "q2" } ] },
-    { "country": "Australia", "flag": "/figma/s30/flag-au.png", "rail": "NPP (PayID)", "speed": "Real-time ", "statuses": [ { "label": "Collections", "status": "2026Q3", "variant": "q3" }, { "label": "Disbursements", "status": "2026Q3", "variant": "q3" } ] }
-  ],
-  "statusVariants": {
-    "live": { "bg": "#f61414", "text": "#ffffff" },
-    "q2": { "bg": "#f77b15", "text": "#ffffff" },
-    "q3": { "bg": "#1449f6", "text": "#ffffff" }
+  {
+   "country": "Thailand",
+   "flag": "/figma/s30/flag-th.png",
+   "rail": "PromptPay",
+   "speed": "Real-time",
+   "statuses": [
+    {
+     "label": "Collections",
+     "status": "2026Q3",
+     "variant": "q3"
+    },
+    {
+     "label": "Disbursements",
+     "status": "ACTIVE",
+     "variant": "active"
+    }
+   ]
   },
-  "assets": {
-    "flags": ["/figma/s30/flag-ph.png", "/figma/s30/flag-th.png", "/figma/s30/flag-sg.png", "/figma/s30/flag-hk.png", "/figma/s30/flag-ae.png", "/figma/s30/flag-eu.png", "/figma/s30/flag-br.png", "/figma/s30/flag-au.png"]
+  {
+   "country": "Singapore",
+   "flag": "/figma/s30/flag-sg.png",
+   "rail": "FAST",
+   "speed": "Real-time",
+   "statuses": [
+    {
+     "label": "Collections",
+     "status": "2026Q3",
+     "variant": "q3"
+    },
+    {
+     "label": "Disbursements",
+     "status": "2026Q3",
+     "variant": "q3"
+    }
+   ]
+  },
+  {
+   "country": "Hong Kong",
+   "flag": "/figma/s30/flag-hk.png",
+   "rail": "FPS",
+   "speed": "Real-time",
+   "statuses": [
+    {
+     "label": "Collections",
+     "status": "2026Q3",
+     "variant": "q3"
+    },
+    {
+     "label": "Disbursements",
+     "status": "2026Q3",
+     "variant": "q3"
+    }
+   ]
+  },
+  {
+   "country": "UAE",
+   "flag": "/figma/s30/flag-ae.png",
+   "rail": "IPI / UAEFTS",
+   "speed": "Real-time / Banking hours",
+   "statuses": [
+    {
+     "label": "Collections",
+     "status": "2026Q3",
+     "variant": "q3"
+    },
+    {
+     "label": "Disbursements",
+     "status": "2026Q3",
+     "variant": "q3"
+    }
+   ]
+  },
+  {
+   "country": "Europe",
+   "flag": "/figma/s30/flag-eu.png",
+   "rail": "SEPA Instant / Standard SEPA",
+   "speed": "Real-time / Batch",
+   "statuses": [
+    {
+     "label": "Collections",
+     "status": "2026Q3",
+     "variant": "q3"
+    },
+    {
+     "label": "Disbursements",
+     "status": "2026Q3",
+     "variant": "q3"
+    }
+   ]
+  },
+  {
+   "country": "Brazil",
+   "flag": "/figma/s30/flag-br.png",
+   "rail": "PIX",
+   "speed": "Real-time",
+   "statuses": [
+    {
+     "label": "Collections",
+     "status": "2026Q3",
+     "variant": "q3"
+    },
+    {
+     "label": "Disbursements",
+     "status": "ACTIVE",
+     "variant": "active"
+    }
+   ]
+  },
+  {
+   "country": "Australia",
+   "flag": "/figma/s30/flag-au.png",
+   "rail": "NPP (PayID)",
+   "speed": "Real-time ",
+   "statuses": [
+    {
+     "label": "Collections",
+     "status": "2026Q3",
+     "variant": "q3"
+    },
+    {
+     "label": "Disbursements",
+     "status": "2026Q3",
+     "variant": "q3"
+    }
+   ]
   }
+ ],
+ "statusVariants": {
+  "live": {
+   "bg": "#f61414",
+   "text": "#ffffff"
+  },
+  "q2": {
+   "bg": "#f77b15",
+   "text": "#ffffff"
+  },
+  "q3": {
+   "bg": "#1449f6",
+   "text": "#ffffff"
+  }
+ },
+ "assets": {
+  "flags": [
+   "/figma/s30/flag-ph.png",
+   "/figma/s30/flag-th.png",
+   "/figma/s30/flag-sg.png",
+   "/figma/s30/flag-hk.png",
+   "/figma/s30/flag-ae.png",
+   "/figma/s30/flag-eu.png",
+   "/figma/s30/flag-br.png",
+   "/figma/s30/flag-au.png"
+  ]
+ },
+ "visualSource": {
+  "node": "854:22226",
+  "note": "Statuses taken from the twin frame (ACTIVE chips), per Jan 2026-10-07"
+ }
 }

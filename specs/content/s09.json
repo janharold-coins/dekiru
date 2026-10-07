@@ -1,85 +1,81 @@
 {
-  "slide": 9,
-  "node": "511:29454",
-  "pattern": "product-index",
-  "texts": {
-    "title": "Pay. Move. Trade",
-    "subtitle": "Eight products. Three pillars. Pick what fits your business. We plug in the rest.",
-    "footer": "Strictly Private And Confidential"
-  },
-  "items": {
-    "titleRuns": [
-      {
-        "text": "Pay. ",
-        "color": "#204680"
-      },
-      {
-        "text": "Move. ",
-        "color": "#1f7aff"
-      },
-      {
-        "text": "Trade",
-        "color": "#fa7312"
-      }
-    ],
-    "pillars": [
-      {
-        "number": "01",
-        "title": "Accept  /  Payments",
-        "color": "#204680",
-        "products": [
-          {
-            "name": "QRPh and WebPay",
-            "description": "Accept payments, online and in store"
-          },
-          {
-            "name": "Virtual Accounts",
-            "description": "Accept fiat and crypto, sorted by sellert"
-          },
-          {
-            "name": "Scan and Pay",
-            "description": "Send white-labelled QRPh payments"
-          },
-          {
-            "name": "Business Portal",
-            "description": "The control center for your money"
-          },
-          {
-            "name": "Disbursement",
-            "description": "Pay anyone, anywhere, right now"
-          }
-        ]
-      },
-      {
-        "number": "02",
-        "title": "Move  /  Cross Border",
-        "color": "#1f7aff",
-        "products": [
-          {
-            "name": "Multi-Currency",
-            "description": "Any currency. One wallet. Zero friction"
-          }
-        ]
-      },
-      {
-        "number": "03",
-        "title": "Trade  /  Institutional Crypto",
-        "color": "#fa7312",
-        "products": [
-          {
-            "name": "OTC RFQ",
-            "description": "Lock your price before you trade"
-          },
-          {
-            "name": "Order Book",
-            "description": "Live spot trading at tight spreads"
-          }
-        ]
-      }
+ "slide": 9,
+ "node": "511:29454",
+ "pattern": "product-index",
+ "texts": {
+  "title": "Pay. Move. Trade",
+  "subtitle": "Seven products. Three pillars. Pick what fits your business. We plug in the rest.",
+  "footer": "Strictly Private And Confidential"
+ },
+ "items": {
+  "titleRuns": [
+   {
+    "text": "Pay. ",
+    "color": "#204680"
+   },
+   {
+    "text": "Move. ",
+    "color": "#1f7aff"
+   },
+   {
+    "text": "Trade",
+    "color": "#fa7312"
+   }
+  ],
+  "pillars": [
+   {
+    "number": "01",
+    "title": "Accept  /  Payments",
+    "color": "#204680",
+    "products": [
+     {
+      "name": "QRPh and WebPay",
+      "description": "Accept payments, online and in store"
+     },
+     {
+      "name": "Virtual Accounts",
+      "description": "Accept fiat and crypto, sorted by sellert"
+     },
+     {
+      "name": "Scan and Pay",
+      "description": "Send white-labelled QRPh payments"
+     },
+     {
+      "name": "Disbursement",
+      "description": "Pay anyone, anywhere, right now"
+     }
     ]
-  },
-  "assets": {
-    "logo": "/figma/shared/logo-dark.svg",
-    "accentBar": "/figma/shared/accent-bar.svg"
-  }
+   },
+   {
+    "number": "02",
+    "title": "Move  /  Cross Border",
+    "color": "#1f7aff",
+    "products": [
+     {
+      "name": "Multi-Currency",
+      "description": "Any currency. One wallet. Zero friction"
+     }
+    ]
+   },
+   {
+    "number": "03",
+    "title": "Trade  /  Institutional Crypto",
+    "color": "#fa7312",
+    "products": [
+     {
+      "name": "OTC RFQ",
+      "description": "Lock your price before you trade"
+     },
+     {
+      "name": "Order Book",
+      "description": "Live spot trading at tight spreads"
+     }
+    ]
+   }
+  ]
+ },
+ "assets": {
+  "logo": "/figma/shared/logo-dark.svg",
+  "accentBar": "/figma/shared/accent-bar.svg"
+ }
 }

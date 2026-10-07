@@ -14,15 +14,19 @@ export const productIndexMeta: PatternMeta = {
   budgets: [{ slot: "pillars", maxItems: 3 }, { slot: "products (total)", maxItems: 9 }, { slot: "product.description", maxChars: 42 }],
 };
 
-/** Pillar blocks flow top-down from y 182; header 46 + 30 gap, rows on a 57.6 pitch, ~72 between pillars. */
+/** Pillars stack top-down. The original 5/1/2 split keeps its exact Figma positions; any other split is centred with 48px between pillars. */
 export function ProductIndex({ titleRuns, subtitle, pillars }: ProductIndexProps) {
   const FIGMA_TOPS = [182, 596, 778];
   const useFigma = pillars.length === 3 && pillars.map((p) => p.products.length).join() === "5,1,2";
-  const tops = pillars.reduce<number[]>((acc, p, i) => {
-    if (useFigma) return [...acc, FIGMA_TOPS[i]];
-    const prev = pillars[i - 1];
-    return [...acc, i === 0 ? 182 : acc[i - 1] + 76 + prev.products.length * 57.6 - 24 + 74];
-  }, []);
+  // Pillar height: header 46 + 30 gap + rows on a 57.6 pitch (33.6 row + 24 gap).
+  const heights = pillars.map((p) => 76 + p.products.length * 57.6 - 24);
+  const GAP = 48;
+  const total = heights.reduce((a, h) => a + h, 0) + GAP * (pillars.length - 1);
+  const start = 540 - total / 2; // centred on the slide, like Figma's 7-product frame (797:33192)
+  const tops = useFigma
+    ? FIGMA_TOPS
+    : heights.map((_, i) => start + heights.slice(0, i).reduce((a, h) => a + h, 0) + GAP * i);
+
   return (
     <>
       <h1 style={{ position: "absolute", left: 79, top: 440, margin: 0, ...t(72, 1.15, -2.16, 600), ...noWrap }}>

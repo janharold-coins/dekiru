@@ -1,7 +1,7 @@
 import { t, noWrap } from "../tokens";
 import type { PatternMeta } from "../types";
 
-export interface StatusRow { label: string; status: string; variant: "live" | "q2" | "q3" | string }
+export interface StatusRow { label: string; status: string; variant: "active" | "live" | "q2" | "q3" | string }
 export interface CountryCardData { country: string; flag: string; rail: string; speed: string; statuses: StatusRow[] }
 export interface CardGridProps { eyebrow?: string; title: string; subtitle: string; body: string; cards: CountryCardData[] }
 
@@ -12,7 +12,7 @@ export const cardGridMeta: PatternMeta = {
   budgets: [{ slot: "cards", maxItems: 8 }, { slot: "body", maxChars: 220, maxLines: 6 }],
 };
 
-const CHIP: Record<string, string> = { live: "#f61414", q2: "#f77b15", q3: "#1449f6" };
+const CHIP: Record<string, string> = { active: "#009a27", live: "#f61414", q2: "#f77b15", q3: "#1449f6" };
 
 export function CardGrid({ eyebrow, title, subtitle, body, cards }: CardGridProps) {
   return (

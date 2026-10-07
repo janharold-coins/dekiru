@@ -881,7 +881,7 @@
       "color": "#fa7312"
      }
     ],
-    "subtitle": "Eight products. Three pillars. Pick what fits your business. We plug in the rest.",
+    "subtitle": "Seven products. Three pillars. Pick what fits your business. We plug in the rest.",
     "pillars": [
      {
       "number": "01",
@@ -899,10 +899,6 @@
        {
         "name": "Scan and Pay",
         "description": "Send white-labelled QRPh payments"
-       },
-       {
-        "name": "Business Portal",
-        "description": "The control center for your money"
        },
        {
         "name": "Disbursement",
@@ -1623,13 +1619,13 @@
       "statuses": [
        {
         "label": "Collections",
-        "status": "LIVE",
-        "variant": "live"
+        "status": "ACTIVE",
+        "variant": "active"
        },
        {
         "label": "Disbursements",
-        "status": "LIVE",
-        "variant": "live"
+        "status": "ACTIVE",
+        "variant": "active"
        }
       ]
      },
@@ -1646,8 +1642,8 @@
        },
        {
         "label": "Disbursements",
-        "status": "2026Q2",
-        "variant": "q2"
+        "status": "ACTIVE",
+        "variant": "active"
        }
       ]
      },
@@ -1659,13 +1655,13 @@
       "statuses": [
        {
         "label": "Collections",
-        "status": "2026Q2",
-        "variant": "q2"
+        "status": "2026Q3",
+        "variant": "q3"
        },
        {
         "label": "Disbursements",
-        "status": "2026Q2",
-        "variant": "q2"
+        "status": "2026Q3",
+        "variant": "q3"
        }
       ]
      },
@@ -1695,13 +1691,13 @@
       "statuses": [
        {
         "label": "Collections",
-        "status": "2026Q2",
-        "variant": "q2"
+        "status": "2026Q3",
+        "variant": "q3"
        },
        {
         "label": "Disbursements",
-        "status": "2026Q2",
-        "variant": "q2"
+        "status": "2026Q3",
+        "variant": "q3"
        }
       ]
      },
@@ -1713,13 +1709,13 @@
       "statuses": [
        {
         "label": "Collections",
-        "status": "2026Q2",
-        "variant": "q2"
+        "status": "2026Q3",
+        "variant": "q3"
        },
        {
         "label": "Disbursements",
-        "status": "2026Q2",
-        "variant": "q2"
+        "status": "2026Q3",
+        "variant": "q3"
        }
       ]
      },
@@ -1731,13 +1727,13 @@
       "statuses": [
        {
         "label": "Collections",
-        "status": "2026Q2",
-        "variant": "q2"
+        "status": "2026Q3",
+        "variant": "q3"
        },
        {
         "label": "Disbursements",
-        "status": "2026Q2",
-        "variant": "q2"
+        "status": "ACTIVE",
+        "variant": "active"
        }
       ]
      },
@@ -1763,7 +1759,8 @@
    },
    "source": {
     "figmaNode": "511:30387",
-    "slide": 30
+    "slide": 30,
+    "visualNode": "854:22226"
    }
   },
   {
