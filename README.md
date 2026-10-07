@@ -13,14 +13,34 @@ npm run dev        # http://localhost:3000
 
 Without a database the app reads the master decks straight from `src/content/decks/*.json`.
 
+## Sign-in (Google)
+
+Every page needs a @coins.ph Google sign-in. The **first person to sign in becomes admin**; everyone after is a member.
+
+| Variable | Where it comes from |
+|---|---|
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google Cloud Console → project "Dekiru" → Google Auth Platform → Clients → "Dekiru web" (audience: Internal) |
+| `BETTER_AUTH_SECRET` | `openssl rand -base64 32` — same value on Vercel and locally |
+
+Google client redirect URIs: `http://localhost:3000/api/auth/callback/google` and `https://<production domain>/api/auth/callback/google`. Preview deployments can't sign in (Google needs exact URLs).
+
+Without these settings, sign-in is off: local development runs open; deployments on Vercel refuse every page.
+
+| Command | What |
+|---|---|
+| `npm run user:role` | List everyone who has signed in, with roles |
+| `npm run user:role -- name@coins.ph manager` | Change a role (`admin`, `manager`, `member`) |
+
+Code: `src/lib/auth.ts` (server: config, `requireUser()` at the top of every private page), `src/proxy.ts` (fast redirect when there's no session cookie), `src/app/sign-in/`.
+
 ## Database (Neon)
 
 Decks, versions (draft / published), share links and view analytics live in Postgres on Neon. Schema: `src/db/schema.ts`; all reads and writes go through `src/lib/decks.ts`.
 
 One-time setup:
 
-1. Vercel → the dekiru project → **Storage** → **Create** → **Neon** → connect it to the project. This sets `DATABASE_URL` for every environment.
-2. Locally: `npx vercel link` then `npx vercel env pull .env.local`.
+1. Vercel → the dekiru project → **Storage** → **Create** → **Neon** → connect it to the project. This sets `DATABASE_URL` for Production and Preview.
+2. Locally: Vercel → Storage → the Neon database → Quickstart → **.env.local** tab → **Copy Snippet**, paste into `.env.local`. (The integration doesn't offer Development, so `vercel env pull` won't bring it — and running `vercel env pull` later overwrites `.env.local`.)
 3. `npm run db:migrate` — creates the tables.
 4. `npm run db:seed` — loads the Sales and Ramp masters as v1 (published).
 
@@ -81,4 +101,4 @@ public/figma/          assets exported from Figma (+ ref/ screenshots for /compa
 
 ## Not built yet (later milestones)
 
-Google sign-in + roles, publish/share links with passwords, view analytics (tables exist), the Claude connector (remote MCP) for generation, the block picker.
+Role-based editing and approvals, publish/share links with passwords, view analytics (tables exist), the Claude connector (remote MCP) for generation, the block picker.

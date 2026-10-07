@@ -2,7 +2,8 @@
  * Dekiru database (Postgres on Neon).
  *
  *   users ─┬─ decks ── deck_versions (draft | published, slides as JSON)
- *          └─ share_links → one frozen published version ── view_sessions ── slide_views
+ *          ├─ share_links → one frozen published version ── view_sessions ── slide_views
+ *          └─ sessions, accounts (Google sign-in, managed by Better Auth) + verifications
  *
  * A deck's content lives in its versions. Each deck has at most one draft (where edits land)
  * and any number of published versions; the newest published one is what people see.
@@ -11,7 +12,7 @@
  */
 import { sql } from "drizzle-orm";
 import {
-  index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid,
+  boolean, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid,
 } from "drizzle-orm/pg-core";
 import type { SeedSlide } from "@/content/resolve";
 
@@ -21,15 +22,60 @@ export const versionStatus = pgEnum("version_status", ["draft", "published"]);
 
 const created = () => timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
 
-/** Filled on first Google sign-in. Admins and managers edit masters and approve; members copy and submit. */
+const updated = () => timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date());
+
+/**
+ * Filled on first Google sign-in (coins.ph accounts only). The first person to sign in becomes admin.
+ * Admins and managers edit masters and approve; members copy and submit.
+ * Column set follows Better Auth's user model (src/lib/auth.ts), plus `role`.
+ */
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   email: text("email").notNull().unique(),
-  name: text("name"),
+  emailVerified: boolean("email_verified").notNull().default(false),
+  name: text("name").notNull().default(""),
   image: text("image"),
   role: role("role").notNull().default("member"),
   createdAt: created(),
+  updatedAt: updated(),
 });
+
+/* Sign-in plumbing, read and written only by Better Auth. */
+export const sessions = pgTable("sessions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: created(),
+  updatedAt: updated(),
+}, (t) => [index("sessions_user").on(t.userId)]);
+
+export const accounts = pgTable("accounts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  accountId: text("account_id").notNull(),
+  providerId: text("provider_id").notNull(),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  idToken: text("id_token"),
+  accessTokenExpiresAt: timestamp("access_token_expires_at", { withTimezone: true }),
+  refreshTokenExpiresAt: timestamp("refresh_token_expires_at", { withTimezone: true }),
+  scope: text("scope"),
+  password: text("password"),
+  createdAt: created(),
+  updatedAt: updated(),
+}, (t) => [index("accounts_user").on(t.userId)]);
+
+export const verifications = pgTable("verifications", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  createdAt: created(),
+  updatedAt: updated(),
+}, (t) => [index("verifications_identifier").on(t.identifier)]);
 
 /** Master decks (company-wide) and personal copies. Slug ids keep URLs readable: /decks/sales. */
 export const decks = pgTable("decks", {
@@ -41,7 +87,7 @@ export const decks = pgTable("decks", {
   copiedFromVersionId: uuid("copied_from_version_id"),
   archivedAt: timestamp("archived_at", { withTimezone: true }),
   createdAt: created(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: updated(),
 });
 
 export const deckVersions = pgTable(

@@ -4,8 +4,13 @@ import * as schema from "./schema";
 
 export type Db = NodePgDatabase<typeof schema>;
 
-/** Neon's Vercel integration sets DATABASE_URL (and POSTGRES_URL as an alias). */
-export const databaseUrl = () => process.env.DATABASE_URL || process.env.POSTGRES_URL || "";
+/**
+ * Neon's Vercel integration sets DATABASE_URL (and POSTGRES_URL as an alias).
+ * Its `sslmode=require` is spelled out as `verify-full` (what the pg driver already does today),
+ * which keeps full certificate checks and silences pg's upcoming-change warning.
+ */
+export const databaseUrl = () =>
+  (process.env.DATABASE_URL || process.env.POSTGRES_URL || "").replace(/sslmode=(require|prefer|verify-ca)\b/, "sslmode=verify-full");
 
 export const MISSING_DB_HELP =
   "No DATABASE_URL found. In Vercel: Storage → your Neon database → Connected Projects → make sure the dekiru project " +

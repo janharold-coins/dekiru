@@ -6,15 +6,17 @@ import { PreviewChecks } from "@/deck/frame/PreviewChecks";
 import { checkOverflow } from "@/deck/overflow";
 import { patterns } from "@/deck/registry";
 import { getDeck } from "@/lib/decks";
+import { requireUser } from "@/lib/auth";
 import { Nav } from "../../Nav";
 
 export default async function DeckPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const user = await requireUser(`/decks/${id}`);
   const deck = await getDeck(id);
   if (!deck) notFound();
   return (
     <main className="shell">
-      <Nav on="decks" />
+      <Nav on="decks" user={user} />
       <div className="row" style={{ marginBottom: 8 }}>
         <h1 className="page" style={{ margin: 0 }}>{deck.title}</h1>
         <span className="spacer" style={{ flex: 1 }} />

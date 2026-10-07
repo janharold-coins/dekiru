@@ -3,13 +3,15 @@ import { RenderSlide } from "@/deck/RenderSlide";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
 import { patterns } from "@/deck/registry";
 import { listDecks } from "@/lib/decks";
+import { requireUser } from "@/lib/auth";
 import { Nav } from "./Nav";
 
 export default async function Home() {
+  const user = await requireUser("/");
   const decks = await listDecks();
   return (
     <main className="shell">
-      <Nav />
+      <Nav user={user} />
       <h1 className="page">Decks</h1>
       <p className="lede">Master decks built from the pattern library. Open one to review it slide by slide, present it, or compare it with the Figma original.</p>
       <div className="grid">

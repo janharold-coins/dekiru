@@ -3,13 +3,15 @@ import { RenderSlide } from "@/deck/RenderSlide";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
 import { patternOrder, patterns } from "@/deck/registry";
 import { listDecks } from "@/lib/decks";
+import { requireUser } from "@/lib/auth";
 import { Nav } from "../Nav";
 
 export default async function LibraryPage() {
+  const user = await requireUser("/library");
   const all = (await listDecks()).flatMap((d) => d.slides.map((s, i) => ({ deck: d, slide: s, index: i })).filter((u) => !u.slide.ref));
   return (
     <main className="shell">
-      <Nav on="library" />
+      <Nav on="library" user={user} />
       <h1 className="page">Pattern library</h1>
       <p className="lede">
         {patternOrder.length} patterns. A pattern is a layout that takes any content; blocks (approved content) and decks are built from them.
