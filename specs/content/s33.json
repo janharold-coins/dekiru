@@ -1,33 +1,33 @@
 {
-  "slide": 33,
-  "node": "511:30672",
-  "pattern": "product-detail",
-  "product": "otc-rfq",
-  "texts": {
-    "eyebrow": "Products and Pricing",
-    "title": "OTC RFQ",
-    "tagline": "Lock your price before you trade.\nNo surprises.",
-    "description": "Moving large amounts? Get a guaranteed rate upfront. What you see is exactly what you get.",
-    "whoLabel": "Who is it for",
-    "who": "Treasuries, funds, and institutional desks trading at scale who need price certainty before committing.",
-    "whatLabel": "What it is",
-    "keyApisLabel": "Key APIs",
-    "pricingLabel": "PRICING"
-  },
-  "what": [
-    "Firm rate on any supported pair.\n7, 10, or 20 second lock.",
-    "Instant or deferred settlement. Manual or automatic.",
-    "Accessed via Business Portal.\nFull history on tap."
-  ],
-  "keyApis": [
-    "Apply for OTC Access,\nRequest for quote.",
-    "Submit order, manual settle.",
-    "Order query: pending,\nsettled, failed."
-  ],
-  "pricing": {
-    "kind": "text",
-    "chips": [],
-    "text": "No hidden fees. Fixed spread only.",
-    "subtext": null
-  }
+ "slide": 33,
+ "node": "511:30672",
+ "pattern": "product-detail",
+ "product": "otc-rfq",
+ "texts": {
+  "eyebrow": "Products and Pricing",
+  "title": "OTC RFQ",
+  "tagline": "Lock your price before you trade.\nNo surprises.",
+  "description": "Moving large amounts? Get a guaranteed rate upfront. What you see is exactly what you get.",
+  "whoLabel": "Who is it for",
+  "who": "Treasuries, funds, and institutional desks trading at scale who need price certainty before committing.",
+  "whatLabel": "What it is",
+  "keyApisLabel": "Key APIs",
+  "pricingLabel": "PRICING"
+ },
+ "what": [
+  "Firm rate on any supported pair.\n7, 10, or 20 second lock.",
+  "Instant or deferred settlement. Manual or automatic.",
+  "Available via API or web.\nFull history on tap."
+ ],
+ "keyApis": [
+  "Apply for OTC Access,\nRequest for quote.",
+  "Submit order, manual settle.",
+  "Order query: pending,\nsettled, failed."
+ ],
+ "pricing": {
+  "kind": "text",
+  "chips": [],
+  "text": "No hidden fees. Fixed spread only.",
+  "subtext": null
+ }
 }

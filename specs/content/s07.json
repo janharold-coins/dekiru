@@ -1,30 +1,30 @@
 {
-  "slide": 7,
-  "node": "511:29425",
-  "pattern": "statement-highlights",
-  "texts": {
-    "title": "We're building the infrastructure \nto reach you, wherever you do business.",
-    "body": "Coins.ph started in the Philippines and is expanding across multiple corridors in Asia Pacific, Europe, the Americas, the Middle East. Licensed in every corridor we serve, so your expansion doesn't wait on regulators. Largest digital asset exchange in the Philippines. The country's most established crypto and payments company. Pay, move, trade, all through one regulated stack.",
-    "footer": "Strictly Private And Confidential"
-  },
-  "items": {
-    "highlights": [
-      {
-        "title": "Stablecoin-native",
-        "description": "Official Circle \nand Tether partner"
-      },
-      {
-        "title": "8 corridors",
-        "description": "PH live, 7 more \nrolling through 2026"
-      },
-      {
-        "title": "Built for enterprise",
-        "description": "Payments, trading, and treasury in one stack"
-      }
-    ]
-  },
-  "assets": {
-    "logo": "/figma/shared/logo-dark.svg",
-    "accentBar": "/figma/shared/accent-bar.svg"
-  }
+ "slide": 7,
+ "node": "511:29425",
+ "pattern": "statement-highlights",
+ "texts": {
+  "title": "We're building the infrastructure \nto reach you, wherever you do business.",
+  "body": "Coins.ph started in the Philippines and is expanding across multiple corridors in Asia Pacific, Europe, the Americas, and the Middle East. Licensed in every corridor we serve, so your expansion doesn't wait on regulators. Largest digital asset exchange in the Philippines. The country's most established crypto and payments company. Pay, move, trade, all through one regulated stack.",
+  "footer": "Strictly Private And Confidential"
+ },
+ "items": {
+  "highlights": [
+   {
+    "title": "Stablecoin-native",
+    "description": "Official Circle \nand Tether partner"
+   },
+   {
+    "title": "8 corridors",
+    "description": "PH live, 7 more \nrolling through 2026"
+   },
+   {
+    "title": "Built for enterprise",
+    "description": "Payments, trading, and treasury in one stack"
+   }
+  ]
+ },
+ "assets": {
+  "logo": "/figma/shared/logo-dark.svg",
+  "accentBar": "/figma/shared/accent-bar.svg"
+ }
 }

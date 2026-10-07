@@ -1,24 +1,99 @@
 {
-  "slide": 38,
-  "node": "511:31619",
-  "pattern": "feature-cards",
-  "texts": {
-    "title": "Why Businesses chooses Coins."
+ "slide": 38,
+ "node": "511:31619",
+ "pattern": "feature-cards",
+ "texts": {
+  "title": "Why businesses choose Coins."
+ },
+ "items": [
+  {
+   "number": "01",
+   "title": "Regulated everywhere \nyou operate",
+   "titleLinesNote": "two paragraphs; first wraps → renders 3 lines",
+   "body": "Licensed in every corridor we serve. The regulatory work is done before you get there, so compliance is never your problem.",
+   "x": 114,
+   "y": 331
   },
-  "items": [
-    { "number": "01", "title": "Regulated everywhere \nyou operate", "titleLinesNote": "two paragraphs; first wraps → renders 3 lines", "body": "Licensed in every corridor we serve. The regulatory work is done before you get there, so compliance is never your problem.", "x": 114, "y": 331 },
-    { "number": "02", "title": "Stablecoin settlement live", "titlePadLine": true, "body": "Official Circle and Tether partner. Exclusive issuer of PHPC. Stablecoin settlement wired directly into local payment rails in every corridor.", "x": 462, "y": 391 },
-    { "number": "03", "title": "Multi-currency reach", "titlePadLine": true, "body": "Accept in one currency, pay out in another. \nFiat or stablecoin. \nOne integration covers every corridor we serve, and we keep adding more.", "x": 810, "y": 331 },
-    { "number": "04", "title": "One API. \nEvery product.", "titlePadLine": true, "body": "Payments, disbursements, trading, and virtual accounts through a single API. One partner, one contract, one dashboard for everything.", "x": 1158, "y": 391 },
-    { "number": "05", "title": "Built to scale with you", "titlePadLine": true, "body": "Philippines live today. \n7 more corridors rolling through 2026. As your business grows into new markets, we're already there or on the way.", "x": 1506, "y": 331 }
-  ],
-  "assets": {
-    "coins": [
-      { "layer": "THB_3", "glyph": "C (PHPC-style coin)", "file": "/figma/s38/coin-thb-3.png", "x": 436, "y": 776, "size": 357, "z": "behind cards" },
-      { "layer": "PHP_4", "glyph": "₱", "file": "/figma/s38/coin-php-4.png", "x": 1308, "y": 192, "size": 293, "z": "behind cards" },
-      { "layer": "USDC_3", "glyph": "$", "file": "/figma/s38/coin-usdc-3.png", "x": 1722, "y": 577, "size": 294, "z": "behind cards" },
-      { "layer": "THB_6", "glyph": "฿ (silver)", "file": "/figma/s38/coin-thb-6.png", "x": -55, "y": 152, "size": 300, "z": "behind cards" },
-      { "layer": "USDT_5", "glyph": "₮", "file": "/figma/s38/coin-usdt-5.png", "x": 810, "y": -54, "size": 231, "z": "topmost (above cards and logo)" }
-    ]
+  {
+   "number": "02",
+   "title": "Stablecoin settlement live",
+   "titlePadLine": true,
+   "body": "Official Circle and Tether partner. Exclusive issuer of PHPC. Stablecoin settlement wired directly into local payment rails in every corridor.",
+   "x": 462,
+   "y": 391
+  },
+  {
+   "number": "03",
+   "title": "Multi-currency reach",
+   "titlePadLine": true,
+   "body": "Accept in one currency, pay out in another. \nFiat or stablecoin. \nOne integration covers every corridor we serve, and we keep adding more.",
+   "x": 810,
+   "y": 331
+  },
+  {
+   "number": "04",
+   "title": "One API. \nEvery product.",
+   "titlePadLine": true,
+   "body": "Payments, disbursements, trading, and virtual accounts through a single API. One partner, one contract, one dashboard for everything.",
+   "x": 1158,
+   "y": 391
+  },
+  {
+   "number": "05",
+   "title": "Built to scale with you",
+   "titlePadLine": true,
+   "body": "Philippines live today. \n7 more corridors rolling through 2026. As your business grows into new markets, we're already there or on the way.",
+   "x": 1506,
+   "y": 331
   }
+ ],
+ "assets": {
+  "coins": [
+   {
+    "layer": "THB_3",
+    "glyph": "C (PHPC-style coin)",
+    "file": "/figma/s38/coin-thb-3.png",
+    "x": 436,
+    "y": 776,
+    "size": 357,
+    "z": "behind cards"
+   },
+   {
+    "layer": "PHP_4",
+    "glyph": "₱",
+    "file": "/figma/s38/coin-php-4.png",
+    "x": 1308,
+    "y": 192,
+    "size": 293,
+    "z": "behind cards"
+   },
+   {
+    "layer": "USDC_3",
+    "glyph": "$",
+    "file": "/figma/s38/coin-usdc-3.png",
+    "x": 1722,
+    "y": 577,
+    "size": 294,
+    "z": "behind cards"
+   },
+   {
+    "layer": "THB_6",
+    "glyph": "฿ (silver)",
+    "file": "/figma/s38/coin-thb-6.png",
+    "x": -55,
+    "y": 152,
+    "size": 300,
+    "z": "behind cards"
+   },
+   {
+    "layer": "USDT_5",
+    "glyph": "₮",
+    "file": "/figma/s38/coin-usdt-5.png",
+    "x": 810,
+    "y": -54,
+    "size": 231,
+    "z": "topmost (above cards and logo)"
+   }
+  ]
+ }
 }

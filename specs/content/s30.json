@@ -139,7 +139,7 @@
    "country": "Australia",
    "flag": "/figma/s30/flag-au.png",
    "rail": "NPP (PayID)",
-   "speed": "Real-time ",
+   "speed": "Real-time",
    "statuses": [
     {
      "label": "Collections",

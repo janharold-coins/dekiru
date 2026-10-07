@@ -1,46 +1,46 @@
 {
-  "slide": 24,
-  "node": "511:29782",
-  "pattern": "product-detail",
-  "product": "disbursement",
-  "texts": {
-    "eyebrow": "Products and Pricing",
-    "title": "Disbursement",
-    "tagline": "Pay anyone. Anywhere. Right now.",
-    "description": "Send money to any bank or wallet, local or cross-border. Stablecoin in, local currency out, delivered on arrival.",
-    "whoLabel": "Who is it for",
-    "who": "Platforms, marketplaces, and payroll providers that need to pay people fast, whether across the street or across\nthe world.",
-    "whatLabel": "What it is",
-    "keyApisLabel": "Key APIs",
-    "pricingLabel": "PRICING"
-  },
-  "what": [
-    "Real-time PHP payouts to any bank or e-wallet via InstaPay.",
-    "Cross-border payouts across 4+ corridors, and growing.",
-    "Settle with stablecoins or pre-fund with fiat. Either way, same-day"
+ "slide": 24,
+ "node": "511:29782",
+ "pattern": "product-detail",
+ "product": "disbursement",
+ "texts": {
+  "eyebrow": "Products and Pricing",
+  "title": "Disbursement",
+  "tagline": "Pay anyone. Anywhere. Right now.",
+  "description": "Send money to any bank or wallet, local or cross-border. Stablecoin in, local currency out, delivered on arrival.",
+  "whoLabel": "Who is it for",
+  "who": "Platforms, marketplaces, and payroll providers that need to pay people fast, whether across the street or across\nthe world.",
+  "whatLabel": "What it is",
+  "keyApisLabel": "Key APIs",
+  "pricingLabel": "PRICING"
+ },
+ "what": [
+  "Real-time PHP payouts to any bank or e-wallet via InstaPay.",
+  "Cross-border payouts across 4+ corridors, and growing.",
+  "Settle with stablecoins or pre-fund with fiat. Either way, same-day settlement."
+ ],
+ "keyApis": [
+  "Create payout, account validation.",
+  "Get payout status, Balance query.",
+  "Webhook: real-time\nsettlement alert."
+ ],
+ "pricing": {
+  "kind": "chips+text",
+  "chips": [
+   {
+    "label": "InstaPay",
+    "value": "10",
+    "unit": "PHP",
+    "caption": null
+   },
+   {
+    "label": "PESONet",
+    "value": "5",
+    "unit": "PHP",
+    "caption": null
+   }
   ],
-  "keyApis": [
-    "Create payout, account validation.",
-    "Get payout status, Balance query.",
-    "Webhook: real-time\nsettlement alert."
-  ],
-  "pricing": {
-    "kind": "chips+text",
-    "chips": [
-      {
-        "label": "InstaPay",
-        "value": "10",
-        "unit": "PHP",
-        "caption": null
-      },
-      {
-        "label": "PESONet",
-        "value": "5",
-        "unit": "PHP",
-        "caption": null
-      }
-    ],
-    "text": "Cross-border payments:",
-    "subtext": "Contact sales for corridor rates."
-  }
+  "text": "Cross-border payments:",
+  "subtext": "Contact sales for corridor rates."
+ }
 }

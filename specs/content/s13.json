@@ -1,38 +1,38 @@
 {
-  "slide": 13,
-  "node": "511:29652",
-  "pattern": "product-flow",
-  "product": "qrph-webpay",
-  "texts": {
-    "eyebrow": "Products and Pricing",
-    "titleBold": "QRPh and WebPay",
-    "titleRegular": "Product Flow"
+ "slide": 13,
+ "node": "511:29652",
+ "pattern": "product-flow",
+ "product": "qrph-webpay",
+ "texts": {
+  "eyebrow": "Products and Pricing",
+  "titleBold": "QRPh and WebPay",
+  "titleRegular": "Product Flow"
+ },
+ "steps": [
+  {
+   "n": "01",
+   "title": "Your customer\nis ready to buy",
+   "caption": "Cart's full, checkout time."
   },
-  "steps": [
-    {
-      "n": "01",
-      "title": "Your customer\nis ready to buy",
-      "caption": "Cart's full, checkout time."
-    },
-    {
-      "n": "02",
-      "title": "They choose how to pay",
-      "caption": "Any wallet, bank,\nor crypto app."
-    },
-    {
-      "n": "03",
-      "title": "They tap\nor scan",
-      "caption": "Select from\nmultiple payment."
-    },
-    {
-      "n": "04",
-      "title": "The payment clears",
-      "caption": "We confirm it\nthe second it's done."
-    },
-    {
-      "n": "05",
-      "title": "You get the money",
-      "caption": "Straight into your Coins account,  T+0 Settlement."
-    }
-  ]
+  {
+   "n": "02",
+   "title": "They choose how to pay",
+   "caption": "Any wallet, bank,\nor crypto app."
+  },
+  {
+   "n": "03",
+   "title": "They tap\nor scan",
+   "caption": "Select from multiple\npayment methods."
+  },
+  {
+   "n": "04",
+   "title": "The payment clears",
+   "caption": "We confirm it\nthe second it's done."
+  },
+  {
+   "n": "05",
+   "title": "You get the money",
+   "caption": "Straight into your Coins account. T+0 settlement."
+  }
+ ]
 }

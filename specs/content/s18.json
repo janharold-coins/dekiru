@@ -1,33 +1,33 @@
 {
-  "slide": 18,
-  "node": "511:29737",
-  "pattern": "product-detail",
-  "product": "scan-and-pay",
-  "texts": {
-    "eyebrow": "Products and Pricing",
-    "title": "QRPh Scan and Pay",
-    "tagline": "Payments by your brand.\nBacked by our platform.",
-    "description": "White-labelled QRPh payments that live inside\nyour app. Your users never leave, and your brand\nstays front and centre.",
-    "whoLabel": "Who is it for",
-    "who": "Any platform that wants access to the QRPh merchant network. Pay millions of merchants on behalf of your users, under your own brand.",
-    "whatLabel": "What it is",
-    "keyApisLabel": "Key APIs",
-    "pricingLabel": "PRICING"
-  },
-  "what": [
-    "White-labelled QRPh. Your brand, end to end.",
-    "Compliance handled. API-based 1 time KYC,, no app switch.",
-    "Real-time settlement through Instapay."
-  ],
-  "keyApis": [
-    "Create Account and\nPayment Preview.",
-    "Payment Execution and\nGet Payment Result.",
-    "Webhook push for final state."
-  ],
-  "pricing": {
-    "kind": "text",
-    "chips": [],
-    "text": "1 to 5 PHP per successful transactions",
-    "subtext": "Charged on successful transactions only. Pending and failed are free."
-  }
+ "slide": 18,
+ "node": "511:29737",
+ "pattern": "product-detail",
+ "product": "scan-and-pay",
+ "texts": {
+  "eyebrow": "Products and Pricing",
+  "title": "QRPh Scan and Pay",
+  "tagline": "Payments by your brand.\nBacked by our platform.",
+  "description": "White-labelled QRPh payments that live inside\nyour app. Your users never leave, and your brand\nstays front and centre.",
+  "whoLabel": "Who is it for",
+  "who": "Any platform that wants access to the QRPh merchant network. Pay millions of merchants on behalf of your users, under your own brand.",
+  "whatLabel": "What it is",
+  "keyApisLabel": "Key APIs",
+  "pricingLabel": "PRICING"
+ },
+ "what": [
+  "White-labelled QRPh. Your brand, end to end.",
+  "Compliance handled. API-based one-time KYC, no app switch.",
+  "Real-time settlement through InstaPay."
+ ],
+ "keyApis": [
+  "Create Account and\nPayment Preview.",
+  "Payment Execution and\nGet Payment Result.",
+  "Webhook push for final state."
+ ],
+ "pricing": {
+  "kind": "text",
+  "chips": [],
+  "text": "1 to 5 PHP per successful transaction",
+  "subtext": "Charged on successful transactions only. Pending and failed are free."
+ }
 }

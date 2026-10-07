@@ -1,38 +1,38 @@
 {
-  "slide": 29,
-  "node": "511:30384",
-  "pattern": "product-flow",
-  "product": "multi-currency",
-  "texts": {
-    "eyebrow": "Products and Pricing",
-    "titleBold": "Multi-currency",
-    "titleRegular": "Product Flow"
+ "slide": 29,
+ "node": "511:30384",
+ "pattern": "product-flow",
+ "product": "multi-currency",
+ "texts": {
+  "eyebrow": "Products and Pricing",
+  "titleBold": "Multi-Currency",
+  "titleRegular": "Product Flow"
+ },
+ "steps": [
+  {
+   "n": "01",
+   "title": "You fund\nyour account",
+   "caption": "Top up with\nUSDT or USDC."
   },
-  "steps": [
-    {
-      "n": "01",
-      "title": "You fund\nyour account",
-      "caption": "Top up with\nUSDT or USDC."
-    },
-    {
-      "n": "02",
-      "title": "Pick your corridor",
-      "caption": "8 corridors live\nor launching."
-    },
-    {
-      "n": "03",
-      "title": "We lock\nthe FX rate",
-      "caption": "Live quote,\nready to send."
-    },
-    {
-      "n": "04",
-      "title": "We move it\non local rails",
-      "caption": "Settled on the country's own payment network."
-    },
-    {
-      "n": "05",
-      "title": "They get\npaid at home",
-      "caption": "Same day,\nin their own currency"
-    }
-  ]
+  {
+   "n": "02",
+   "title": "Pick your corridor",
+   "caption": "8 corridors live\nor launching."
+  },
+  {
+   "n": "03",
+   "title": "We lock\nthe FX rate",
+   "caption": "Live quote,\nready to send."
+  },
+  {
+   "n": "04",
+   "title": "We move it\non local rails",
+   "caption": "Settled on the country's own payment network."
+  },
+  {
+   "n": "05",
+   "title": "They get\npaid at home",
+   "caption": "Same day,\nin their own currency"
+  }
+ ]
 }

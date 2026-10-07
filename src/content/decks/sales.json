@@ -799,7 +799,7 @@
    "pattern": "statement-highlights",
    "props": {
     "title": "We're building the infrastructure \nto reach you, wherever you do business.",
-    "body": "Coins.ph started in the Philippines and is expanding across multiple corridors in Asia Pacific, Europe, the Americas, the Middle East. Licensed in every corridor we serve, so your expansion doesn't wait on regulators. Largest digital asset exchange in the Philippines. The country's most established crypto and payments company. Pay, move, trade, all through one regulated stack.",
+    "body": "Coins.ph started in the Philippines and is expanding across multiple corridors in Asia Pacific, Europe, the Americas, and the Middle East. Licensed in every corridor we serve, so your expansion doesn't wait on regulators. Largest digital asset exchange in the Philippines. The country's most established crypto and payments company. Pay, move, trade, all through one regulated stack.",
     "highlights": [
      {
       "title": "Stablecoin-native",
@@ -894,7 +894,7 @@
        },
        {
         "name": "Virtual Accounts",
-        "description": "Accept fiat and crypto, sorted by sellert"
+        "description": "Accept fiat and crypto, sorted by seller"
        },
        {
         "name": "Scan and Pay",
@@ -990,7 +990,7 @@
     "who": "Online merchants, in-store merchants, and aggregators accepting payments from any Philippine wallet, bank, or crypto holder.",
     "whatLabel": "What it is",
     "what": [
-     "Hosted and API based checkout\nfor web and app.",
+     "Hosted and API-based checkout\nfor web and app.",
      "In-store QR codes, plus credit card acceptance through POS terminals.",
      "Checkout in PHP, USDT, USDC, BTC, ETH. One-tap repeat buying via WebPay."
     ],
@@ -1055,7 +1055,7 @@
      {
       "n": "03",
       "title": "They tap\nor scan",
-      "caption": "Select from\nmultiple payment."
+      "caption": "Select from multiple\npayment methods."
      },
      {
       "n": "04",
@@ -1065,7 +1065,7 @@
      {
       "n": "05",
       "title": "You get the money",
-      "caption": "Straight into your Coins account,  T+0 Settlement."
+      "caption": "Straight into your Coins account. T+0 settlement."
      }
     ]
    },
@@ -1210,8 +1210,8 @@
     "whatLabel": "What it is",
     "what": [
      "White-labelled QRPh. Your brand, end to end.",
-     "Compliance handled. API-based 1 time KYC,, no app switch.",
-     "Real-time settlement through Instapay."
+     "Compliance handled. API-based one-time KYC, no app switch.",
+     "Real-time settlement through InstaPay."
     ],
     "keyApisLabel": "Key APIs",
     "keyApis": [
@@ -1223,7 +1223,7 @@
     "pricing": {
      "kind": "text",
      "chips": [],
-     "text": "1 to 5 PHP per successful transactions",
+     "text": "1 to 5 PHP per successful transaction",
      "subtext": "Charged on successful transactions only. Pending and failed are free."
     }
    },
@@ -1412,7 +1412,7 @@
     "what": [
      "Real-time PHP payouts to any bank or e-wallet via InstaPay.",
      "Cross-border payouts across 4+ corridors, and growing.",
-     "Settle with stablecoins or pre-fund with fiat. Either way, same-day"
+     "Settle with stablecoins or pre-fund with fiat. Either way, same-day settlement."
     ],
     "keyApisLabel": "Key APIs",
     "keyApis": [
@@ -1567,7 +1567,7 @@
    "props": {
     "product": "multi-currency",
     "eyebrow": "Products and Pricing",
-    "titleBold": "Multi-currency",
+    "titleBold": "Multi-Currency",
     "titleRegular": "Product Flow",
     "steps": [
      {
@@ -1741,7 +1741,7 @@
       "country": "Australia",
       "flag": "/figma/s30/flag-au.png",
       "rail": "NPP (PayID)",
-      "speed": "Real-time ",
+      "speed": "Real-time",
       "statuses": [
        {
         "label": "Collections",
@@ -1816,7 +1816,7 @@
     "what": [
      "Firm rate on any supported pair.\n7, 10, or 20 second lock.",
      "Instant or deferred settlement. Manual or automatic.",
-     "Accessed via Business Portal.\nFull history on tap."
+     "Available via API or web.\nFull history on tap."
     ],
     "keyApisLabel": "Key APIs",
     "keyApis": [
@@ -1917,7 +1917,7 @@
     "whatLabel": "What it is",
     "what": [
      "Spot exchange against the live\norder book. Major pairs.",
-     "API-first. Also available through Business Portal.",
+     "API-first. Also available on the web.",
      "VIP fees by 30-day volume.\nTrade more, pay less."
     ],
     "keyApisLabel": null,
@@ -2059,7 +2059,7 @@
    "id": "s38",
    "pattern": "feature-cards",
    "props": {
-    "title": "Why Businesses chooses Coins.",
+    "title": "Why businesses choose Coins.",
     "cards": [
      {
       "number": "01",
@@ -2106,7 +2106,7 @@
       "email": "payments-business@coins.ph"
      },
      {
-      "label": "For Crypto and all things Web3:",
+      "label": "For crypto and all things Web3:",
       "email": "crypto-business@coins.ph"
      }
     ],
