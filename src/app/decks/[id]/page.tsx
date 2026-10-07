@@ -21,6 +21,7 @@ export default async function DeckPage({ params }: { params: Promise<{ id: strin
         <h1 className="page" style={{ margin: 0 }}>{deck.title}</h1>
         <span className="spacer" style={{ flex: 1 }} />
         <Link className="btn" href={`/decks/${deck.id}/compare`}>Compare with Figma</Link>
+        <Link className="btn" href={`/decks/${deck.id}/share`}>Share</Link>
         <Link className="btn primary" href={`/decks/${deck.id}/present`}>Present ▶</Link>
       </div>
       <p className="lede">{deck.slides.filter((s) => !s.hidden).length} slides presented{deck.slides.some((s) => s.hidden) ? ` · ${deck.slides.filter((s) => s.hidden).length} hidden` : ""} · {deck.kind === "master" ? "master deck" : "personal copy"}{deck.versionNumber ? ` · v${deck.versionNumber}${deck.hasDraft ? " (unpublished draft exists)" : ""}` : ""}{deck.slides.some((s) => s.ref) ? ` · ${deck.slides.filter((s) => s.ref).length} shared with other decks` : ""}. Overflow flags and image-fit warnings show here in preview only, never in the presented deck.</p>

@@ -33,6 +33,17 @@ Without these settings, sign-in is off: local development runs open; deployments
 
 Code: `src/lib/auth.ts` (server: config, `requireUser()` at the top of every private page), `src/proxy.ts` (fast redirect when there's no session cookie), `src/app/sign-in/`.
 
+## Share links
+
+Deck page → **Share** (`/decks/<id>/share`). A link is a public URL (`/s/<slug>`, no sign-in) for the deck as it is right now:
+
+- **Frozen.** The link stores a snapshot of the newest published version (shared slides resolved), so later edits — even to a shared Sales slide — never change a sent link. Make a new link to send an update.
+- **Password by default.** Generated (`abcd-efgh`, shown once to the creator) or set by hand; "no password" is allowed with a warning. Stored as a scrypt hash. Unlocking sets a cookie for that link only (7 days); revoking the link locks it again.
+- **Expiry** 7 / 30 (default) / 90 days or never. **Revoke** any time: the creator, admins and managers can.
+- The list shows who made each link, for whom, which version, and how many times it was opened (view tracking is the next step).
+
+Code: `src/lib/share.ts`, `src/app/decks/[id]/share/`, `src/app/s/[slug]/`.
+
 ## Database (Neon)
 
 Decks, versions (draft / published), share links and view analytics live in Postgres on Neon. Schema: `src/db/schema.ts`; all reads and writes go through `src/lib/decks.ts`.
@@ -101,4 +112,4 @@ public/figma/          assets exported from Figma (+ ref/ screenshots for /compa
 
 ## Not built yet (later milestones)
 
-Role-based editing and approvals, publish/share links with passwords, view analytics (tables exist), the Claude connector (remote MCP) for generation, the block picker.
+Role-based editing and approvals, view analytics (opens, time per slide), image uploads, the Claude connector (remote MCP) for generation, the block picker.

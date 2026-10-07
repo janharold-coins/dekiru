@@ -15,6 +15,7 @@ import {
   boolean, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid,
 } from "drizzle-orm/pg-core";
 import type { SeedSlide } from "@/content/resolve";
+import type { SlideData } from "@/deck/types";
 
 export const role = pgEnum("role", ["admin", "manager", "member"]);
 export const deckKind = pgEnum("deck_kind", ["master", "copy"]);
@@ -114,12 +115,18 @@ export const deckVersions = pgTable(
   ],
 );
 
-/** Public URL for one published version. Password on by default (scrypt hash); null = open link. */
+/**
+ * Public URL for one published version. Password on by default (scrypt hash); null = open link.
+ * `slides` is the version as shown on the day the link was made, references already resolved,
+ * so later edits to a shared master slide don't change what a sent link shows.
+ */
 export const shareLinks = pgTable("share_links", {
   id: uuid("id").primaryKey().defaultRandom(),
   slug: text("slug").notNull().unique(),
   deckId: text("deck_id").notNull().references(() => decks.id, { onDelete: "cascade" }),
   versionId: uuid("version_id").notNull().references(() => deckVersions.id),
+  deckTitle: text("deck_title").notNull(),
+  slides: jsonb("slides").$type<SlideData[]>().notNull(),
   label: text("label"), // e.g. the merchant it was sent to
   passwordHash: text("password_hash"),
   createdBy: uuid("created_by").references(() => users.id),
