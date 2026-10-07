@@ -25,13 +25,14 @@ export default async function DeckPage({ params }: { params: Promise<{ id: strin
         <Link className="btn" href={`/decks/${deck.id}/compare`}>Compare with Figma</Link>
         <Link className="btn primary" href={`/decks/${deck.id}/present`}>Present ▶</Link>
       </div>
-      <p className="lede">{deck.slides.length} slides · master deck. Overflow flags and image-fit warnings show here in preview only, never in the presented deck.</p>
+      <p className="lede">{deck.slides.filter((s) => !s.hidden).length} slides presented{deck.slides.some((s) => s.hidden) ? ` · ${deck.slides.filter((s) => s.hidden).length} hidden` : ""} · master deck. Overflow flags and image-fit warnings show here in preview only, never in the presented deck.</p>
       <div className="grid">
         {deck.slides.map((s, i) => {
           const warnings = checkOverflow(s);
+          const presentIndex = deck.slides.slice(0, i).filter((x) => !x.hidden).length + 1;
           return (
-            <div key={s.id} className="card">
-              <Link href={`/decks/${deck.id}/present#${i + 1}`}>
+            <div key={s.id} className="card" style={s.hidden ? { opacity: 0.45 } : undefined}>
+              <Link href={s.hidden ? "#" : `/decks/${deck.id}/present#${presentIndex}`}>
                 <ScaledSlide className="thumb">
                   <PreviewChecks><RenderSlide slide={s} /></PreviewChecks>
                 </ScaledSlide>
@@ -40,6 +41,7 @@ export default async function DeckPage({ params }: { params: Promise<{ id: strin
                 <b>{String(i + 1).padStart(2, "0")}</b>
                 <span>{patterns[s.pattern]?.meta.name ?? s.pattern}</span>
                 <span className="spacer" style={{ flex: 1 }} />
+                {s.hidden && <span className="tag">Hidden</span>}
                 {warnings.length > 0 && <span className="tag warn">{warnings.length} overflow</span>}
               </div>
               {warnings.length > 0 && (

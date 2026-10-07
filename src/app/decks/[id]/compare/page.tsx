@@ -24,7 +24,8 @@ export default async function ComparePage({ params }: { params: Promise<{ id: st
           <div className="slidehead">
             <span>{String(i + 1).padStart(2, "0")}</span>
             <span className="tag">{patterns[s.pattern]?.meta.name ?? s.pattern}</span>
-            <span className="mono">figma {s.source?.figmaNode}</span>
+            {s.hidden && <span className="tag">Hidden</span>}
+            <span className="mono">figma {s.source?.figmaNode}{s.source?.visualNode ? ` · visual ${s.source.visualNode}` : ""}</span>
           </div>
           <figure>
             {/* eslint-disable-next-line @next/next/no-img-element */}

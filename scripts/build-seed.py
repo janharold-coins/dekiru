@@ -122,6 +122,9 @@ CHROME = {
     40: {"background": "dark-navy"},
 }
 
+# Slides kept in the master but not presented (Jan, 2026-10-07: Business Portal).
+HIDDEN = {20, 21, 22}
+
 slides = []
 for n in range(1, 41):
     d = load(n)
@@ -129,6 +132,10 @@ for n in range(1, 41):
     s = {"id": f"s{n:02d}", "pattern": pattern, "props": fn(d), "source": {"figmaNode": d["node"], "slide": n}}
     if n in CHROME:
         s["chrome"] = CHROME[n]
+    if n in HIDDEN:
+        s["hidden"] = True
+    if d.get("visualSource"):
+        s["source"]["visualNode"] = d["visualSource"]["node"]
     slides.append(s)
 
 deck = {"id": "sales", "title": "Coins.ph — Sales deck", "version": "figma-511:28902", "slides": slides}

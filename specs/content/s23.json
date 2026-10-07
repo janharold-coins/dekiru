@@ -1,31 +1,35 @@
 {
-  "slide": 23,
-  "node": "511:29765",
-  "pattern": "product-hero",
-  "product": "disbursement",
-  "texts": {
-    "eyebrow": "Products and Pricing",
-    "title": "Disbursement",
-    "tagline": "Pay anyone. Anywhere. Right now."
-  },
-  "assets": {
-    "hero": "/figma/s23/hero.png"
-  },
-  "imageSlot": {
-    "x": 699.0,
-    "y": 24.0,
-    "w": 1221.0,
-    "h": 1045.0
-  },
-  "imageVariant": "mockup",
-  "heroPx": [
-    2442,
-    2090
-  ],
-  "textColumn": {
-    "x": 79,
-    "y": 452,
-    "w": 733,
-    "h": 176
-  }
+ "slide": 23,
+ "node": "511:29765",
+ "pattern": "product-hero",
+ "product": "disbursement",
+ "texts": {
+  "eyebrow": "Products and Pricing",
+  "title": "Disbursement",
+  "tagline": "Pay anyone. Anywhere. Right now."
+ },
+ "assets": {
+  "hero": "/figma/s23/hero.png"
+ },
+ "imageSlot": {
+  "x": 703,
+  "y": 27,
+  "w": 1217,
+  "h": 1042
+ },
+ "imageVariant": "mockup",
+ "heroPx": [
+  2434,
+  2084
+ ],
+ "textColumn": {
+  "x": 79,
+  "y": 452,
+  "w": 733,
+  "h": 176
+ },
+ "visualSource": {
+  "node": "801:38285",
+  "note": "Hero visual taken from the twin frame (Coins.ph-branded screenshots), per Jan 2026-10-07"
+ }
 }

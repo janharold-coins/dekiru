@@ -41,10 +41,10 @@ export default function LibraryPage() {
             <div className="strip">
               {uses.map((u) => (
                 <figure key={u.deck.id + u.slide.id}>
-                  <Link href={`/decks/${u.deck.id}/present#${u.index + 1}`} className="frame" style={{ display: "block" }}>
+                  <Link href={`/decks/${u.deck.id}`} className="frame" style={{ display: "block" }}>
                     <ScaledSlide><RenderSlide slide={u.slide} /></ScaledSlide>
                   </Link>
-                  <figcaption>{u.deck.id} · slide {u.index + 1}</figcaption>
+                  <figcaption>{u.deck.id} · slide {u.index + 1}{u.slide.hidden ? " · hidden" : ""}</figcaption>
                 </figure>
               ))}
             </div>

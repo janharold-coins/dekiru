@@ -11,5 +11,5 @@ export default async function PresentPage({ params }: { params: Promise<{ id: st
   const { id } = await params;
   const deck = getDeck(id);
   if (!deck) notFound();
-  return <Presenter slides={deck.slides.map((s) => <RenderSlide key={s.id} slide={s} />)} />;
+  return <Presenter slides={deck.slides.filter((s) => !s.hidden).map((s) => <RenderSlide key={s.id} slide={s} />)} />;
 }

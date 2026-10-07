@@ -969,15 +969,16 @@
     "image": {
      "src": "/figma/s11/hero.png",
      "variant": "mockup",
-     "x": 837.0,
-     "y": 69.0,
-     "w": 1027.0,
-     "h": 1000.0
+     "x": 841,
+     "y": 77,
+     "w": 1019,
+     "h": 992
     }
    },
    "source": {
     "figmaNode": "511:29490",
-    "slide": 11
+    "slide": 11,
+    "visualNode": "517:33279"
    }
   },
   {
@@ -1088,15 +1089,16 @@
     "image": {
      "src": "/figma/s14/hero.png",
      "variant": "mockup",
-     "x": 614.0,
-     "y": 33.0,
-     "w": 1306.0,
-     "h": 1036.0
+     "x": 617,
+     "y": 33,
+     "w": 1303,
+     "h": 1036
     }
    },
    "source": {
     "figmaNode": "511:29671",
-    "slide": 14
+    "slide": 14,
+    "visualNode": "801:33836"
    }
   },
   {
@@ -1298,7 +1300,8 @@
    },
    "chrome": {
     "footer": null
-   }
+   },
+   "hidden": true
   },
   {
    "id": "s21",
@@ -1330,7 +1333,8 @@
    "source": {
     "figmaNode": "511:29760",
     "slide": 21
-   }
+   },
+   "hidden": true
   },
   {
    "id": "s22",
@@ -1371,7 +1375,8 @@
    "source": {
     "figmaNode": "511:29762",
     "slide": 22
-   }
+   },
+   "hidden": true
   },
   {
    "id": "s23",
@@ -1384,15 +1389,16 @@
     "image": {
      "src": "/figma/s23/hero.png",
      "variant": "mockup",
-     "x": 699.0,
-     "y": 24.0,
-     "w": 1221.0,
-     "h": 1045.0
+     "x": 703,
+     "y": 27,
+     "w": 1217,
+     "h": 1042
     }
    },
    "source": {
     "figmaNode": "511:29765",
-    "slide": 23
+    "slide": 23,
+    "visualNode": "801:38285"
    }
   },
   {
@@ -1511,15 +1517,16 @@
     "image": {
      "src": "/figma/s27/hero.png",
      "variant": "mockup",
-     "x": 794.0,
-     "y": 97.0,
-     "w": 1126.0,
-     "h": 972.0
+     "x": 797,
+     "y": 100,
+     "w": 1123,
+     "h": 969
     }
    },
    "source": {
     "figmaNode": "511:29790",
-    "slide": 27
+    "slide": 27,
+    "visualNode": "801:40371"
    }
   },
   {
@@ -1785,15 +1792,16 @@
     "image": {
      "src": "/figma/s32/hero.png",
      "variant": "mockup",
-     "x": 658.0,
-     "y": 98.0,
-     "w": 1262.0,
-     "h": 950.0
+     "x": 663,
+     "y": 100,
+     "w": 1257,
+     "h": 942
     }
    },
    "source": {
     "figmaNode": "511:30409",
-    "slide": 32
+    "slide": 32,
+    "visualNode": "801:41528"
    }
   },
   {

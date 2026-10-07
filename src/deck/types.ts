@@ -19,7 +19,9 @@ export interface SlideData<P = Record<string, unknown>> {
   pattern: string;
   props: P;
   chrome?: Partial<Chrome>;
-  source?: { figmaNode?: string; slide?: number };
+  /** Kept in the deck (and the library) but skipped when presenting or sharing. */
+  hidden?: boolean;
+  source?: { figmaNode?: string; visualNode?: string; slide?: number };
 }
 
 export interface Deck {
