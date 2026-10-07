@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 import { startVisit, recordTime } from "@/lib/analytics";
+import { auth, authConfigured } from "@/lib/auth";
 import { getShareLink, isUnlocked, linkStatus, unlockCookieName } from "@/lib/share";
 
 /**
@@ -18,8 +19,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
   try { body = JSON.parse((await req.text()) || "{}"); } catch { return new NextResponse(null, { status: 400 }); }
 
   if (!body.sid) {
-    const internal = Boolean(getSessionCookie(req, { cookiePrefix: "dekiru" }));
-    return NextResponse.json({ sid: await startVisit(link.id, internal) });
+    // Signed in to Dekiru → a team visit (presenting or checking), recorded with who it was.
+    let viewerId: string | null = null;
+    if (authConfigured() && getSessionCookie(req, { cookiePrefix: "dekiru" })) {
+      viewerId = (await auth().api.getSession({ headers: req.headers }))?.user.id ?? null;
+    }
+    return NextResponse.json({ sid: await startVisit(link.id, viewerId) });
   }
   const validSid = /^[0-9a-f-]{36}$/.test(body.sid);
   const validSlide = typeof body.slide === "string" && link.slides.some((s) => s.id === body.slide);

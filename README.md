@@ -38,7 +38,7 @@ Deck page → **Share** (`/decks/<id>/share`). A link is a public URL (`/s/<slug
 - **Password by default.** Generated (`abcd-efgh`, shown once to the creator) or set by hand; "no password" is allowed with a warning. Stored as a scrypt hash. Unlocking sets a cookie for that link only (7 days); revoking the link locks it again.
 - **Expiry** 7 / 30 (default) / 90 days or never. **Revoke** any time: the creator, admins and managers can.
 - The list shows who made each link, for whom, which version, how many times it was opened and when last.
-- **Report per link** (click the name or the opens count): opens, total and average time viewed, last opened, time per slide with how many visits reached it, and each visit. Only time the tab is visible counts; visits by anyone signed in to Dekiru (reps checking their own link) are left out. No viewer identity or IP is stored.
+- **Report per link** (click the name or the opens count): opens, total and average time viewed, last opened, time per slide with how many visits reached it, and each visit. Only time the deck is on screen counts. Every visit counts, split into **Recipients** (not signed in to Dekiru — the client on their own; no identity or IP stored) and **Team** (signed in — a rep presenting it in a meeting or checking it, recorded with who). The report filters All / Recipients / Team.
 
 Code: `src/lib/share.ts`, `src/lib/analytics.ts`, `src/app/decks/[id]/share/`, `src/app/s/[slug]/` (tracking beacon: `s/[slug]/track`).
 

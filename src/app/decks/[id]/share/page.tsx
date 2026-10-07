@@ -60,6 +60,7 @@ async function LinkList({ deckId, origin, userId, canRevokeAll }: { deckId: stri
             <td>{l.creatorName || l.creatorEmail || <span className="mono">local</span>}<div className="mono">{fmt(l.createdAt)}</div></td>
             <td>
               <Link href={`/decks/${deckId}/share/${l.id}`} className="ul">{l.opens}</Link>
+              {l.opens > 0 && <div className="mono">{l.recipientOpens} recipient · {l.teamOpens} team</div>}
               {l.lastOpened && <div className="mono">last {fmt(l.lastOpened)}</div>}
             </td>
             <td>

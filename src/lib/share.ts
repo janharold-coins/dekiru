@@ -127,7 +127,8 @@ export async function listShareLinks(deckId: string) {
   const opens = await opensByLink(rows.map((r) => r.id));
   return rows.map(({ hasPassword, slideCount, ...r }) => ({
     ...r, hasPassword: Boolean(hasPassword), slideCount,
-    status: linkStatus(r), opens: opens.get(r.id)?.opens ?? 0, lastOpened: opens.get(r.id)?.lastOpened ?? null,
+    status: linkStatus(r), opens: opens.get(r.id)?.opens ?? 0, recipientOpens: opens.get(r.id)?.recipient ?? 0,
+    teamOpens: opens.get(r.id)?.team ?? 0, lastOpened: opens.get(r.id)?.lastOpened ?? null,
   }));
 }
 

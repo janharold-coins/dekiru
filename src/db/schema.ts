@@ -137,8 +137,9 @@ export const shareLinks = pgTable("share_links", {
 
 /**
  * One open of a share link (a visit). Time per deck = sum of its slide_views (visible time only).
- * `internal` = opened by someone signed in to Dekiru (a rep checking their own link); kept out of the counts.
- * No IPs or viewer identities stored.
+ * Two kinds of visit, both counted and reported separately:
+ *   recipient — not signed in to Dekiru (the client opening the link). No identity or IP stored.
+ *   team      — signed in (`internal` = true, `viewerId` = who): a rep presenting it in a meeting, or checking it.
  */
 export const viewSessions = pgTable(
   "view_sessions",
@@ -146,6 +147,7 @@ export const viewSessions = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     linkId: uuid("link_id").notNull().references(() => shareLinks.id, { onDelete: "cascade" }),
     internal: boolean("internal").notNull().default(false),
+    viewerId: uuid("viewer_id").references(() => users.id, { onDelete: "set null" }),
     startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
   },

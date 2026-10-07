@@ -2,18 +2,26 @@
  * View tracking for share links.
  *
  * The public presenter reports visible time per slide in small increments (see TrackedPresenter).
- * Each visit is a view_session; each slide's time accumulates in slide_views. Visits by people signed
- * in to Dekiru are marked internal and left out of the numbers reps see.
+ * Each visit is a view_session; each slide's time accumulates in slide_views.
+ *
+ * Every visit counts. Visits are split by who opened the link:
+ *   recipient — not signed in to Dekiru (the client on their own)
+ *   team      — signed in (a rep presenting it in a meeting, or checking it); we know who
  */
-import { and, desc, eq, inArray, max, sql, sum } from "drizzle-orm";
+import { and, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db/client";
-import { shareLinks, slideViews, viewSessions } from "@/db/schema";
+import { shareLinks, slideViews, users, viewSessions } from "@/db/schema";
 
 /** One report can't add more than this, so a sleeping laptop can't inflate a slide's time. */
 export const MAX_BEAT_MS = 60_000;
 
-export async function startVisit(linkId: string, internal: boolean) {
-  const [v] = await db().insert(viewSessions).values({ linkId, internal }).returning({ id: viewSessions.id });
+export type Who = "all" | "recipients" | "team";
+export const WHO: Who[] = ["all", "recipients", "team"];
+
+export async function startVisit(linkId: string, viewerId: string | null) {
+  const [v] = await db().insert(viewSessions)
+    .values({ linkId, internal: Boolean(viewerId), viewerId })
+    .returning({ id: viewSessions.id });
   return v.id;
 }
 
@@ -29,46 +37,73 @@ export async function recordTime(linkId: string, sessionId: string, slideId: str
   return true;
 }
 
-/** Opens and last-open per link, external visits only (for the link list). */
+const n = (e: SQL) => sql<number>`${e}`.mapWith(Number);
+
+/** Opens per link, split recipient / team, plus last open (for the link list). */
 export async function opensByLink(linkIds: string[]) {
-  if (!linkIds.length) return new Map<string, { opens: number; lastOpened: Date | null }>();
-  const rows = await db().select({ linkId: viewSessions.linkId, opens: sql<number>`count(*)`.mapWith(Number), last: max(viewSessions.startedAt) })
-    .from(viewSessions).where(and(inArray(viewSessions.linkId, linkIds), eq(viewSessions.internal, false)))
-    .groupBy(viewSessions.linkId);
-  return new Map(rows.map((r) => [r.linkId, { opens: r.opens, lastOpened: r.last }]));
+  type Row = { opens: number; recipient: number; team: number; lastOpened: Date | null };
+  if (!linkIds.length) return new Map<string, Row>();
+  const rows = await db().select({
+      linkId: viewSessions.linkId,
+      opens: n(sql`count(*)`),
+      team: n(sql`count(*) filter (where ${viewSessions.internal})`),
+      last: sql<Date | null>`max(${viewSessions.startedAt})`.mapWith((v) => (v ? new Date(v) : null)),
+    })
+    .from(viewSessions).where(inArray(viewSessions.linkId, linkIds)).groupBy(viewSessions.linkId);
+  return new Map<string, Row>(rows.map((r) => [r.linkId, { opens: r.opens, team: r.team, recipient: r.opens - r.team, lastOpened: r.last }]));
 }
 
+export interface Visit { startedAt: Date; ms: number; slidesSeen: number; viewer: string | null }
 export interface LinkReport {
-  opens: number; internalOpens: number; totalMs: number; avgMs: number; lastOpened: Date | null;
+  who: Who;
+  counts: { all: number; recipients: number; team: number };
+  opens: number; totalMs: number; avgMs: number; lastOpened: Date | null;
   slides: { slideId: string; ms: number; reach: number }[];
-  visits: { startedAt: Date; ms: number; slidesSeen: number }[];
+  visits: Visit[];
 }
 
-/** Everything for one link's report page (external visits only). */
-export async function linkReport(linkId: string): Promise<LinkReport> {
+/** Everything for one link's report page, for all visits or one group. */
+export async function linkReport(linkId: string, who: Who = "all"): Promise<LinkReport> {
   const q = db();
-  const visits = await q.select({
+  const all = await q.select({
       id: viewSessions.id, startedAt: viewSessions.startedAt, internal: viewSessions.internal,
-      ms: sql<number>`coalesce(sum(${slideViews.ms}), 0)`.mapWith(Number),
-      slidesSeen: sql<number>`count(${slideViews.slideId})`.mapWith(Number),
+      viewer: sql<string | null>`coalesce(nullif(${users.name}, ''), ${users.email}, case when ${viewSessions.internal} then 'Someone on the team' end)`,
+      ms: n(sql`coalesce(sum(${slideViews.ms}), 0)`),
+      slidesSeen: n(sql`count(${slideViews.slideId})`),
     })
-    .from(viewSessions).leftJoin(slideViews, eq(slideViews.sessionId, viewSessions.id))
-    .where(eq(viewSessions.linkId, linkId)).groupBy(viewSessions.id).orderBy(desc(viewSessions.startedAt));
-  const external = visits.filter((v) => !v.internal);
-  const perSlide = await q.select({
-      slideId: slideViews.slideId, ms: sum(slideViews.ms).mapWith(Number),
-      reach: sql<number>`count(distinct ${slideViews.sessionId})`.mapWith(Number),
-    })
-    .from(slideViews).innerJoin(viewSessions, eq(viewSessions.id, slideViews.sessionId))
-    .where(and(eq(viewSessions.linkId, linkId), eq(viewSessions.internal, false)))
-    .groupBy(slideViews.slideId);
-  const totalMs = external.reduce((a, v) => a + v.ms, 0);
+    .from(viewSessions)
+    .leftJoin(slideViews, eq(slideViews.sessionId, viewSessions.id))
+    .leftJoin(users, eq(users.id, viewSessions.viewerId))
+    .where(eq(viewSessions.linkId, linkId))
+    .groupBy(viewSessions.id, users.name, users.email)
+    .orderBy(desc(viewSessions.startedAt));
+
+  const keep = (internal: boolean) => who === "all" || (who === "team") === internal;
+  const visits = all.filter((v) => keep(v.internal));
+  const ids = new Set(visits.map((v) => v.id));
+
+  const perSession = ids.size
+    ? await q.select({ sessionId: slideViews.sessionId, slideId: slideViews.slideId, ms: slideViews.ms })
+        .from(slideViews).where(inArray(slideViews.sessionId, [...ids]))
+    : [];
+  const bySlide = new Map<string, { ms: number; reach: number }>();
+  for (const r of perSession) {
+    const cur = bySlide.get(r.slideId) ?? { ms: 0, reach: 0 };
+    bySlide.set(r.slideId, { ms: cur.ms + r.ms, reach: cur.reach + 1 });
+  }
+
+  const totalMs = visits.reduce((a, v) => a + v.ms, 0);
+  const team = all.filter((v) => v.internal).length;
   return {
-    opens: external.length, internalOpens: visits.length - external.length, totalMs,
-    avgMs: external.length ? Math.round(totalMs / external.length) : 0,
-    lastOpened: external[0]?.startedAt ?? null,
-    slides: perSlide,
-    visits: external.slice(0, 50).map(({ startedAt, ms, slidesSeen }) => ({ startedAt, ms, slidesSeen })),
+    who,
+    counts: { all: all.length, recipients: all.length - team, team },
+    opens: visits.length, totalMs,
+    avgMs: visits.length ? Math.round(totalMs / visits.length) : 0,
+    lastOpened: visits[0]?.startedAt ?? null,
+    slides: [...bySlide].map(([slideId, v]) => ({ slideId, ...v })),
+    visits: visits.slice(0, 100).map(({ startedAt, ms, slidesSeen, internal, viewer }) => ({
+      startedAt, ms, slidesSeen, viewer: internal ? viewer : null,
+    })),
   };
 }
 

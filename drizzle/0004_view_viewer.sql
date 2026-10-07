@@ -1,0 +1,2 @@
+ALTER TABLE "view_sessions" ADD COLUMN "viewer_id" uuid;--> statement-breakpoint
+ALTER TABLE "view_sessions" ADD CONSTRAINT "view_sessions_viewer_id_users_id_fk" FOREIGN KEY ("viewer_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
