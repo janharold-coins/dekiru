@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "tsx scripts/prepare-db.ts && next dev",
+    "build": "tsx scripts/prepare-db.ts && next build",
     "start": "next start",
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:migrate": "tsx scripts/prepare-db.ts",
     "db:seed": "tsx scripts/db-seed.ts",
     "db:studio": "drizzle-kit studio",
     "user:role": "tsx scripts/user-role.ts"

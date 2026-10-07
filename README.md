@@ -52,17 +52,16 @@ One-time setup:
 
 1. Vercel → the dekiru project → **Storage** → **Create** → **Neon** → connect it to the project. This sets `DATABASE_URL` for Production and Preview.
 2. Locally: Vercel → Storage → the Neon database → Quickstart → **.env.local** tab → **Copy Snippet**, paste into `.env.local`. (The integration doesn't offer Development, so `vercel env pull` won't bring it — and running `vercel env pull` later overwrites `.env.local`.)
-3. `npm run db:migrate` — creates the tables.
-4. `npm run db:seed` — loads the Sales and Ramp masters as v1 (published).
 
-Day to day:
+**Nothing to run after that.** `npm run dev` and every Vercel build first apply any new migrations and sync the master decks from the Figma build (`scripts/prepare-db.ts`, ~0.1 s when there's nothing to do). On Vercel a failed migration stops the deploy, so the live site keeps its previous version; locally it only warns.
+
+Master sync rule: a master whose JSON changed gets a new published version — unless its newest version was edited in the app, which is never overwritten automatically (`npm run db:seed -- --force` does it on purpose).
 
 | Command | What |
 |---|---|
-| `npm run db:seed` | Create any master deck that's missing |
-| `npm run db:seed -- --update` | Publish a new version of a master whose JSON changed (after `python3 scripts/build-seed.py`) |
-| `npm run db:generate` | After editing `src/db/schema.ts`: write the next migration into `drizzle/` |
-| `npm run db:migrate` | Apply pending migrations |
+| `npm run db:generate` | After editing `src/db/schema.ts`: write the next migration into `drizzle/` (commit it; it applies itself) |
+| `npm run db:migrate` | Same as the automatic step, on demand |
+| `npm run db:seed -- --force` | Overwrite masters with the Figma build even if edited in the app |
 | `npm run db:studio` | Browse the data |
 
 How versions work: each deck has at most one **draft** (where edits land) and any number of **published** versions; people see the newest published one. Share links point at one published version, so publishing again never changes what a sent link shows. Slides shared between masters are stored as references (`{"id":"s01","ref":"sales/s01"}`) and follow the referenced deck's newest published version. A personal copy is a snapshot: master edits don't reach it.
