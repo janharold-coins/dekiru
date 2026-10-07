@@ -20,6 +20,26 @@ export function Bullets({ items, lineHeight = 1.6 }: { items: string[]; lineHeig
   );
 }
 
+/** Key APIs as numbered steps, each with its own bulleted calls (Ramp: QUOTE / CONFIRM / TRACK). */
+export interface KeyApiGroup { title: string; items: string[] }
+
+export function NumberedGroups({ groups, lineHeight = 1.6 }: { groups: KeyApiGroup[]; lineHeight?: number }) {
+  return (
+    <ol style={{ margin: 0, padding: 0, listStyle: "decimal", ...t(24, lineHeight, -0.72, 400) }}>
+      {groups.map((g, i) => (
+        <li key={i} style={{ marginInlineStart: 36, marginBottom: i === groups.length - 1 ? 0 : 12 }}>
+          <span style={keepBreaks}>{g.title}</span>
+          <ul style={{ margin: "12px 0 0", padding: 0, listStyle: "disc" }}>
+            {g.items.map((it, j) => (
+              <li key={j} style={{ marginInlineStart: 36, marginBottom: j === g.items.length - 1 ? 0 : 12, ...keepBreaks }}>{it}</li>
+            ))}
+          </ul>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 export interface Chip { label: string; value: string; unit?: string | null }
 
 export function PriceChip({ c }: { c: Chip }) {

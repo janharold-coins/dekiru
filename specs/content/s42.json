@@ -1,0 +1,63 @@
+{
+ "slide": 42,
+ "node": "515:32960",
+ "pattern": "product-detail",
+ "product": "ramp",
+ "texts": {
+  "eyebrow": "Products and Pricing",
+  "title": "Ramp",
+  "tagline": "Buy and sell stablecoins. In your app.",
+  "description": "Give your CEX or DEX users a PHP fiat deposit and withdrawal channel without sending them off-platform. Stablecoin rails, faster, lower cost, 24/7. Coins handles compliance.",
+  "whoLabel": "Who is it for",
+  "who": "CEXs and DEXs adding a PH fiat channel for their users without the licenses, rails, or compliance lift.",
+  "whatLabel": "What it is",
+  "keyApisLabel": "Key APIs",
+  "pricingLabel": "PRICING"
+ },
+ "what": [
+  "Supplementary fiat deposit and withdrawal channel for your exchange.",
+  "Live: PHP fiat, BRL fiat, USDC and USDT crypto.",
+  "Roadmap: 100+ mainstream crypto, 10+ fiat currencies.",
+  "PH payment methods: InstaPay, PESONet, UnionBank, GCash, Maya.",
+  "Tiered KYC, MFA, and AML handled by Coins."
+ ],
+ "keyApis": [
+  {
+   "title": "QUOTE",
+   "items": [
+    "Get Payment Configurations",
+    "Trial Price"
+   ]
+  },
+  {
+   "title": "CONFIRM",
+   "items": [
+    "Confirm On-Chain Funding",
+    "Initiate On-Chain Funding"
+   ]
+  },
+  {
+   "title": "TRACK",
+   "items": [
+    "Get Order Detail",
+    "Order status callbacks"
+   ]
+  }
+ ],
+ "pricing": {
+  "kind": "chips",
+  "chips": [
+   {
+    "label": "Ramp fees",
+    "value": "< 0.50",
+    "unit": "%",
+    "caption": null
+   }
+  ]
+ },
+ "layout": {
+  "rightTop": 258,
+  "pricingBottom": 72,
+  "whoWidth": 727
+ }
+}

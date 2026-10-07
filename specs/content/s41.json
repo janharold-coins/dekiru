@@ -1,0 +1,32 @@
+{
+ "slide": 41,
+ "node": "512:32751",
+ "pattern": "product-hero",
+ "product": "ramp",
+ "texts": {
+  "eyebrow": "Products and Pricing",
+  "title": "Ramp",
+  "tagline": "Buy and sell stablecoins. In your app."
+ },
+ "assets": {
+  "hero": "/figma/s41/hero.jpg"
+ },
+ "imageSlot": {
+  "x": 1042,
+  "y": 0,
+  "w": 878,
+  "h": 1069
+ },
+ "imageVariant": "mockup",
+ "heroPx": [
+  1755,
+  2138
+ ],
+ "textColumn": {
+  "x": 79,
+  "y": 452,
+  "w": 751,
+  "h": 176
+ },
+ "notes": "Figma tagline had a stray space ('stablecoins . In'); fixed."
+}

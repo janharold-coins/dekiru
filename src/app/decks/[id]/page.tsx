@@ -25,7 +25,7 @@ export default async function DeckPage({ params }: { params: Promise<{ id: strin
         <Link className="btn" href={`/decks/${deck.id}/compare`}>Compare with Figma</Link>
         <Link className="btn primary" href={`/decks/${deck.id}/present`}>Present ▶</Link>
       </div>
-      <p className="lede">{deck.slides.filter((s) => !s.hidden).length} slides presented{deck.slides.some((s) => s.hidden) ? ` · ${deck.slides.filter((s) => s.hidden).length} hidden` : ""} · master deck. Overflow flags and image-fit warnings show here in preview only, never in the presented deck.</p>
+      <p className="lede">{deck.slides.filter((s) => !s.hidden).length} slides presented{deck.slides.some((s) => s.hidden) ? ` · ${deck.slides.filter((s) => s.hidden).length} hidden` : ""} · master deck{deck.slides.some((s) => s.ref) ? ` · ${deck.slides.filter((s) => s.ref).length} shared with other decks` : ""}. Overflow flags and image-fit warnings show here in preview only, never in the presented deck.</p>
       <div className="grid">
         {deck.slides.map((s, i) => {
           const warnings = checkOverflow(s);
@@ -42,6 +42,7 @@ export default async function DeckPage({ params }: { params: Promise<{ id: strin
                 <span>{patterns[s.pattern]?.meta.name ?? s.pattern}</span>
                 <span className="mono" title="Position in the Figma file">fig {s.source?.slide ?? i + 1}</span>
                 <span className="spacer" style={{ flex: 1 }} />
+                {s.ref && <span className="tag" title={`Shared slide — edits to ${s.ref} apply to every deck that uses it`}>Shared · {s.ref.split("/")[0]}</span>}
                 {s.hidden && <span className="tag">Hidden</span>}
                 {warnings.length > 0 && <span className="tag warn">{warnings.length} overflow</span>}
               </div>

@@ -1,0 +1,103 @@
+{
+ "id": "ramp",
+ "title": "Coins.ph — Ramp deck",
+ "version": "figma-511:28902",
+ "slides": [
+  {
+   "id": "s01",
+   "ref": "sales/s01"
+  },
+  {
+   "id": "s04",
+   "ref": "sales/s04"
+  },
+  {
+   "id": "s05",
+   "ref": "sales/s05"
+  },
+  {
+   "id": "s06",
+   "ref": "sales/s06"
+  },
+  {
+   "id": "s41",
+   "ref": "sales/s41"
+  },
+  {
+   "id": "s42",
+   "ref": "sales/s42"
+  },
+  {
+   "id": "s43",
+   "ref": "sales/s43"
+  },
+  {
+   "id": "s38",
+   "ref": "sales/s38"
+  },
+  {
+   "id": "s11",
+   "ref": "sales/s11"
+  },
+  {
+   "id": "s12",
+   "ref": "sales/s12"
+  },
+  {
+   "id": "s13",
+   "ref": "sales/s13"
+  },
+  {
+   "id": "s17",
+   "ref": "sales/s17"
+  },
+  {
+   "id": "s18",
+   "ref": "sales/s18"
+  },
+  {
+   "id": "s19",
+   "ref": "sales/s19"
+  },
+  {
+   "id": "s23",
+   "ref": "sales/s23"
+  },
+  {
+   "id": "s24",
+   "ref": "sales/s24"
+  },
+  {
+   "id": "s25",
+   "ref": "sales/s25"
+  },
+  {
+   "id": "s26",
+   "ref": "sales/s26"
+  },
+  {
+   "id": "s27",
+   "ref": "sales/s27"
+  },
+  {
+   "id": "s28",
+   "ref": "sales/s28"
+  },
+  {
+   "id": "s29",
+   "ref": "sales/s29"
+  },
+  {
+   "id": "s30",
+   "ref": "sales/s30"
+  },
+  {
+   "id": "s39",
+   "ref": "sales/s39"
+  },
+  {
+   "id": "s40",
+   "ref": "sales/s40"
+  }
+ ]
+}

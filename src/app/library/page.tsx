@@ -6,7 +6,7 @@ import { decks } from "@/content/decks";
 import { Nav } from "../Nav";
 
 export default function LibraryPage() {
-  const all = Object.values(decks).flatMap((d) => d.slides.map((s, i) => ({ deck: d, slide: s, index: i })));
+  const all = Object.values(decks).flatMap((d) => d.slides.map((s, i) => ({ deck: d, slide: s, index: i })).filter((u) => !u.slide.ref));
   return (
     <main className="shell">
       <Nav on="library" />

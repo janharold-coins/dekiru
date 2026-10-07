@@ -1,0 +1,38 @@
+{
+ "slide": 43,
+ "node": "515:33041",
+ "pattern": "product-flow",
+ "product": "ramp",
+ "texts": {
+  "eyebrow": "Products and Pricing",
+  "titleBold": "Ramp",
+  "titleRegular": "Product Flow"
+ },
+ "steps": [
+  {
+   "n": "01",
+   "title": "User starts\na transaction",
+   "caption": "Inside your\napp or platform."
+  },
+  {
+   "n": "02",
+   "title": "Coins handles compliance",
+   "caption": "Tiered KYC, MFA, AML."
+  },
+  {
+   "n": "03",
+   "title": "We lock\nthe quote",
+   "caption": "Live FX rate via Trial Price."
+  },
+  {
+   "n": "04",
+   "title": "Money\nmoves",
+   "caption": "Fiat in via PH rails, or crypto in on-chain."
+  },
+  {
+   "n": "05",
+   "title": "Settled",
+   "caption": "Crypto to wallet,\nor fiat to bank\nor e-wallet."
+  }
+ ]
+}

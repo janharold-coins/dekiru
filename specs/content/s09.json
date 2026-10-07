@@ -33,10 +33,6 @@
       "description": "Accept payments, online and in store"
      },
      {
-      "name": "Virtual Accounts",
-      "description": "Accept fiat and crypto, sorted by seller"
-     },
-     {
       "name": "Scan and Pay",
       "description": "Send white-labelled QRPh payments"
      },
@@ -62,6 +58,10 @@
     "title": "Trade  /  Institutional Crypto",
     "color": "#fa7312",
     "products": [
+     {
+      "name": "Ramp",
+      "description": "Buy and sell stablecoins. In your app"
+     },
      {
       "name": "OTC RFQ",
       "description": "Lock your price before you trade"

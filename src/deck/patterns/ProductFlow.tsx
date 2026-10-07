@@ -13,7 +13,7 @@ export const productFlowMeta: PatternMeta = {
   id: "product-flow", name: "Product flow", shape: "sequence",
   description: "Centred title; numbered step cards joined by chevrons. The last step is the payoff (bold).",
   defaultChrome: { background: "light", overlay: false, logo: "dark", footer: "bottom-left", accentBar: true },
-  budgets: [{ slot: "steps", maxItems: 5 }, { slot: "step.title", maxChars: 28, maxLines: 2 }, { slot: "step.caption", maxChars: 50, maxLines: 2 }],
+  budgets: [{ slot: "steps", maxItems: 5 }, { slot: "step.title", maxChars: 28, maxLines: 2 }, { slot: "step.caption", maxChars: 50, maxLines: 3 }],
 };
 
 function Chevron() {

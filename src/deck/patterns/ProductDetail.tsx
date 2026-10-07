@@ -1,4 +1,4 @@
-import { Bullets, PriceChip, SectionHeader, TierChip, type Chip, type Tier } from "../components/ProductParts";
+import { Bullets, NumberedGroups, PriceChip, SectionHeader, TierChip, type Chip, type KeyApiGroup, type Tier } from "../components/ProductParts";
 import { t, keepBreaks } from "../tokens";
 import type { PatternMeta } from "../types";
 
@@ -11,9 +11,15 @@ export interface ProductDetailProps {
   eyebrow: string; title: string; tagline: string; description: string;
   whoLabel: string; who: string;
   whatLabel: string; what: string[];
-  keyApisLabel?: string | null; keyApis: string[];
+  keyApisLabel?: string | null;
+  /** Plain bullets, or numbered steps with their own calls. */
+  keyApis: string[] | KeyApiGroup[];
   pricingLabel: string; pricing: Pricing;
+  /** Pixel overrides reproducing a Figma frame; generated slides omit them. */
+  figma?: { rightTop?: number; pricingBottom?: number; whoWidth?: number };
 }
+
+const isGroups = (k: ProductDetailProps["keyApis"]): k is KeyApiGroup[] => k.length > 0 && typeof k[0] !== "string";
 
 export const productDetailMeta: PatternMeta = {
   id: "product-detail", name: "Product detail", shape: "set",
@@ -21,8 +27,8 @@ export const productDetailMeta: PatternMeta = {
   defaultChrome: { background: "light", overlay: false, logo: "dark", footer: "top-right", accentBar: true },
   budgets: [
     { slot: "title", maxChars: 22, maxLines: 1 }, { slot: "tagline", maxChars: 55, maxLines: 2 },
-    { slot: "description", maxChars: 150, maxLines: 3 }, { slot: "who", maxChars: 160, maxLines: 4 },
-    { slot: "what", maxItems: 3 }, { slot: "what.item", maxChars: 85, maxLines: 3 },
+    { slot: "description", maxChars: 180, maxLines: 4 }, { slot: "who", maxChars: 160, maxLines: 4 },
+    { slot: "what", maxItems: 5 }, { slot: "what.item", maxChars: 85, maxLines: 3 },
     { slot: "keyApis", maxItems: 4 }, { slot: "keyApis.item", maxChars: 50, maxLines: 2 },
     { slot: "pricing.chips", maxItems: 3 }, { slot: "pricing.tiers", maxItems: 5 },
   ],
@@ -41,9 +47,9 @@ function Head({ eyebrow, title, tagline, description }: ProductDetailProps) {
   );
 }
 
-function Who({ whoLabel, who }: ProductDetailProps) {
+function Who({ whoLabel, who, figma }: ProductDetailProps) {
   return (
-    <div style={{ width: 751, display: "flex", flexDirection: "column", gap: 8 }}>
+    <div style={{ width: figma?.whoWidth ?? 751, display: "flex", flexDirection: "column", gap: 8 }}>
       <span style={t(36, 1.4, -1.08, 700)}>{whoLabel}</span>
       <span style={{ ...t(40, 1.6, -1.2, 400), ...keepBreaks }}>{who}</span>
     </div>
@@ -53,6 +59,11 @@ function Who({ whoLabel, who }: ProductDetailProps) {
 export function ProductDetail(p: ProductDetailProps) {
   if (p.pricing.kind === "tiers") return <ProductDetailTiers {...p} />;
   const { pricing } = p;
+  const grouped = isGroups(p.keyApis);
+  // Taller right column (more than 3 bullets, or numbered API steps) starts higher and pricing sits lower.
+  const tall = grouped || p.what.length > 3;
+  const rightTop = p.figma?.rightTop ?? (tall ? 258 : 336);
+  const pricingBottom = p.figma?.pricingBottom ?? (tall ? 72 : 92);
   const pricingText = pricing.text && (
     <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-start" }}>
       <span style={t(24, 1.4, -0.72, 500)}>{pricing.text}</span>
@@ -65,7 +76,7 @@ export function ProductDetail(p: ProductDetailProps) {
         <Head {...p} />
         <Who {...p} />
       </div>
-      <div style={{ position: "absolute", left: 903, top: 336, width: 940, display: "flex", gap: 60, alignItems: "flex-start" }}>
+      <div style={{ position: "absolute", left: 903, top: rightTop, width: 940, display: "flex", gap: 60, alignItems: "flex-start" }}>
         <div style={{ width: 420, display: "flex", flexDirection: "column", gap: 24, padding: "36px 0" }}>
           <SectionHeader label={p.whatLabel} />
           <Bullets items={p.what} />
@@ -73,11 +84,11 @@ export function ProductDetail(p: ProductDetailProps) {
         {p.keyApis.length > 0 && (
           <div style={{ width: 460, boxSizing: "border-box", border: "1px solid #000", borderRadius: 12, padding: "35px 23px", display: "flex", flexDirection: "column", gap: 24 }}>
             <SectionHeader label={p.keyApisLabel ?? "Key APIs"} />
-            <Bullets items={p.keyApis} />
+            {isGroups(p.keyApis) ? <NumberedGroups groups={p.keyApis} /> : <Bullets items={p.keyApis} />}
           </div>
         )}
       </div>
-      <div style={{ position: "absolute", right: 77, bottom: 92, display: "flex", gap: 36, alignItems: "center", justifyContent: "flex-end", whiteSpace: "nowrap" }}>
+      <div style={{ position: "absolute", right: 77, bottom: pricingBottom, display: "flex", gap: 36, alignItems: "center", justifyContent: "flex-end", whiteSpace: "nowrap" }}>
         <span style={t(36, 1.4, 1.08, 700)}>{p.pricingLabel}</span>
         {pricing.chips && pricing.chips.length > 0 && (
           <div style={{ display: "flex", gap: 24, alignItems: "center" }}>

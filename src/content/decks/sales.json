@@ -893,10 +893,6 @@
         "description": "Accept payments, online and in store"
        },
        {
-        "name": "Virtual Accounts",
-        "description": "Accept fiat and crypto, sorted by seller"
-       },
-       {
         "name": "Scan and Pay",
         "description": "Send white-labelled QRPh payments"
        },
@@ -922,6 +918,10 @@
       "title": "Trade  /  Institutional Crypto",
       "color": "#fa7312",
       "products": [
+       {
+        "name": "Ramp",
+        "description": "Buy and sell stablecoins. In your app"
+       },
        {
         "name": "OTC RFQ",
         "description": "Lock your price before you trade"
@@ -1095,7 +1095,8 @@
     "figmaNode": "511:29671",
     "slide": 14,
     "visualNode": "801:33836"
-   }
+   },
+   "hidden": true
   },
   {
    "id": "s15",
@@ -1131,7 +1132,8 @@
    "source": {
     "figmaNode": "511:29686",
     "slide": 15
-   }
+   },
+   "hidden": true
   },
   {
    "id": "s16",
@@ -1172,7 +1174,8 @@
    "source": {
     "figmaNode": "511:29721",
     "slide": 16
-   }
+   },
+   "hidden": true
   },
   {
    "id": "s17",
@@ -1776,6 +1779,135 @@
    "source": {
     "figmaNode": "511:30406",
     "slide": 31
+   }
+  },
+  {
+   "id": "s41",
+   "pattern": "product-hero",
+   "props": {
+    "product": "ramp",
+    "eyebrow": "Products and Pricing",
+    "title": "Ramp",
+    "tagline": "Buy and sell stablecoins. In your app.",
+    "image": {
+     "src": "/figma/s41/hero.jpg",
+     "variant": "mockup",
+     "x": 1042,
+     "y": 0,
+     "w": 878,
+     "h": 1069
+    }
+   },
+   "source": {
+    "figmaNode": "512:32751",
+    "slide": 41
+   }
+  },
+  {
+   "id": "s42",
+   "pattern": "product-detail",
+   "props": {
+    "product": "ramp",
+    "eyebrow": "Products and Pricing",
+    "title": "Ramp",
+    "tagline": "Buy and sell stablecoins. In your app.",
+    "description": "Give your CEX or DEX users a PHP fiat deposit and withdrawal channel without sending them off-platform. Stablecoin rails, faster, lower cost, 24/7. Coins handles compliance.",
+    "whoLabel": "Who is it for",
+    "who": "CEXs and DEXs adding a PH fiat channel for their users without the licenses, rails, or compliance lift.",
+    "whatLabel": "What it is",
+    "what": [
+     "Supplementary fiat deposit and withdrawal channel for your exchange.",
+     "Live: PHP fiat, BRL fiat, USDC and USDT crypto.",
+     "Roadmap: 100+ mainstream crypto, 10+ fiat currencies.",
+     "PH payment methods: InstaPay, PESONet, UnionBank, GCash, Maya.",
+     "Tiered KYC, MFA, and AML handled by Coins."
+    ],
+    "keyApisLabel": "Key APIs",
+    "keyApis": [
+     {
+      "title": "QUOTE",
+      "items": [
+       "Get Payment Configurations",
+       "Trial Price"
+      ]
+     },
+     {
+      "title": "CONFIRM",
+      "items": [
+       "Confirm On-Chain Funding",
+       "Initiate On-Chain Funding"
+      ]
+     },
+     {
+      "title": "TRACK",
+      "items": [
+       "Get Order Detail",
+       "Order status callbacks"
+      ]
+     }
+    ],
+    "pricingLabel": "PRICING",
+    "pricing": {
+     "kind": "chips",
+     "chips": [
+      {
+       "label": "Ramp fees",
+       "value": "< 0.50",
+       "unit": "%",
+       "caption": null
+      }
+     ]
+    },
+    "figma": {
+     "rightTop": 258,
+     "pricingBottom": 72,
+     "whoWidth": 727
+    }
+   },
+   "source": {
+    "figmaNode": "515:32960",
+    "slide": 42
+   }
+  },
+  {
+   "id": "s43",
+   "pattern": "product-flow",
+   "props": {
+    "product": "ramp",
+    "eyebrow": "Products and Pricing",
+    "titleBold": "Ramp",
+    "titleRegular": "Product Flow",
+    "steps": [
+     {
+      "n": "01",
+      "title": "User starts\na transaction",
+      "caption": "Inside your\napp or platform."
+     },
+     {
+      "n": "02",
+      "title": "Coins handles compliance",
+      "caption": "Tiered KYC, MFA, AML."
+     },
+     {
+      "n": "03",
+      "title": "We lock\nthe quote",
+      "caption": "Live FX rate via Trial Price."
+     },
+     {
+      "n": "04",
+      "title": "Money\nmoves",
+      "caption": "Fiat in via PH rails, or crypto in on-chain."
+     },
+     {
+      "n": "05",
+      "title": "Settled",
+      "caption": "Crypto to wallet,\nor fiat to bank\nor e-wallet."
+     }
+    ]
+   },
+   "source": {
+    "figmaNode": "515:33041",
+    "slide": 43
    }
   },
   {

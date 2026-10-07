@@ -1,6 +1,9 @@
-"""Turn the Figma extraction (specs/content/sNN.json) into the Sales master deck seed.
+"""Turn the Figma extraction (specs/content/sNN.json) into the master deck seeds.
 
-Output: src/content/decks/sales.json — a Deck: {id, title, slides:[{id, pattern, props, chrome?, source}]}.
+Output:
+  src/content/decks/sales.json — a Deck: {id, title, slides:[{id, pattern, props, chrome?, hidden?, source}]}.
+  src/content/decks/ramp.json  — a Deck whose slides are references ({id, ref:"sales/sNN"}) to Sales master
+                                 slides, so a fix to a shared slide lands in both decks.
 Each slide's `props` matches the pattern's TypeScript props in src/deck/patterns/*.
 `figma` keys inside props carry pixel-exact overrides that reproduce the Figma file;
 generated decks omit them and patterns fall back to measured/auto layout.
@@ -79,7 +82,8 @@ def detail(d):
     return {"product": d["product"], "eyebrow": t["eyebrow"], "title": t["title"], "tagline": t["tagline"],
             "description": t["description"], "whoLabel": t["whoLabel"], "who": t["who"],
             "whatLabel": t["whatLabel"], "what": d["what"], "keyApisLabel": t.get("keyApisLabel"),
-            "keyApis": d["keyApis"], "pricingLabel": t["pricingLabel"], "pricing": d["pricing"]}
+            "keyApis": d["keyApis"], "pricingLabel": t["pricingLabel"], "pricing": d["pricing"],
+            **({"figma": d["layout"]} if d.get("layout") else {})}
 
 def flow(d):
     t = d["texts"]
@@ -122,11 +126,20 @@ CHROME = {
     40: {"background": "dark-navy"},
 }
 
-# Slides kept in the master but not presented (Jan, 2026-10-07: Business Portal).
-HIDDEN = {20, 21, 22}
+# Slides kept in the master but not presented.
+#   20-22 Business Portal (Jan, 2026-10-07).
+#   14-16 Virtual Accounts — not in "Sales Deck as of Jun5" PDF (2026-10-07). Un-hide to bring back.
+HIDDEN = {14, 15, 16, 20, 21, 22}
+
+# Presented order of the Sales deck (Figma positions). Follows "Sales Deck as of Jun5 (no biz portal).pdf":
+# the Ramp kit (41-43, built in Figma after the main run) sits at the top of Trade, before OTC RFQ.
+SALES_ORDER = list(range(1, 32)) + [41, 42, 43] + list(range(32, 41))
+
+# Ramp deck, per "Ramp Deck as of Jun 5.pdf". Every slide is shared with Sales.
+RAMP_ORDER = [1, 4, 5, 6, 41, 42, 43, 38, 11, 12, 13, 17, 18, 19, 23, 24, 25, 26, 27, 28, 29, 30, 39, 40]
 
 slides = []
-for n in range(1, 41):
+for n in SALES_ORDER:
     d = load(n)
     pattern, fn = MAP[d["pattern"]]
     s = {"id": f"s{n:02d}", "pattern": pattern, "props": fn(d), "source": {"figmaNode": d["node"], "slide": n}}
@@ -138,7 +151,13 @@ for n in range(1, 41):
         s["source"]["visualNode"] = d["visualSource"]["node"]
     slides.append(s)
 
+OUT = ROOT / "src" / "content" / "decks"
 deck = {"id": "sales", "title": "Coins.ph — Sales deck", "version": "figma-511:28902", "slides": slides}
-out = ROOT / "src" / "content" / "decks" / "sales.json"
-out.write_text(json.dumps(deck, ensure_ascii=False, indent=1))
-print("wrote", out, len(slides), "slides")
+(OUT / "sales.json").write_text(json.dumps(deck, ensure_ascii=False, indent=1))
+print("wrote sales.json", len(slides), "slides,", sum(1 for s in slides if not s.get("hidden")), "presented")
+
+assert not HIDDEN & set(RAMP_ORDER), "Ramp references a slide hidden in Sales"
+ramp = {"id": "ramp", "title": "Coins.ph — Ramp deck", "version": "figma-511:28902",
+        "slides": [{"id": f"s{n:02d}", "ref": f"sales/s{n:02d}"} for n in RAMP_ORDER]}
+(OUT / "ramp.json").write_text(json.dumps(ramp, ensure_ascii=False, indent=1))
+print("wrote ramp.json", len(ramp["slides"]), "slides")

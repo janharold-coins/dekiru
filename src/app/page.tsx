@@ -15,7 +15,7 @@ export default function Home() {
         {Object.values(decks).map((d) => (
           <Link key={d.id} href={`/decks/${d.id}`} className="card">
             <ScaledSlide className="thumb"><RenderSlide slide={d.slides[0]} /></ScaledSlide>
-            <div className="meta"><b>{d.title}</b><span className="spacer" /><span className="tag">{d.slides.length} slides</span></div>
+            <div className="meta"><b>{d.title}</b><span className="spacer" /><span className="tag">{d.slides.filter((s) => !s.hidden).length} slides</span></div>
           </Link>
         ))}
         <Link href="/library" className="card" style={{ display: "grid", placeItems: "center", padding: 24, minHeight: 200 }}>
