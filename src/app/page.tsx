@@ -2,17 +2,18 @@ import Link from "next/link";
 import { RenderSlide } from "@/deck/RenderSlide";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
 import { patterns } from "@/deck/registry";
-import { decks } from "@/content/decks";
+import { listDecks } from "@/lib/decks";
 import { Nav } from "./Nav";
 
-export default function Home() {
+export default async function Home() {
+  const decks = await listDecks();
   return (
     <main className="shell">
       <Nav />
       <h1 className="page">Decks</h1>
       <p className="lede">Master decks built from the pattern library. Open one to review it slide by slide, present it, or compare it with the Figma original.</p>
       <div className="grid">
-        {Object.values(decks).map((d) => (
+        {decks.map((d) => (
           <Link key={d.id} href={`/decks/${d.id}`} className="card">
             <ScaledSlide className="thumb"><RenderSlide slide={d.slides[0]} /></ScaledSlide>
             <div className="meta"><b>{d.title}</b><span className="spacer" /><span className="tag">{d.slides.filter((s) => !s.hidden).length} slides</span></div>

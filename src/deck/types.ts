@@ -21,7 +21,7 @@ export interface SlideData<P = Record<string, unknown>> {
   chrome?: Partial<Chrome>;
   /** Kept in the deck (and the library) but skipped when presenting or sharing. */
   hidden?: boolean;
-  source?: { figmaNode?: string; visualNode?: string; slide?: number };
+  source?: { figmaNode?: string; visualNode?: string; slide?: number; copiedFrom?: string };
   /** Set when the slide is shared from another master deck ("sales/s01"); edit it there. */
   ref?: string;
 }

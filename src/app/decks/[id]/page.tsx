@@ -5,16 +5,12 @@ import { ScaledSlide } from "@/deck/frame/ScaledSlide";
 import { PreviewChecks } from "@/deck/frame/PreviewChecks";
 import { checkOverflow } from "@/deck/overflow";
 import { patterns } from "@/deck/registry";
-import { decks, getDeck } from "@/content/decks";
+import { getDeck } from "@/lib/decks";
 import { Nav } from "../../Nav";
-
-export function generateStaticParams() {
-  return Object.keys(decks).map((id) => ({ id }));
-}
 
 export default async function DeckPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const deck = getDeck(id);
+  const deck = await getDeck(id);
   if (!deck) notFound();
   return (
     <main className="shell">
@@ -25,7 +21,7 @@ export default async function DeckPage({ params }: { params: Promise<{ id: strin
         <Link className="btn" href={`/decks/${deck.id}/compare`}>Compare with Figma</Link>
         <Link className="btn primary" href={`/decks/${deck.id}/present`}>Present ▶</Link>
       </div>
-      <p className="lede">{deck.slides.filter((s) => !s.hidden).length} slides presented{deck.slides.some((s) => s.hidden) ? ` · ${deck.slides.filter((s) => s.hidden).length} hidden` : ""} · master deck{deck.slides.some((s) => s.ref) ? ` · ${deck.slides.filter((s) => s.ref).length} shared with other decks` : ""}. Overflow flags and image-fit warnings show here in preview only, never in the presented deck.</p>
+      <p className="lede">{deck.slides.filter((s) => !s.hidden).length} slides presented{deck.slides.some((s) => s.hidden) ? ` · ${deck.slides.filter((s) => s.hidden).length} hidden` : ""} · {deck.kind === "master" ? "master deck" : "personal copy"}{deck.versionNumber ? ` · v${deck.versionNumber}${deck.hasDraft ? " (unpublished draft exists)" : ""}` : ""}{deck.slides.some((s) => s.ref) ? ` · ${deck.slides.filter((s) => s.ref).length} shared with other decks` : ""}. Overflow flags and image-fit warnings show here in preview only, never in the presented deck.</p>
       <div className="grid">
         {deck.slides.map((s, i) => {
           const warnings = checkOverflow(s);

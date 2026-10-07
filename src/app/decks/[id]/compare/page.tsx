@@ -2,17 +2,13 @@ import { notFound } from "next/navigation";
 import { RenderSlide } from "@/deck/RenderSlide";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
 import { patterns } from "@/deck/registry";
-import { decks, getDeck } from "@/content/decks";
+import { getDeck } from "@/lib/decks";
 import { Nav } from "../../../Nav";
-
-export function generateStaticParams() {
-  return Object.keys(decks).map((id) => ({ id }));
-}
 
 /** Side by side: Figma render (left) vs code render (right), for parity review. */
 export default async function ComparePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const deck = getDeck(id);
+  const deck = await getDeck(id);
   if (!deck) notFound();
   return (
     <main className="shell">

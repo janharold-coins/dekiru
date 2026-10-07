@@ -2,11 +2,11 @@ import Link from "next/link";
 import { RenderSlide } from "@/deck/RenderSlide";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
 import { patternOrder, patterns } from "@/deck/registry";
-import { decks } from "@/content/decks";
+import { listDecks } from "@/lib/decks";
 import { Nav } from "../Nav";
 
-export default function LibraryPage() {
-  const all = Object.values(decks).flatMap((d) => d.slides.map((s, i) => ({ deck: d, slide: s, index: i })).filter((u) => !u.slide.ref));
+export default async function LibraryPage() {
+  const all = (await listDecks()).flatMap((d) => d.slides.map((s, i) => ({ deck: d, slide: s, index: i })).filter((u) => !u.slide.ref));
   return (
     <main className="shell">
       <Nav on="library" />
