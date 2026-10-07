@@ -7,7 +7,7 @@
  * Re-run after `python3 scripts/build-seed.py` while Figma is still the source for masters.
  */
 import { eq } from "drizzle-orm";
-import { db } from "@/db/client";
+import { db, hasDb, MISSING_DB_HELP } from "@/db/client";
 import { decks } from "@/db/schema";
 import { seedDecks } from "@/content/decks";
 import { createDeck, getDeckVersions, publishDraft, saveDraft } from "@/lib/decks";
@@ -20,6 +20,7 @@ const canon = (v: unknown): string =>
 
 async function main() {
   try { process.loadEnvFile(".env.local"); } catch { /* env may come from the shell */ }
+  if (!hasDb()) { console.error(`\n${MISSING_DB_HELP}\n`); process.exit(1); }
   const update = process.argv.includes("--update");
   for (const d of seedDecks) {
     const [row] = await db().select().from(decks).where(eq(decks.id, d.id)).limit(1);
