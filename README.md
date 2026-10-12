@@ -40,7 +40,9 @@ Deck page → **Share** (`/decks/<id>/share`). A link is a public URL (`/s/<slug
 - The list shows who made each link, for whom, which version, how many times it was opened and when last.
 - **Report per link** (click the name or the opens count): opens, total and average time viewed, last opened, time per slide with how many visits reached it, and each visit. Only time the deck is on screen counts. Every visit counts, split into **Recipients** (not signed in to Dekiru — the client on their own; no identity or IP stored) and **Team** (signed in — a rep presenting it in a meeting or checking it, recorded with who). The report filters All / Recipients / Team.
 
-Code: `src/lib/share.ts`, `src/lib/analytics.ts`, `src/app/decks/[id]/share/`, `src/app/s/[slug]/` (tracking beacon: `s/[slug]/track`).
+**Presentations.** When a rep presents with the deck's **Present** button (like presenting from Google Slides), the session is tracked too: who presented, when, how long, time per slide, and an optional **Presenting to…** note typed into the bar at the bottom of the presenter. Deck page → **Presentations**. Sessions under 30 s count as quick checks and are hidden by default.
+
+Code: `src/lib/share.ts`, `src/lib/analytics.ts`, `src/app/decks/[id]/present/` (presenter + tracking), `src/app/decks/[id]/presentations/`, `src/app/decks/[id]/share/`, `src/app/s/[slug]/` (tracking beacon: `s/[slug]/track`).
 
 ## Database (Neon)
 

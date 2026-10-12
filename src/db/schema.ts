@@ -20,6 +20,7 @@ import type { SlideData } from "@/deck/types";
 export const role = pgEnum("role", ["admin", "manager", "member"]);
 export const deckKind = pgEnum("deck_kind", ["master", "copy"]);
 export const versionStatus = pgEnum("version_status", ["draft", "published"]);
+export const viewKind = pgEnum("view_kind", ["link", "present"]);
 
 const created = () => timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
 
@@ -136,22 +137,29 @@ export const shareLinks = pgTable("share_links", {
 });
 
 /**
- * One open of a share link (a visit). Time per deck = sum of its slide_views (visible time only).
- * Two kinds of visit, both counted and reported separately:
- *   recipient — not signed in to Dekiru (the client opening the link). No identity or IP stored.
- *   team      — signed in (`internal` = true, `viewerId` = who): a rep presenting it in a meeting, or checking it.
+ * One viewing of a deck. Two kinds:
+ *   link    — someone opened a share link. Split by who:
+ *               recipient — not signed in (the client on their own; no identity or IP stored)
+ *               team      — signed in (`internal`, `viewerId`): a rep presenting the link or checking it
+ *   present — a signed-in rep used the deck's Present button (like presenting from Google Slides).
+ *             `audience` is the optional "Presenting to…" note.
+ * Time per visit = sum of its slide_views (visible time only).
  */
 export const viewSessions = pgTable(
   "view_sessions",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    linkId: uuid("link_id").notNull().references(() => shareLinks.id, { onDelete: "cascade" }),
+    kind: viewKind("kind").notNull().default("link"),
+    deckId: text("deck_id").references(() => decks.id, { onDelete: "cascade" }),
+    versionId: uuid("version_id").references(() => deckVersions.id, { onDelete: "set null" }),
+    linkId: uuid("link_id").references(() => shareLinks.id, { onDelete: "cascade" }),
     internal: boolean("internal").notNull().default(false),
     viewerId: uuid("viewer_id").references(() => users.id, { onDelete: "set null" }),
+    audience: text("audience"),
     startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("view_sessions_link").on(t.linkId, t.startedAt)],
+  (t) => [index("view_sessions_link").on(t.linkId, t.startedAt), index("view_sessions_deck").on(t.deckId, t.kind, t.startedAt)],
 );
 
 /** Time spent on a slide during a visit (one row per slide per visit, ms accumulated). */

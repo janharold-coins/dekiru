@@ -17,6 +17,7 @@ export interface DeckInfo extends Deck {
   kind: "master" | "copy";
   /** Version number shown in the UI; absent when running from the JSON seed. */
   versionNumber?: number;
+  versionId?: string;
   status: "published" | "draft";
   /** True when an unpublished draft exists alongside the version shown. */
   hasDraft: boolean;
@@ -82,7 +83,7 @@ async function load(q: Db, row: typeof decks.$inferSelect, wantDraft: boolean): 
   if (!v) return undefined;
   return {
     id: row.id, title: row.title, kind: row.kind,
-    version: `v${v.number}`, versionNumber: v.number, status: v.status, hasDraft: Boolean(draft),
+    version: `v${v.number}`, versionNumber: v.number, versionId: v.id, status: v.status, hasDraft: Boolean(draft),
     slides: await resolveSlides(v.slides, dbLookup(q)),
   };
 }
