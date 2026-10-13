@@ -3,6 +3,7 @@ import { RenderSlide } from "@/deck/RenderSlide";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
 import { patterns } from "@/deck/registry";
 import { getDeck } from "@/lib/decks";
+import { deckFor } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { Nav } from "../../../Nav";
 
@@ -10,6 +11,7 @@ import { Nav } from "../../../Nav";
 export default async function ComparePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requireUser(`/decks/${id}/compare`);
+  if (!(await deckFor(id, user))) notFound();
   const deck = await getDeck(id);
   if (!deck) notFound();
   return (

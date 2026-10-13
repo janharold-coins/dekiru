@@ -1,14 +1,15 @@
 import { requireUser } from "@/lib/auth";
 import { notFound } from "next/navigation";
 import { RenderSlide } from "@/deck/RenderSlide";
-import { getDeck } from "@/lib/decks";
+import { deckFor } from "@/lib/access";
 import { TrackedPresenter } from "./TrackedPresenter";
 
 export default async function PresentPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  await requireUser(`/decks/${id}/present`);
-  const deck = await getDeck(id);
-  if (!deck) notFound();
+  const user = await requireUser(`/decks/${id}/present`);
+  const found = await deckFor(id, user);
+  if (!found) notFound();
+  const { deck } = found;
   const shown = deck.slides.filter((s) => !s.hidden);
   return (
     <TrackedPresenter

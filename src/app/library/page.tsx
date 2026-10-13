@@ -8,7 +8,7 @@ import { Nav } from "../Nav";
 
 export default async function LibraryPage() {
   const user = await requireUser("/library");
-  const all = (await listDecks()).flatMap((d) => d.slides.map((s, i) => ({ deck: d, slide: s, index: i })).filter((u) => !u.slide.ref));
+  const all = (await listDecks({ viewerId: user?.id ?? null })).filter((d) => d.kind === "master").flatMap((d) => d.slides.map((s, i) => ({ deck: d, slide: s, index: i })).filter((u) => !u.slide.ref));
   return (
     <main className="shell">
       <Nav on="library" user={user} />

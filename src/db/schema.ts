@@ -79,6 +79,48 @@ export const verifications = pgTable("verifications", {
   updatedAt: updated(),
 }, (t) => [index("verifications_identifier").on(t.identifier)]);
 
+/*
+ * Claude connector sign-in (OAuth 2.1 via Better Auth's MCP plugin). Claude registers itself as a client,
+ * the person signs in with Google, and Claude gets a token that acts as that person. Managed by Better Auth.
+ */
+export const oauthApplications = pgTable("oauth_applications", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  icon: text("icon"),
+  metadata: text("metadata"),
+  clientId: text("client_id").notNull().unique(),
+  clientSecret: text("client_secret"),
+  redirectUrls: text("redirect_urls").notNull(),
+  type: text("type").notNull(),
+  disabled: boolean("disabled").default(false),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+  createdAt: created(),
+  updatedAt: updated(),
+}, (t) => [index("oauth_applications_user").on(t.userId)]);
+
+export const oauthAccessTokens = pgTable("oauth_access_tokens", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  accessToken: text("access_token").notNull().unique(),
+  refreshToken: text("refresh_token").notNull().unique(),
+  accessTokenExpiresAt: timestamp("access_token_expires_at", { withTimezone: true }).notNull(),
+  refreshTokenExpiresAt: timestamp("refresh_token_expires_at", { withTimezone: true }).notNull(),
+  clientId: text("client_id").notNull().references(() => oauthApplications.clientId, { onDelete: "cascade" }),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+  scopes: text("scopes").notNull(),
+  createdAt: created(),
+  updatedAt: updated(),
+}, (t) => [index("oauth_access_tokens_client").on(t.clientId), index("oauth_access_tokens_user").on(t.userId)]);
+
+export const oauthConsents = pgTable("oauth_consents", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  clientId: text("client_id").notNull().references(() => oauthApplications.clientId, { onDelete: "cascade" }),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  scopes: text("scopes").notNull(),
+  consentGiven: boolean("consent_given").notNull(),
+  createdAt: created(),
+  updatedAt: updated(),
+}, (t) => [index("oauth_consents_client").on(t.clientId), index("oauth_consents_user").on(t.userId)]);
+
 /** Master decks (company-wide) and personal copies. Slug ids keep URLs readable: /decks/sales. */
 export const decks = pgTable("decks", {
   id: text("id").primaryKey(),

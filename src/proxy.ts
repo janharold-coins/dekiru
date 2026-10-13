@@ -18,6 +18,7 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Everything except sign-in, public share links (/s/…), the auth API, Next internals and static files.
-  matcher: ["/((?!sign-in|s/|api/auth|_next/|figma/|favicon|.*\\.(?:png|jpg|jpeg|svg|webp|ico|woff2?)$).*)"],
+  // Everything except sign-in, public share links (/s/…), the auth API, the Claude connector (bearer-token auth),
+  // OAuth discovery documents, Next internals and static files.
+  matcher: ["/((?!sign-in|s/|api/auth|api/mcp|\\.well-known|_next/|figma/|favicon|.*\\.(?:png|jpg|jpeg|svg|webp|ico|woff2?)$).*)"],
 };

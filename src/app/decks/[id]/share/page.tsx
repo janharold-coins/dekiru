@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { hasDb } from "@/db/client";
 import { requireUser } from "@/lib/auth";
 import { getDeck } from "@/lib/decks";
+import { deckFor } from "@/lib/access";
 import { listShareLinks } from "@/lib/share";
 import { Nav } from "../../../Nav";
 import { revokeLinkAction } from "./actions";
@@ -14,6 +15,7 @@ const fmt = (d: Date) => d.toLocaleDateString("en-PH", { day: "numeric", month: 
 export default async function SharePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requireUser(`/decks/${id}/share`);
+  if (!(await deckFor(id, user))) notFound();
   const deck = await getDeck(id);
   if (!deck) notFound();
   const h = await headers();

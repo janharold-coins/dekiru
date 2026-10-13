@@ -43,6 +43,13 @@
       "when": 1791430345666,
       "tag": "0005_present_tracking",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791861790295,
+      "tag": "0006_claude_connector",
+      "breakpoints": true
     }
   ]
 }

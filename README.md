@@ -44,6 +44,30 @@ Deck page → **Share** (`/decks/<id>/share`). A link is a public URL (`/s/<slug
 
 Code: `src/lib/share.ts`, `src/lib/analytics.ts`, `src/app/decks/[id]/present/` (presenter + tracking), `src/app/decks/[id]/presentations/`, `src/app/decks/[id]/share/`, `src/app/s/[slug]/` (tracking beacon: `s/[slug]/track`).
 
+## Claude connector (make and edit decks from Claude)
+
+Dekiru is a remote MCP server at **`https://<domain>/api/mcp`**. People add it to Claude as a custom connector and sign in
+with their coins.ph Google account (OAuth via Better Auth's MCP plugin, with an "Allow Claude?" consent page at `/connect`).
+Every tool call then acts as that person.
+
+Tools: `list_decks`, `get_deck`, `list_patterns`, `get_pattern` (real example props from the masters), `copy_deck`,
+`create_deck`, `add_slide` (an approved block like `sales/s04`, or a new slide), `update_slide`, `remove_slide`, `move_slide`,
+`hide_slide`, `publish_deck`. Server instructions tell Claude how to work: reuse blocks, one slide at a time, respect budgets,
+never invent figures, publish only when asked.
+
+Rules enforced on the server:
+- Masters: admins and managers edit; everyone can copy. Copies: only the owner. Others' copies are invisible.
+- Every edit lands in a draft; the deck page shows editors the draft with a **Publish** button.
+- Every new or changed slide is rendered on the server before saving; props that break the layout are rejected with the
+  reason, and overflow warnings come back so Claude can suggest shorter text.
+- Blocks are stored as references and keep following the master; editing one turns it into the deck's own slide (Claude is told).
+- Only Claude's callback URLs (`claude.ai`, `claude.com`) and `localhost` can register as clients (`MCP_ALLOWED_REDIRECTS` adds more).
+
+Setup (owner of the Coins Claude workspace): Settings → Connectors → Add custom connector → name **Dekiru**, URL `https://coins-dekiru.vercel.app/api/mcp`.
+For a quick personal test without org setup: Claude Code `claude mcp add --transport http dekiru https://coins-dekiru.vercel.app/api/mcp`.
+
+Code: `src/app/api/mcp/route.ts`, `src/lib/mcp-tools.ts`, `src/lib/editing.ts`, `src/lib/access.ts`, `src/app/connect/`, `src/app/.well-known/`.
+
 ## Database (Neon)
 
 Decks, versions (draft / published), share links and view analytics live in Postgres on Neon. Schema: `src/db/schema.ts`; all reads and writes go through `src/lib/decks.ts`.
@@ -111,4 +135,4 @@ public/figma/          assets exported from Figma (+ ref/ screenshots for /compa
 
 ## Not built yet (later milestones)
 
-Role-based editing and approvals, image uploads, the Claude connector (remote MCP) for generation, the block picker.
+Approval requests for masters, image uploads, block picker in the app, the Claude connector (remote MCP) for generation, the block picker.

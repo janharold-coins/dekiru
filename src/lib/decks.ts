@@ -15,6 +15,7 @@ import type { Deck } from "@/deck/types";
 
 export interface DeckInfo extends Deck {
   kind: "master" | "copy";
+  ownerId?: string | null;
   /** Version number shown in the UI; absent when running from the JSON seed. */
   versionNumber?: number;
   versionId?: string;
@@ -51,8 +52,11 @@ async function draftOf(q: Q, deckId: string) {
 
 const dbLookup = (q: Q): DeckLookup => async (id) => (await latestPublished(q, id))?.slides;
 
-/** Every live deck, newest published version, references resolved. */
-export async function listDecks(): Promise<DeckInfo[]> {
+/**
+ * Live decks, newest published version, references resolved.
+ * With `viewerId`: company masters plus that person's own copies.
+ */
+export async function listDecks(opts: { viewerId?: string | null } = {}): Promise<DeckInfo[]> {
   if (!hasDb()) {
     return Promise.all(
       seedDecks.map(async (d) => ({
@@ -63,7 +67,8 @@ export async function listDecks(): Promise<DeckInfo[]> {
   }
   await connection(); // database reads happen per request, never at build time
   const q = db();
-  const rows = await q.select().from(decks).where(isNull(decks.archivedAt)).orderBy(decks.kind, decks.createdAt);
+  const all = await q.select().from(decks).where(isNull(decks.archivedAt)).orderBy(decks.kind, decks.createdAt);
+  const rows = opts.viewerId ? all.filter((r) => r.kind === "master" || r.ownerId === opts.viewerId) : all;
   const out = await Promise.all(rows.map((r) => load(q, r, false)));
   return out.filter((d): d is DeckInfo => Boolean(d));
 }
@@ -82,7 +87,7 @@ async function load(q: Db, row: typeof decks.$inferSelect, wantDraft: boolean): 
   const v = (wantDraft && draft) || pub;
   if (!v) return undefined;
   return {
-    id: row.id, title: row.title, kind: row.kind,
+    id: row.id, title: row.title, kind: row.kind, ownerId: row.ownerId,
     version: `v${v.number}`, versionNumber: v.number, versionId: v.id, status: v.status, hasDraft: Boolean(draft),
     slides: await resolveSlides(v.slides, dbLookup(q)),
   };

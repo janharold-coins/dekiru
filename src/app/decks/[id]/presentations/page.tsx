@@ -4,6 +4,7 @@ import { hasDb } from "@/db/client";
 import { requireUser } from "@/lib/auth";
 import { duration, presentationReport, SHORT_PRESENTATION_MS } from "@/lib/analytics";
 import { getDeck } from "@/lib/decks";
+import { deckFor } from "@/lib/access";
 import { Nav } from "../../../Nav";
 import { SlideBars, Tile, when } from "../Report";
 
@@ -14,6 +15,7 @@ export default async function PresentationsPage({ params, searchParams }: {
   const { id } = await params;
   const includeShort = (await searchParams).short === "1";
   const user = await requireUser(`/decks/${id}/presentations`);
+  if (!(await deckFor(id, user))) notFound();
   const deck = await getDeck(id);
   if (!deck) notFound();
   const shown = deck.slides.filter((s) => !s.hidden);

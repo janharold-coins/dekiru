@@ -6,18 +6,32 @@
  */
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { APIError } from "better-auth/api";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
+import { mcp } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { db, hasDb } from "@/db/client";
-import { accounts, sessions, users, verifications } from "@/db/schema";
+import { accounts, oauthAccessTokens, oauthApplications, oauthConsents, sessions, users, verifications } from "@/db/schema";
 
 export const ALLOWED_DOMAIN = process.env.ALLOWED_EMAIL_DOMAIN || "coins.ph";
 
 export type Role = "admin" | "manager" | "member";
 export interface SignedInUser { id: string; email: string; name: string; image?: string | null; role: Role }
+
+export const appBaseURL = () => baseURL();
+
+/** Connector clients may only send people back to Claude, or to a local tool on this machine. */
+const REDIRECT_ALLOW = [
+  /^https:\/\/claude\.ai\/api\/mcp\/auth_callback$/,
+  /^https:\/\/claude\.com\/api\/mcp\/auth_callback$/,
+  /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//,
+];
+export function allowedRedirect(uri: string) {
+  const extra = (process.env.MCP_ALLOWED_REDIRECTS ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+  return REDIRECT_ALLOW.some((r) => r.test(uri)) || extra.includes(uri);
+}
 
 export const authConfigured = () =>
   hasDb() && Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.BETTER_AUTH_SECRET);
@@ -40,7 +54,10 @@ function create() {
     baseURL: baseURL(),
     database: drizzleAdapter(db(), {
       provider: "pg",
-      schema: { user: users, session: sessions, account: accounts, verification: verifications },
+      schema: {
+        user: users, session: sessions, account: accounts, verification: verifications,
+        oauthApplication: oauthApplications, oauthAccessToken: oauthAccessTokens, oauthConsent: oauthConsents,
+      },
     }),
     advanced: { database: { generateId: "uuid" }, cookiePrefix: "dekiru" },
     socialProviders: {
@@ -68,8 +85,27 @@ function create() {
         },
       },
     },
+    hooks: {
+      before: createAuthMiddleware(async (ctx) => {
+        // Only Claude (and local tools like Claude Code / MCP Inspector) may register as connector clients.
+        if (ctx.path === "/mcp/register") {
+          const uris: unknown = (ctx.body as { redirect_uris?: unknown })?.redirect_uris;
+          const bad = Array.isArray(uris) ? uris.filter((u) => typeof u !== "string" || !allowedRedirect(u)) : ["(none)"];
+          if (bad.length) throw new APIError("BAD_REQUEST", { message: `Redirect URI not allowed: ${bad.join(", ")}` });
+        }
+        // Always ask the person before a connector gets access ("Allow Claude to use Dekiru as you?").
+        if (ctx.path === "/mcp/authorize" && ctx.query && !String(ctx.query.prompt ?? "").includes("consent")) {
+          return { context: { query: { ...ctx.query, prompt: "consent" } } };
+        }
+      }),
+    },
     telemetry: { enabled: false },
-    plugins: [nextCookies()],
+    plugins: [
+      // Claude connector: OAuth for the MCP endpoint (/api/mcp). Claude registers itself, the person
+      // signs in with Google on our sign-in page, and Claude's token then acts as that person.
+      mcp({ loginPage: "/sign-in", resource: `${baseURL()}/api/mcp`, oidcConfig: { loginPage: "/sign-in", consentPage: "/connect" } }),
+      nextCookies(),
+    ],
   });
 }
 
