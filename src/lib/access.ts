@@ -33,3 +33,14 @@ export async function deckFor(id: string, user: SignedInUser | null) {
   const deck = await getDeck(id, { draft: editable });
   return deck ? { deck, canEdit: editable } : null;
 }
+
+/** Decks this person can add slides to: their own decks, plus the company masters for admins and managers. */
+export async function editableDecks(user: SignedInUser | null) {
+  if (!hasDb()) return [];
+  const { listDecks } = await import("./decks");
+  const all = await listDecks({ viewerId: user?.id ?? null });
+  return all
+    .filter((d) => canEdit(d as unknown as DeckRow, user))
+    .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "copy" ? -1 : 1))
+    .map((d) => ({ id: d.id, title: d.kind === "master" ? `${d.title} (company master)` : d.title }));
+}

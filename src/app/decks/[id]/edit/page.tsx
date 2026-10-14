@@ -32,9 +32,10 @@ export default async function EditDeckPage({ params }: { params: Promise<{ id: s
         <h1 className="page" style={{ margin: 0 }}>Arrange slides</h1>
         <span className="spacer" style={{ flex: 1 }} />
         <Link className="btn" href={`/decks/${deck.id}/add`}>+ Add approved slides</Link>
+        <Link className="btn" href={`/library/templates?deck=${encodeURIComponent(deck.id)}`}>+ From a template</Link>
         <Link className="btn primary" href={`/decks/${deck.id}`}>Done</Link>
       </div>
-      <p className="lede">Drag to reorder, or use the arrows. Hidden slides stay in the deck but aren&apos;t presented or shared. Changes save as a draft; publish when you&apos;re happy. To rewrite a slide&apos;s text, ask Claude with the Dekiru connector.</p>
+      <p className="lede">Drag to reorder, or use the arrows. Hidden slides stay in the deck but aren&apos;t presented or shared. Changes save as a draft; publish when you&apos;re happy. Use Edit to change a slide&apos;s words, or ask Claude with the Dekiru connector.</p>
       {deck.status === "draft" && <DraftBar deckId={deck.id} />}
       <SlideEditor key={deck.slides.map((s) => s.id + (s.hidden ? "h" : "")).join()} deckId={deck.id} items={items} />
     </main>

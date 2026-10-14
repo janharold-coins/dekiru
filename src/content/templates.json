@@ -1,0 +1,821 @@
+[
+ {
+  "id": "cover",
+  "name": "Cover",
+  "use": "Deck title and a one-line promise.",
+  "from": "sales/s01",
+  "slide": {
+   "id": "cover",
+   "pattern": "cover",
+   "props": {
+    "title": "Title of\nthe deck.",
+    "subtitle": "Key point   ·   Key point   ·   Key point"
+   }
+  }
+ },
+ {
+  "id": "agenda",
+  "name": "Agenda",
+  "use": "Up to three topics you'll cover.",
+  "from": "sales/s02",
+  "slide": {
+   "id": "agenda",
+   "pattern": "agenda",
+   "props": {
+    "title": "What\nwe’ll cover.",
+    "items": [
+     {
+      "number": "01",
+      "title": "Topic 1",
+      "description": "What this part covers, in a short line"
+     },
+     {
+      "number": "02",
+      "title": "Topic 2",
+      "description": "What this part covers, in a short line"
+     },
+     {
+      "number": "03",
+      "title": "Topic 3",
+      "description": "What this part covers, in a short line"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "section",
+  "name": "Section divider",
+  "use": "Opens a major section.",
+  "from": "sales/s03",
+  "slide": {
+   "id": "section",
+   "pattern": "section",
+   "props": {
+    "level": 1,
+    "number": "01",
+    "title": "Section title",
+    "subtitle": "What this section covers, in a short line"
+   }
+  }
+ },
+ {
+  "id": "subsection",
+  "name": "Sub-section divider",
+  "use": "Opens a part inside a section.",
+  "from": "sales/s10",
+  "slide": {
+   "id": "subsection",
+   "pattern": "section",
+   "props": {
+    "level": 2,
+    "number": "02",
+    "parentTitle": "Section title",
+    "title": "Sub-section",
+    "subtitle": "A short line that sets up this slide. Keep it short and specific."
+   }
+  }
+ },
+ {
+  "id": "key-numbers",
+  "name": "Key numbers",
+  "use": "Two headline stats plus supporting figures.",
+  "from": "sales/s04",
+  "slide": {
+   "id": "key-numbers",
+   "pattern": "key-numbers",
+   "props": {
+    "title": "Slide title",
+    "subtitle": "A short line that sets up this slide. Keep it short and specific.",
+    "callout": {
+     "lead": "Lead-in line:",
+     "lines": [
+      "supporting line,",
+      "supporting line,",
+      "supporting line,",
+      "supporting line,"
+     ]
+    },
+    "statCards": [
+     {
+      "icon": "/figma/s04/icon-verified-user.svg",
+      "tone": "orange",
+      "value": "0M+",
+      "eyebrow": "Section name",
+      "label": "Label that\nwraps",
+      "description": "Describe this point in a sentence or two. Keep it short and specific. Say what matters to the client. Use plain words.",
+      "variant": "consumer"
+     },
+     {
+      "icon": "/figma/s04/icon-verified-business.svg",
+      "tone": "blue",
+      "value": "0,000+",
+      "eyebrow": "Section name",
+      "label": "Label that\nwraps",
+      "description": "Describe this point in a sentence or two. Keep it short and specific. Say what matters to the client.",
+      "variant": "enterprise"
+     }
+    ],
+    "primaryStats": [
+     {
+      "value": "~00%",
+      "valueSize": 60,
+      "valueWeight": 600,
+      "label": "Label",
+      "note": "Source or footnote",
+      "noteWidth": 169,
+      "itemWidth": 354
+     },
+     {
+      "value": "00",
+      "valueSize": 70,
+      "valueWeight": 700,
+      "label": "Label",
+      "note": "Source or footnote",
+      "noteWidth": 195
+     },
+     {
+      "value": "$00B+",
+      "valueSize": 60,
+      "valueWeight": 700,
+      "label": "Label",
+      "labelWidth": 206.55
+     }
+    ],
+    "secondaryStats": [
+     {
+      "value": "$00B",
+      "label": "Label",
+      "labelWidth": 211.48
+     },
+     {
+      "value": "$0.0B",
+      "label": "Label",
+      "labelWidth": 182
+     },
+     {
+      "value": "$0.0B",
+      "label": "Label that\nwraps",
+      "labelWidth": null,
+      "itemWidth": 289
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "timeline",
+  "name": "Timeline",
+  "use": "Milestones by year.",
+  "from": "sales/s05",
+  "slide": {
+   "id": "timeline",
+   "pattern": "timeline",
+   "props": {
+    "title": "Slide title",
+    "subtitle": "A short line that sets up this slide. Keep it short and specific.",
+    "items": [
+     {
+      "year": "20XX",
+      "yearColor": "#474747",
+      "side": "right",
+      "text": "Milestone\nor event",
+      "caption": "Supporting detail",
+      "captionTracking": 2.16,
+      "y": 142,
+      "markerY": 154
+     },
+     {
+      "year": "20XX",
+      "side": "right",
+      "text": "Milestone\nor event",
+      "caption": "Supporting detail",
+      "captionTracking": 1.44,
+      "y": 267,
+      "markerY": 278
+     },
+     {
+      "year": "20XX",
+      "side": "left",
+      "text": "Milestone\nor event",
+      "y": 333,
+      "markerY": 341
+     },
+     {
+      "year": "20XX",
+      "side": "both",
+      "leftText": "Earlier milestone",
+      "text": "Milestone\nor event",
+      "y": 473,
+      "markerY": 483
+     },
+     {
+      "year": "20XX",
+      "side": "right-bracket",
+      "bracketGroup": "2018-2021",
+      "text": "Milestone\nor event",
+      "y": 633,
+      "markerY": 640,
+      "markerSize": 13
+     },
+     {
+      "year": "20XX",
+      "side": "left",
+      "text": "Milestone or event",
+      "y": 675,
+      "markerY": 685
+     },
+     {
+      "year": "20XX",
+      "side": "bracket-end",
+      "bracketGroup": "2018-2021",
+      "y": 717,
+      "markerY": 727,
+      "markerSize": 13
+     },
+     {
+      "year": "20XX",
+      "side": "right",
+      "text": "Milestone\nor event",
+      "caption": "Supporting detail",
+      "captionTracking": 2.16,
+      "y": 804,
+      "markerY": 814
+     },
+     {
+      "year": "20XX",
+      "side": "left",
+      "text": "Milestone or event",
+      "y": 841,
+      "markerY": 851
+     }
+    ],
+    "flags": [
+     {
+      "code": "eu",
+      "file": "/figma/s05/flag-eu.png",
+      "x": 1305,
+      "y": 146
+     },
+     {
+      "code": "sg",
+      "file": "/figma/s05/flag-sg.png",
+      "x": 1305,
+      "y": 190
+     },
+     {
+      "code": "hk",
+      "file": "/figma/s05/flag-hk.png",
+      "x": 1305,
+      "y": 234
+     },
+     {
+      "code": "br",
+      "file": "/figma/s05/flag-br.png",
+      "x": 1305,
+      "y": 286
+     },
+     {
+      "code": "ar",
+      "file": "/figma/s05/flag-ar.png",
+      "x": 1305,
+      "y": 330
+     },
+     {
+      "code": "au",
+      "file": "/figma/s05/flag-au.png",
+      "x": 1305,
+      "y": 374
+     },
+     {
+      "code": "ph",
+      "file": "/figma/s05/flag-ph.png",
+      "x": 1305,
+      "y": 440
+     },
+     {
+      "code": "th",
+      "file": "/figma/s05/flag-th.png",
+      "x": 1305,
+      "y": 484
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "statement",
+  "name": "Statement and highlights",
+  "use": "A big statement with three proof points.",
+  "from": "sales/s07",
+  "slide": {
+   "id": "statement",
+   "pattern": "statement-highlights",
+   "props": {
+    "title": "Short title\ngoes here",
+    "body": "Explain the idea in a few clear sentences. Keep it short and specific. Say what matters to the client. Use plain words. One idea per line. Add a number if you have one. Cut anything that repeats.",
+    "highlights": [
+     {
+      "title": "Slide title",
+      "description": "Describe this point in\na sentence or two."
+     },
+     {
+      "title": "Slide title",
+      "description": "Describe this point in\na sentence or two."
+     },
+     {
+      "title": "Slide title",
+      "description": "Describe this point in a sentence or two."
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "product-index",
+  "name": "Product overview",
+  "use": "Products grouped under up to three pillars.",
+  "from": "sales/s09",
+  "slide": {
+   "id": "product-index",
+   "pattern": "product-index",
+   "props": {
+    "titleRuns": [
+     {
+      "text": "One. ",
+      "color": "#204680"
+     },
+     {
+      "text": "Two. ",
+      "color": "#1f7aff"
+     },
+     {
+      "text": "Three.",
+      "color": "#fa7312"
+     }
+    ],
+    "subtitle": "A short line that sets up this slide. Keep it short and specific.",
+    "pillars": [
+     {
+      "number": "01",
+      "title": "Pillar 1",
+      "color": "#204680",
+      "products": [
+       {
+        "name": "Product name",
+        "description": "Describe this point in a sentence or two."
+       },
+       {
+        "name": "Product name",
+        "description": "Describe this point in a sentence or two."
+       },
+       {
+        "name": "Product name",
+        "description": "Describe this point in a sentence or two."
+       }
+      ]
+     },
+     {
+      "number": "02",
+      "title": "Pillar 2",
+      "color": "#1f7aff",
+      "products": [
+       {
+        "name": "Product name",
+        "description": "Describe this point in a sentence or two."
+       }
+      ]
+     },
+     {
+      "number": "03",
+      "title": "Pillar 3",
+      "color": "#fa7312",
+      "products": [
+       {
+        "name": "Product name",
+        "description": "Describe this point in a sentence or two."
+       },
+       {
+        "name": "Product name",
+        "description": "Describe this point in a sentence or two."
+       },
+       {
+        "name": "Product name",
+        "description": "Describe this point in a sentence or two."
+       }
+      ]
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "product-hero",
+  "name": "Product intro",
+  "use": "Introduces one product with its image.",
+  "from": "sales/s11",
+  "slide": {
+   "id": "product-hero",
+   "pattern": "product-hero",
+   "props": {
+    "product": "qrph-webpay",
+    "eyebrow": "Section name",
+    "title": "Slide title",
+    "tagline": "One line on what this product does",
+    "image": {
+     "src": "/figma/s11/hero.png",
+     "variant": "mockup",
+     "x": 841,
+     "y": 77,
+     "w": 1019,
+     "h": 992
+    }
+   }
+  }
+ },
+ {
+  "id": "product-detail",
+  "name": "Product detail, rate chips",
+  "use": "Who it's for, what it is, APIs and rates.",
+  "from": "sales/s12",
+  "slide": {
+   "id": "product-detail",
+   "pattern": "product-detail",
+   "props": {
+    "product": "qrph-webpay",
+    "eyebrow": "Section name",
+    "title": "Slide title",
+    "tagline": "One line on what this product does",
+    "description": "Describe this point in a sentence or two.",
+    "whoLabel": "Who is it for",
+    "who": "Who this is for, in a sentence. Keep it short and specific. Say what matters to the client. Use plain words.",
+    "whatLabel": "What it is",
+    "what": [
+     "What the product does. Keep\nit short and specific.",
+     "What the product does. Keep it short and specific.",
+     "What the product does. Keep it short and specific. Say what matters to the client."
+    ],
+    "keyApisLabel": "Key APIs",
+    "keyApis": [
+     "API name, API name.",
+     "API name, API name.",
+     "API name, API name.",
+     "API name, API name."
+    ],
+    "pricingLabel": "PRICING",
+    "pricing": {
+     "kind": "chips",
+     "chips": [
+      {
+       "label": "Method",
+       "value": "0.0",
+       "unit": "%",
+       "caption": null
+      },
+      {
+       "label": "Method",
+       "value": "0.0",
+       "unit": "%",
+       "caption": null
+      },
+      {
+       "label": "Method",
+       "value": "< 0.0",
+       "unit": "%",
+       "caption": null
+      }
+     ],
+     "text": null,
+     "subtext": null
+    }
+   }
+  }
+ },
+ {
+  "id": "product-detail-note",
+  "name": "Product detail, pricing note",
+  "use": "Same, with a written pricing note.",
+  "from": "sales/s15",
+  "slide": {
+   "id": "product-detail-note",
+   "pattern": "product-detail",
+   "props": {
+    "product": "virtual-accounts",
+    "eyebrow": "Section name",
+    "title": "Slide title",
+    "tagline": "One line on what this\nproduct does",
+    "description": "Describe this point in a sentence or two. Keep it short and specific. Say what matters to the client. Use plain words. One idea per line.",
+    "whoLabel": "Who is it for",
+    "who": "Who this is for, in a sentence. Keep it short and specific. Say what matters to the client. Use plain words. One idea per line. Add a number if you have one.",
+    "whatLabel": "What it is",
+    "what": [
+     "What the product does. Keep it short and specific. Say what matters to the client.",
+     "What the product does. Keep it short and specific.",
+     "What the product does. Keep it short and specific. Say what matters to the client."
+    ],
+    "keyApisLabel": "Key APIs",
+    "keyApis": [
+     "API name, API name.",
+     "API name, API name.",
+     "API name, API name."
+    ],
+    "pricingLabel": "PRICING",
+    "pricing": {
+     "kind": "text",
+     "chips": [],
+     "text": "Milestone or event",
+     "subtext": "Pricing note."
+    }
+   }
+  }
+ },
+ {
+  "id": "product-flow",
+  "name": "Product flow",
+  "use": "How it works in up to five steps.",
+  "from": "sales/s13",
+  "slide": {
+   "id": "product-flow",
+   "pattern": "product-flow",
+   "props": {
+    "product": "qrph-webpay",
+    "eyebrow": "Section name",
+    "titleBold": "Product name",
+    "titleRegular": "Product Flow",
+    "steps": [
+     {
+      "n": "01",
+      "title": "Short title\ngoes here",
+      "caption": "Supporting detail"
+     },
+     {
+      "n": "02",
+      "title": "Slide title",
+      "caption": "Supporting detail"
+     },
+     {
+      "n": "03",
+      "title": "Short title\ngoes here",
+      "caption": "Supporting detail"
+     },
+     {
+      "n": "04",
+      "title": "Slide title",
+      "caption": "Supporting detail"
+     },
+     {
+      "n": "05",
+      "title": "Slide title",
+      "caption": "Supporting detail"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "card-grid",
+  "name": "Status cards",
+  "use": "Up to eight cards with statuses, e.g. corridors.",
+  "from": "sales/s30",
+  "slide": {
+   "id": "card-grid",
+   "pattern": "card-grid",
+   "props": {
+    "eyebrow": "Section name",
+    "title": "Slide title",
+    "subtitle": "A short line that sets up this slide.",
+    "body": "Explain the idea in a few clear sentences. Keep it short and specific. Say what matters to the client. Use plain words. One idea per line. Add a number if you have one.",
+    "cards": [
+     {
+      "country": "Country",
+      "flag": "/figma/s30/flag-ph.png",
+      "rail": "Payment rail",
+      "speed": "Speed / hours",
+      "statuses": [
+       {
+        "label": "Label",
+        "status": "ACTIVE",
+        "variant": "active"
+       },
+       {
+        "label": "Label",
+        "status": "ACTIVE",
+        "variant": "active"
+       }
+      ]
+     },
+     {
+      "country": "Country",
+      "flag": "/figma/s30/flag-th.png",
+      "rail": "Payment rail",
+      "speed": "Speed / hours",
+      "statuses": [
+       {
+        "label": "Label",
+        "status": "2026Q3",
+        "variant": "q3"
+       },
+       {
+        "label": "Label",
+        "status": "ACTIVE",
+        "variant": "active"
+       }
+      ]
+     },
+     {
+      "country": "Country",
+      "flag": "/figma/s30/flag-sg.png",
+      "rail": "Payment rail",
+      "speed": "Speed / hours",
+      "statuses": [
+       {
+        "label": "Label",
+        "status": "2026Q3",
+        "variant": "q3"
+       },
+       {
+        "label": "Label",
+        "status": "2026Q3",
+        "variant": "q3"
+       }
+      ]
+     },
+     {
+      "country": "Country",
+      "flag": "/figma/s30/flag-hk.png",
+      "rail": "Payment rail",
+      "speed": "Speed / hours",
+      "statuses": [
+       {
+        "label": "Label",
+        "status": "2026Q3",
+        "variant": "q3"
+       },
+       {
+        "label": "Label",
+        "status": "2026Q3",
+        "variant": "q3"
+       }
+      ]
+     },
+     {
+      "country": "Country",
+      "flag": "/figma/s30/flag-ae.png",
+      "rail": "Payment rail",
+      "speed": "Speed / hours",
+      "statuses": [
+       {
+        "label": "Label",
+        "status": "2026Q3",
+        "variant": "q3"
+       },
+       {
+        "label": "Label",
+        "status": "2026Q3",
+        "variant": "q3"
+       }
+      ]
+     },
+     {
+      "country": "Country",
+      "flag": "/figma/s30/flag-eu.png",
+      "rail": "Payment rail",
+      "speed": "Speed / hours",
+      "statuses": [
+       {
+        "label": "Label",
+        "status": "2026Q3",
+        "variant": "q3"
+       },
+       {
+        "label": "Label",
+        "status": "2026Q3",
+        "variant": "q3"
+       }
+      ]
+     },
+     {
+      "country": "Country",
+      "flag": "/figma/s30/flag-br.png",
+      "rail": "Payment rail",
+      "speed": "Speed / hours",
+      "statuses": [
+       {
+        "label": "Label",
+        "status": "2026Q3",
+        "variant": "q3"
+       },
+       {
+        "label": "Label",
+        "status": "ACTIVE",
+        "variant": "active"
+       }
+      ]
+     },
+     {
+      "country": "Country",
+      "flag": "/figma/s30/flag-au.png",
+      "rail": "Payment rail",
+      "speed": "Speed / hours",
+      "statuses": [
+       {
+        "label": "Label",
+        "status": "2026Q3",
+        "variant": "q3"
+       },
+       {
+        "label": "Label",
+        "status": "2026Q3",
+        "variant": "q3"
+       }
+      ]
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "feature-cards",
+  "name": "Feature cards",
+  "use": "Up to five reasons or features.",
+  "from": "sales/s38",
+  "slide": {
+   "id": "feature-cards",
+   "pattern": "feature-cards",
+   "props": {
+    "title": "Slide title",
+    "cards": [
+     {
+      "number": "01",
+      "title": "Short title\ngoes here",
+      "body": "Explain the idea in a few clear sentences. Keep it short and specific. Say what matters to the client. Use plain words."
+     },
+     {
+      "number": "02",
+      "title": "Slide title",
+      "body": "Explain the idea in a few clear sentences. Keep it short and specific. Say what matters to the client. Use plain words. One idea per line."
+     },
+     {
+      "number": "03",
+      "title": "Slide title",
+      "body": "Explain the idea in a few clear sentences.\nKeep it short and specific. Say what matters\nto the client. Use plain words."
+     },
+     {
+      "number": "04",
+      "title": "Short title\ngoes here",
+      "body": "Explain the idea in a few clear sentences. Keep it short and specific. Say what matters to the client. Use plain words."
+     },
+     {
+      "number": "05",
+      "title": "Slide title",
+      "body": "Explain the idea in a few clear sentences. Keep it short and specific.\nSay what matters to the client. Use plain words. One idea per line."
+     }
+    ],
+    "decoration": "coins"
+   }
+  }
+ },
+ {
+  "id": "cta-contact",
+  "name": "Contact",
+  "use": "Call to action with contact emails.",
+  "from": "sales/s39",
+  "slide": {
+   "id": "cta-contact",
+   "pattern": "cta-contact",
+   "props": {
+    "title": "Let’s get\nstarted.",
+    "subtitle": "A short line that sets up this slide.\nKeep it short and specific.",
+    "contacts": [
+     {
+      "label": "Label",
+      "email": "team@coins.ph"
+     },
+     {
+      "label": "Label",
+      "email": "team@coins.ph"
+     }
+    ]
+   },
+   "chrome": {
+    "background": "dark-navy"
+   }
+  }
+ },
+ {
+  "id": "closing",
+  "name": "Closing",
+  "use": "Final slide.",
+  "from": "sales/s40",
+  "slide": {
+   "id": "closing",
+   "pattern": "closing",
+   "props": {
+    "title": "Thank you"
+   },
+   "chrome": {
+    "background": "dark-navy"
+   }
+  }
+ }
+]

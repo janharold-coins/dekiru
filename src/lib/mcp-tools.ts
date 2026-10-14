@@ -5,6 +5,7 @@
  */
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/server";
+import { templates } from "@/content/templates";
 import { patterns } from "@/deck/registry";
 import type { SlideData } from "@/deck/types";
 import { appBaseURL, type SignedInUser } from "./auth";
@@ -125,7 +126,8 @@ export function registerTools(server: McpServer, user: SignedInUser) {
     }
     return {
       id: pattern_id, name: entry.meta.name, use: entry.meta.description, budgets: entry.meta.budgets ?? [],
-      notes: "Copy the example's shape. Line breaks are \\n. Image paths must be existing /figma/... assets for now (uploads come later).",
+      templates: templates.filter((t) => t.slide.pattern === pattern_id).map((t) => ({ name: t.name, use: t.use, props: cleanProps(t.slide.props as Record<string, unknown>) })),
+      notes: "Copy the example's shape (templates show the same shape with placeholder words). Line breaks are \\n. Image paths must be existing /figma/... assets for now (uploads come later).",
       examples,
     };
   }));

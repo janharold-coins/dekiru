@@ -52,7 +52,15 @@ Code: `src/lib/share.ts`, `src/lib/analytics.ts`, `src/app/decks/[id]/present/` 
 - Approved slides are stored as references and keep following their master; the editor says so on each.
 - Every change saves to the draft; the yellow bar offers **Publish** or **Discard**.
 - **History** (`/decks/<id>/history`): every version with who and when; View any version; **Restore** puts an old version back as a draft.
-- Text changes go through Claude (Dekiru connector) for now.
+- **Edit** a slide (`/decks/<id>/slides/<slideId>`): a form with the slide's words and a live preview; text over a layout's budget is flagged. Editing an approved slide makes it the deck's own (the form says so first). Layout, images and colours stay as approved.
+
+## Library
+
+- **Approved slides** (`/library`): the masters' real slides by deck and section. Pick them in order and add them to one of your decks (or the masters, for admins and managers) or a new deck. They stay linked to the master.
+- **Templates and layouts** (`/library/templates`): approved slides with placeholder words ("Title of the deck"). Open one, fill it in with a live preview, add it to a deck. Template slides are the deck's own, not linked.
+- Templates are built from the Sales master by `python3 scripts/build-templates.py` → `src/content/templates.json` (placeholder words sized to the approved text). Rerun it after the Sales seed changes; edit `TEMPLATES` / `OVERRIDES` there to add or tune one.
+- `?deck=<id>` on either page preselects that deck (Arrange slides → **+ From a template** uses it).
+- Next: **Themes** (admins and chosen people): the deck decides the look, slides carry only content.
 
 ## Claude connector (make and edit decks from Claude)
 
@@ -145,4 +153,4 @@ public/figma/          assets exported from Figma (+ ref/ screenshots for /compa
 
 ## Not built yet (later milestones)
 
-Approval requests for masters, image uploads, block picker in the app, the Claude connector (remote MCP) for generation, the block picker.
+Themes (deck-level look, versioned), approval requests for masters, image uploads and client logos, HTML file export, AI "make it fit" for over-budget text.

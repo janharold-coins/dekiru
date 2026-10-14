@@ -86,7 +86,7 @@ const newSlideId = () => `n${randomBytes(4).toString("hex")}`;
 
 export type SlideInput =
   | { block: string }
-  | { pattern: string; props: Record<string, unknown>; hidden?: boolean };
+  | { pattern: string; props: Record<string, unknown>; hidden?: boolean; chrome?: SlideData["chrome"] };
 
 async function toSlide(input: SlideInput): Promise<SeedSlide> {
   if ("block" in input) {
@@ -98,7 +98,10 @@ async function toSlide(input: SlideInput): Promise<SeedSlide> {
     return { id: newSlideId(), ref: input.block };
   }
   if (!patterns[input.pattern]) throw new EditError(`Unknown pattern "${input.pattern}". Use list_patterns.`);
-  return { id: newSlideId(), pattern: input.pattern, props: input.props, ...(input.hidden ? { hidden: true } : {}) };
+  return {
+    id: newSlideId(), pattern: input.pattern, props: input.props,
+    ...(input.chrome ? { chrome: input.chrome } : {}), ...(input.hidden ? { hidden: true } : {}),
+  };
 }
 
 function indexOf(slides: SeedSlide[], slideId: string) {
@@ -142,7 +145,9 @@ export async function addSlide(user: SignedInUser | null, deckId: string, input:
   return { slideId: slide.id, overflow: r.overflow };
 }
 
-export async function updateSlide(user: SignedInUser | null, deckId: string, slideId: string, props: Record<string, unknown>, pattern?: string) {
+export async function updateSlide(
+  user: SignedInUser | null, deckId: string, slideId: string, props: Record<string, unknown>, pattern?: string, via: Via = "claude",
+) {
   await editable(deckId, user);
   const { slides } = await working(deckId);
   const i = indexOf(slides, slideId);
@@ -154,7 +159,7 @@ export async function updateSlide(user: SignedInUser | null, deckId: string, sli
   if (pattern && !patterns[pattern]) throw new EditError(`Unknown pattern "${pattern}". Use list_patterns.`);
   const r = await validate(next);
   slides[i] = next;
-  await save(deckId, slides, user, "Edited with Claude");
+  await save(deckId, slides, user, editNote(via));
   return { overflow: r.overflow, overridden: wasRef ? (current as { ref: string }).ref : null };
 }
 

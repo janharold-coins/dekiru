@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type ReactNode } from "react";
 import { hideAction, moveAction, removeAction, type Result } from "../actions";
@@ -69,6 +70,7 @@ export function SlideEditor({ deckId, items: initial }: { deckId: string; items:
               <span className="acts">
                 <button className="icon" aria-label="Move up" disabled={i === 0} onClick={() => move(it.id, i - 1)}>↑</button>
                 <button className="icon" aria-label="Move down" disabled={i === items.length - 1} onClick={() => move(it.id, i + 1)}>↓</button>
+                <Link className="btn" href={`/decks/${deckId}/slides/${it.id}`}>Edit</Link>
                 <button className="btn" onClick={() => run(items.map((x) => (x.id === it.id ? { ...x, hidden: !x.hidden } : x)), () => hideAction(deckId, it.id, !it.hidden))}>
                   {it.hidden ? "Show" : "Hide"}
                 </button>

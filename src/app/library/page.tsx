@@ -1,58 +1,40 @@
-import Link from "next/link";
-import { RenderSlide } from "@/deck/RenderSlide";
-import { ScaledSlide } from "@/deck/frame/ScaledSlide";
-import { patternOrder, patterns } from "@/deck/registry";
-import { listDecks } from "@/lib/decks";
+import { redirect } from "next/navigation";
+import { templates } from "@/content/templates";
+import { editableDecks } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
+import { EditError, newDeck } from "@/lib/editing";
 import { Nav } from "../Nav";
+import { BlockPicker } from "../decks/BlockPicker";
+import { blockGroups } from "../decks/blocks";
+import { addBlocksAction } from "../decks/[id]/actions";
+import { LibraryTabs } from "./Tabs";
 
-export default async function LibraryPage() {
+/** Approved slides: the company masters' real slides. Added slides keep following the master. */
+export default async function ApprovedSlidesPage({ searchParams }: { searchParams: Promise<{ deck?: string }> }) {
+  const { deck } = await searchParams;
   const user = await requireUser("/library");
-  const all = (await listDecks({ viewerId: user?.id ?? null })).filter((d) => d.kind === "master").flatMap((d) => d.slides.map((s, i) => ({ deck: d, slide: s, index: i })).filter((u) => !u.slide.ref));
+  const [groups, targets] = await Promise.all([blockGroups(user), editableDecks(user)]);
+  const count = groups.reduce((n, g) => n + g.sections.reduce((m, s) => m + s.items.length, 0), 0);
+  async function add(blocks: string[], title: string, target: string) {
+    "use server";
+    const u = await requireUser("/library");
+    if (target) return addBlocksAction(target, blocks);
+    let id: string;
+    try { id = await newDeck(u, title, blocks.map((block) => ({ block })), "app"); }
+    catch (e) { return { error: e instanceof EditError ? e.message : (e as Error).message }; }
+    redirect(`/decks/${id}/edit`);
+  }
   return (
     <main className="shell">
       <Nav on="library" user={user} />
-      <h1 className="page">Pattern library</h1>
+      <h1 className="page">Library</h1>
+      <LibraryTabs on="approved" counts={{ approved: count, templates: templates.length }} deck={deck} />
       <p className="lede">
-        {patternOrder.length} patterns. A pattern is a layout that takes any content; blocks (approved content) and decks are built from them.
-        Character budgets below are when Dekiru flags overflow: it suggests a rephrase or another layout and never shrinks type.
+        The real slides from the company decks, with approved numbers, pricing and claims. Pick the ones you need, in order.
+        They keep following the company deck, so updates reach your deck too. To write your own content, start from a template.
       </p>
-      {patternOrder.map((id) => {
-        const { meta } = patterns[id];
-        const uses = all.filter((u) => u.slide.pattern === id);
-        return (
-          <section key={id} className="pattern" id={id}>
-            <header>
-              <h3>{meta.name}</h3>
-              <span className="mono">{id}</span>
-              {meta.shape && <span className="tag">{meta.shape}</span>}
-              <span style={{ flex: 1 }} />
-              <span className="mono">{uses.length} slide{uses.length === 1 ? "" : "s"} in master decks</span>
-            </header>
-            <p style={{ margin: "6px 0 0", maxWidth: 900 }}>{meta.description}</p>
-            <div className="chips">
-              <span>bg: {meta.defaultChrome.background}{meta.defaultChrome.overlay ? " + glow" : ""}</span>
-              <span>footer: {meta.defaultChrome.footer ?? "none"}</span>
-              {meta.defaultChrome.accentBar && <span>accent bar</span>}
-              {(meta.budgets ?? []).map((b) => (
-                <span key={b.slot}>
-                  {b.slot}: {[b.maxItems && `≤${b.maxItems} items`, b.maxChars && `≤${b.maxChars} chars`, b.maxLines && `≤${b.maxLines} lines`].filter(Boolean).join(", ")}
-                </span>
-              ))}
-            </div>
-            <div className="strip">
-              {uses.map((u) => (
-                <figure key={u.deck.id + u.slide.id}>
-                  <Link href={`/decks/${u.deck.id}`} className="frame" style={{ display: "block" }}>
-                    <ScaledSlide><RenderSlide slide={u.slide} /></ScaledSlide>
-                  </Link>
-                  <figcaption>{u.deck.id} · {u.slide.hidden ? "hidden" : `slide ${u.deck.slides.slice(0, u.index).filter((x) => !x.hidden).length + 1}`} · fig {u.slide.source?.slide ?? u.index + 1}</figcaption>
-                </figure>
-              ))}
-            </div>
-          </section>
-        );
-      })}
+      <BlockPicker groups={groups} submitLabel="Add slides" onSubmit={add} targets={targets}
+        defaultTarget={deck && targets.some((t) => t.id === deck) ? deck : ""} />
     </main>
   );
 }

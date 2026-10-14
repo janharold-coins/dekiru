@@ -8,15 +8,20 @@ export interface PickerGroup { deckId: string; deckTitle: string; sections: { ti
  * Tick approved slides in the order you want them. Picked slides keep following the master,
  * so company updates (numbers, pricing, corridors) reach your deck too.
  */
-export function BlockPicker({ groups, submitLabel, onSubmit, askTitle = false, defaultTitle = "" }: {
+export function BlockPicker({ groups, submitLabel, onSubmit, askTitle = false, defaultTitle = "", targets, defaultTarget = "" }: {
   groups: PickerGroup[];
   submitLabel: string;
-  onSubmit: (blocks: string[], title: string) => Promise<{ error?: string } | void>;
+  onSubmit: (blocks: string[], title: string, target: string) => Promise<{ error?: string } | void>;
   askTitle?: boolean;
   defaultTitle?: string;
+  /** Decks the picked slides can go to; "" means a new deck (asks for its name). */
+  targets?: { id: string; title: string }[];
+  defaultTarget?: string;
 }) {
   const [picked, setPicked] = useState<string[]>([]);
   const [title, setTitle] = useState(defaultTitle);
+  const [target, setTarget] = useState(defaultTarget);
+  const needTitle = targets ? target === "" : askTitle;
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const toggle = (b: string) => setPicked((p) => (p.includes(b) ? p.filter((x) => x !== b) : [...p, b]));
@@ -24,12 +29,21 @@ export function BlockPicker({ groups, submitLabel, onSubmit, askTitle = false, d
     const all = items.every((i) => picked.includes(i.block));
     setPicked((p) => (all ? p.filter((x) => !items.some((i) => i.block === x)) : [...p, ...items.map((i) => i.block).filter((b) => !p.includes(b))]));
   };
-  const canSubmit = picked.length > 0 && (!askTitle || title.trim().length > 0);
+  const canSubmit = picked.length > 0 && (!needTitle || title.trim().length > 0);
 
   return (
     <div className="picker">
       <div className="picker-bar">
-        {askTitle && (
+        {targets && (
+          <label className="picker-title">
+            <span>Add to</span>
+            <select value={target} onChange={(e) => setTarget(e.target.value)}>
+              <option value="">A new deck</option>
+              {targets.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
+            </select>
+          </label>
+        )}
+        {needTitle && (
           <label className="picker-title">
             <span>Deck name</span>
             <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Ramp for Acme Exchange" maxLength={80} />
@@ -40,7 +54,7 @@ export function BlockPicker({ groups, submitLabel, onSubmit, askTitle = false, d
         {picked.length > 0 && <button className="linkish" onClick={() => setPicked([])}>Clear</button>}
         {error && <span className="hint warn">{error}</span>}
         <button className="btn primary" disabled={!canSubmit || pending}
-          onClick={() => start(async () => { setError(null); const r = await onSubmit(picked, title.trim()); if (r && r.error) setError(r.error); })}>
+          onClick={() => start(async () => { setError(null); const r = await onSubmit(picked, title.trim(), target); if (r && r.error) setError(r.error); })}>
           {pending ? "Working…" : submitLabel}
         </button>
       </div>
