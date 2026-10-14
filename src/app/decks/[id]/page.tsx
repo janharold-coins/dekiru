@@ -8,7 +8,7 @@ import { patterns } from "@/deck/registry";
 import { deckFor } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { Nav } from "../../Nav";
-import { CopyButton, PublishBar } from "./DeckActions";
+import { CopyButton, DraftBar } from "./DeckActions";
 
 export default async function DeckPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -23,12 +23,14 @@ export default async function DeckPage({ params }: { params: Promise<{ id: strin
         <h1 className="page" style={{ margin: 0 }}>{deck.title}</h1>
         <span className="spacer" style={{ flex: 1 }} />
         {deck.kind === "master" && <Link className="btn" href={`/decks/${deck.id}/compare`}>Compare with Figma</Link>}
+        {canEdit && <Link className="btn" href={`/decks/${deck.id}/edit`}>Arrange slides</Link>}
+        {deck.versionNumber && <Link className="btn" href={`/decks/${deck.id}/history`}>History</Link>}
         <CopyButton deckId={deck.id} />
         <Link className="btn" href={`/decks/${deck.id}/presentations`}>Presentations</Link>
         <Link className="btn" href={`/decks/${deck.id}/share`}>Share</Link>
         <Link className="btn primary" href={`/decks/${deck.id}/present`}>Present ▶</Link>
       </div>
-      {canEdit && deck.status === "draft" && <PublishBar deckId={deck.id} />}
+      {canEdit && deck.status === "draft" && <DraftBar deckId={deck.id} />}
       <p className="lede">{deck.slides.filter((s) => !s.hidden).length} slides presented{deck.slides.some((s) => s.hidden) ? ` · ${deck.slides.filter((s) => s.hidden).length} hidden` : ""} · {deck.kind === "master" ? "master deck" : "personal copy"}{deck.versionNumber ? ` · ${deck.status === "draft" ? `draft after v${deck.versionNumber - 1}` : `v${deck.versionNumber}`}` : ""}{deck.slides.some((s) => s.ref) ? ` · ${deck.slides.filter((s) => s.ref).length} shared with other decks` : ""}. Overflow flags and image-fit warnings show here in preview only, never in the presented deck.</p>
       <div className="grid">
         {deck.slides.map((s, i) => {

@@ -44,6 +44,16 @@ Deck page → **Share** (`/decks/<id>/share`). A link is a public URL (`/s/<slug
 
 Code: `src/lib/share.ts`, `src/lib/analytics.ts`, `src/app/decks/[id]/present/` (presenter + tracking), `src/app/decks/[id]/presentations/`, `src/app/decks/[id]/share/`, `src/app/s/[slug]/` (tracking beacon: `s/[slug]/track`).
 
+## Making and arranging decks in the app
+
+- **New deck** (Home → + New deck, `/new`): name it, tick approved slides from the company masters (grouped by section, in the order you tick them), Create.
+- **Make a copy** of any deck you can see.
+- **Arrange slides** (`/decks/<id>/edit`, editors only): drag or ↑ ↓ to reorder, Hide/Show, Remove (asks once), **+ Add approved slides** (`/decks/<id>/add`).
+- Approved slides are stored as references and keep following their master; the editor says so on each.
+- Every change saves to the draft; the yellow bar offers **Publish** or **Discard**.
+- **History** (`/decks/<id>/history`): every version with who and when; View any version; **Restore** puts an old version back as a draft.
+- Text changes go through Claude (Dekiru connector) for now.
+
 ## Claude connector (make and edit decks from Claude)
 
 Dekiru is a remote MCP server at **`https://<domain>/api/mcp`**. People add it to Claude as a custom connector and sign in

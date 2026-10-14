@@ -39,11 +39,15 @@ export default async function Home() {
           </div>
         </Link>
       </div>
-      <h2 className="section-h">My decks</h2>
+      <div className="row" style={{ marginTop: 48 }}>
+        <h2 className="section-h" style={{ margin: 0 }}>My decks</h2>
+        <span className="spacer" style={{ flex: 1 }} />
+        <Link className="btn primary" href="/new">+ New deck</Link>
+      </div>
       {mine.length ? (
         <div className="grid">{mine.map((d) => <DeckCard key={d.id} d={d} />)}</div>
       ) : (
-        <p className="mono">None yet. Open a company deck and click Make a copy, or ask Claude (Dekiru connector) to build one.</p>
+        <p className="mono">None yet. Start a New deck from approved slides, open a company deck and click Make a copy, or ask Claude (Dekiru connector) to build one.</p>
       )}
     </main>
   );

@@ -11,7 +11,11 @@
  *   slide (an override) and the response says so.
  */
 import { randomBytes } from "node:crypto";
+import { and, desc, eq, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { renderToStaticMarkup } from "react-dom/server.edge";
+import { db } from "@/db/client";
+import { deckVersions, users } from "@/db/schema";
 import { createElement } from "react";
 import { isRef, resolveSlides, type SeedSlide } from "@/content/resolve";
 import { RenderSlide } from "@/deck/RenderSlide";
@@ -103,14 +107,18 @@ function indexOf(slides: SeedSlide[], slideId: string) {
   return i;
 }
 
+/** Where an edit came from, recorded as the draft's note (shown in version history). */
+export type Via = "claude" | "app";
+const editNote = (via: Via) => (via === "claude" ? "Edited with Claude" : "Edited in Dekiru");
+
 /* ---------- operations ---------- */
 
-export async function newDeck(user: SignedInUser | null, title: string, inputs: SlideInput[]) {
+export async function newDeck(user: SignedInUser | null, title: string, inputs: SlideInput[], via: Via = "claude") {
   if (!inputs.length) throw new EditError("A deck needs at least one slide.");
   const slides: SeedSlide[] = [];
   for (const i of inputs) { const s = await toSlide(i); await validate(s); slides.push(s); }
   const id = deckSlug(title);
-  await createDeck({ id, title: title.trim(), kind: "copy", slides, note: "Created with Claude" }, { userId: user?.id ?? null });
+  await createDeck({ id, title: title.trim(), kind: "copy", slides, note: via === "claude" ? "Created with Claude" : "Created in Dekiru" }, { userId: user?.id ?? null });
   return id;
 }
 
@@ -123,14 +131,14 @@ export async function duplicateDeck(user: SignedInUser | null, sourceId: string,
   return id;
 }
 
-export async function addSlide(user: SignedInUser | null, deckId: string, input: SlideInput, position?: number) {
+export async function addSlide(user: SignedInUser | null, deckId: string, input: SlideInput, position?: number, via: Via = "claude") {
   await editable(deckId, user);
   const { slides } = await working(deckId);
   const slide = await toSlide(input);
   const r = await validate(slide);
   const at = position ? Math.max(0, Math.min(slides.length, position - 1)) : slides.length;
   slides.splice(at, 0, slide);
-  await save(deckId, slides, user, "Edited with Claude");
+  await save(deckId, slides, user, editNote(via));
   return { slideId: slide.id, overflow: r.overflow };
 }
 
@@ -150,30 +158,30 @@ export async function updateSlide(user: SignedInUser | null, deckId: string, sli
   return { overflow: r.overflow, overridden: wasRef ? (current as { ref: string }).ref : null };
 }
 
-export async function removeSlide(user: SignedInUser | null, deckId: string, slideId: string) {
+export async function removeSlide(user: SignedInUser | null, deckId: string, slideId: string, via: Via = "claude") {
   await editable(deckId, user);
   const { slides } = await working(deckId);
   slides.splice(indexOf(slides, slideId), 1);
   if (!slides.length) throw new EditError("That would leave the deck empty.");
-  await save(deckId, slides, user, "Edited with Claude");
+  await save(deckId, slides, user, editNote(via));
 }
 
-export async function moveSlide(user: SignedInUser | null, deckId: string, slideId: string, position: number) {
+export async function moveSlide(user: SignedInUser | null, deckId: string, slideId: string, position: number, via: Via = "claude") {
   await editable(deckId, user);
   const { slides } = await working(deckId);
   const [s] = slides.splice(indexOf(slides, slideId), 1);
   slides.splice(Math.max(0, Math.min(slides.length, position - 1)), 0, s);
-  await save(deckId, slides, user, "Edited with Claude");
+  await save(deckId, slides, user, editNote(via));
 }
 
-export async function setHidden(user: SignedInUser | null, deckId: string, slideId: string, hidden: boolean) {
+export async function setHidden(user: SignedInUser | null, deckId: string, slideId: string, hidden: boolean, via: Via = "claude") {
   await editable(deckId, user);
   const { slides } = await working(deckId);
   const i = indexOf(slides, slideId);
   const s = { ...slides[i] } as SeedSlide & { hidden?: boolean };
   if (hidden) s.hidden = true; else delete s.hidden;
   slides[i] = s;
-  await save(deckId, slides, user, "Edited with Claude");
+  await save(deckId, slides, user, editNote(via));
 }
 
 export async function publish(user: SignedInUser | null, deckId: string, note?: string) {
@@ -185,6 +193,64 @@ export async function publish(user: SignedInUser | null, deckId: string, note?: 
   if (broken.length) throw new EditError(`Can't publish: ${broken.length} slide(s) don't render (${broken.map((b) => b.slide.id).join(", ")}).`);
   if (note) await saveDraft(deckId, draft.slides, { userId: user?.id ?? null, note });
   return publishDraft(deckId, { userId: user?.id ?? null });
+}
+
+/** Add several approved blocks at once (the app's slide picker). position is 1-based; default: end. */
+export async function addBlocks(user: SignedInUser | null, deckId: string, blocks: string[], position?: number, via: Via = "app") {
+  if (!blocks.length) throw new EditError("Pick at least one slide.");
+  await editable(deckId, user);
+  const { slides } = await working(deckId);
+  const added: SeedSlide[] = [];
+  for (const b of blocks) added.push(await toSlide({ block: b }));
+  const at = position ? Math.max(0, Math.min(slides.length, position - 1)) : slides.length;
+  slides.splice(at, 0, ...added);
+  await save(deckId, slides, user, editNote(via));
+  return added.map((s) => s.id);
+}
+
+/** Throw away unpublished changes. */
+export async function discardDraft(user: SignedInUser | null, deckId: string) {
+  await editable(deckId, user);
+  const { draft } = await getDeckVersions(deckId);
+  if (!draft) throw new EditError("There are no unpublished changes.");
+  await db().delete(deckVersions).where(eq(deckVersions.id, draft.id));
+}
+
+/** Every version of a deck, newest first, with who made / published it. */
+export async function listVersions(user: SignedInUser | null, deckId: string) {
+  const row = await deckRow(deckId);
+  if (!row || !canView(row, user)) throw new EditError(`No deck called "${deckId}".`);
+  const editors = alias(users, "editors");
+  const publishers = alias(users, "publishers");
+  return db().select({
+      number: deckVersions.number, status: deckVersions.status, note: deckVersions.note,
+      createdAt: deckVersions.createdAt, publishedAt: deckVersions.publishedAt,
+      slideCount: sql<number>`jsonb_array_length(${deckVersions.slides})`.mapWith(Number),
+      createdBy: sql<string | null>`coalesce(nullif(${editors.name}, ''), ${editors.email})`,
+      publishedBy: sql<string | null>`coalesce(nullif(${publishers.name}, ''), ${publishers.email})`,
+    })
+    .from(deckVersions)
+    .leftJoin(editors, eq(editors.id, deckVersions.createdBy))
+    .leftJoin(publishers, eq(publishers.id, deckVersions.publishedBy))
+    .where(eq(deckVersions.deckId, deckId))
+    .orderBy(desc(deckVersions.number));
+}
+
+/** One version's slides, references resolved (for previewing history). */
+export async function versionSlides(user: SignedInUser | null, deckId: string, number: number) {
+  const row = await deckRow(deckId);
+  if (!row || !canView(row, user)) throw new EditError(`No deck called "${deckId}".`);
+  const [v] = await db().select().from(deckVersions)
+    .where(and(eq(deckVersions.deckId, deckId), eq(deckVersions.number, number))).limit(1);
+  if (!v) throw new EditError(`No version ${number}.`);
+  return { version: v, slides: await resolveSlides(v.slides, lookup) };
+}
+
+/** Bring an old version back as the draft, to review and publish. */
+export async function restoreVersion(user: SignedInUser | null, deckId: string, number: number) {
+  await editable(deckId, user);
+  const { version } = await versionSlides(user, deckId, number);
+  await saveDraft(deckId, version.slides, { userId: user?.id ?? null, note: `Restored v${number}` });
 }
 
 /** URL-safe id from a title, with a short random suffix so copies never collide. */
