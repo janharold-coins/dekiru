@@ -22,7 +22,8 @@ export async function blockGroups(user: SignedInUser | null): Promise<PickerGrou
       if (!cur || cur.title !== section) { cur = { title: section, items: [] }; sections.push(cur); }
       cur.items.push({
         block: `${d.id}/${s.id}`, name: slideName(s), kind: patterns[s.pattern]?.meta.name ?? s.pattern,
-        thumb: <ScaledSlide><RenderSlide slide={s} /></ScaledSlide>,
+        // Keyed: React checks keys on elements passed from the server inside lists.
+        thumb: <ScaledSlide key={`${d.id}/${s.id}`}><RenderSlide slide={s} /></ScaledSlide>,
       });
     }
     groups.push({ deckId: d.id, deckTitle: d.title, sections });

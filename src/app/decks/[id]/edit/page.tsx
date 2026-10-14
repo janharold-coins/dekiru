@@ -22,7 +22,7 @@ export default async function EditDeckPage({ params }: { params: Promise<{ id: s
   const items = deck.slides.map((s) => ({
     id: s.id, name: slideName(s), kind: patterns[s.pattern]?.meta.name ?? s.pattern, hidden: Boolean(s.hidden),
     follows: s.ref ?? null, overflow: checkOverflow(s).length,
-    thumb: <ScaledSlide><RenderSlide slide={s} /></ScaledSlide>,
+    thumb: <ScaledSlide key={s.id}><RenderSlide slide={s} /></ScaledSlide>,
   }));
   return (
     <main className="shell">
