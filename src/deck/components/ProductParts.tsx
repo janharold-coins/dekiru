@@ -1,11 +1,12 @@
 /* Parts shared by product-detail: section header with dash, bullet list, price chip, VIP tier chip. */
 import { t, keepBreaks } from "../tokens";
+import { onBg, OWN_SURFACE } from "../theme";
 
 export function SectionHeader({ label }: { label: string }) {
   return (
     <div style={{ display: "flex", gap: 36, alignItems: "center", paddingLeft: 24, height: 50 }}>
       <span style={{ ...t(36, 1.4, -1.08, 700), whiteSpace: "nowrap" }}>{label}</span>
-      <span style={{ width: 48, height: 4, background: "rgba(0,0,0,0.2)", marginTop: -4 }} />
+      <span style={{ width: 48, height: 4, background: onBg("rgba(0,0,0,0.2)", "rule"), marginTop: -4 }} />
     </div>
   );
 }
@@ -44,7 +45,7 @@ export interface Chip { label: string; value: string; unit?: string | null }
 
 export function PriceChip({ c }: { c: Chip }) {
   return (
-    <div style={{ background: "#fff", boxShadow: "inset 0 0 0 2px #bcbcbc", borderRadius: 8, padding: 24, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
+    <div style={{ ...OWN_SURFACE, background: "#fff", boxShadow: "inset 0 0 0 2px #bcbcbc", borderRadius: 8, padding: 24, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
       <span style={t(24, 1.4, -0.72, 400)}>{c.label}</span>
       <span style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
         <span style={t(40, 1.4, 0, 700, "#000", "everett")}>{c.value}</span>
@@ -73,7 +74,7 @@ export function TierChip({ tier, index, count }: { tier: Tier; index: number; co
   const bg = tier.highlight ? TIER_HIGHLIGHT : TIER_BG[Math.min(TIER_BG.length - 1, Math.round((index / Math.max(1, count - 2)) * (TIER_BG.length - 1)))];
   return (
     <div style={{ borderRadius: 8, backgroundImage: bg }}>
-      <div style={{ boxShadow: "inset 0 0 0 2px #bcbcbc", borderRadius: 8, padding: 24, display: "flex", flexDirection: "column", alignItems: "flex-start", whiteSpace: "nowrap", height: 180, boxSizing: "border-box" }}>
+      <div style={{ ...OWN_SURFACE, boxShadow: "inset 0 0 0 2px #bcbcbc", borderRadius: 8, padding: 24, display: "flex", flexDirection: "column", alignItems: "flex-start", whiteSpace: "nowrap", height: 180, boxSizing: "border-box" }}>
         <div style={{ display: "flex", justifyContent: "space-between", width: "100%", ...t(16, 1.4, 0, 600, ink) }}>
           <span>{tier.tierLabel}</span>
           <span style={{ fontWeight: 700 }}>{tier.tier}</span>

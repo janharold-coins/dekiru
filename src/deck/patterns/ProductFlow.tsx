@@ -1,4 +1,5 @@
 import { t, keepBreaks, noWrap } from "../tokens";
+import { OWN_SURFACE } from "../theme";
 import type { PatternMeta } from "../types";
 
 export interface ProductFlowProps {
@@ -40,7 +41,7 @@ export function ProductFlow({ eyebrow, titleBold, titleRegular, steps }: Product
             {i > 0 && <Chevron />}
             <div
               style={{
-                position: "relative", width: 300, minHeight: 272, alignSelf: "stretch", boxSizing: "border-box",
+                ...OWN_SURFACE, position: "relative", width: 300, minHeight: 272, alignSelf: "stretch", boxSizing: "border-box",
                 border: "1px solid #000", borderRadius: 8, padding: "60px 30px 30px", display: "flex", flexDirection: "column", gap: 36,
                 backgroundImage: "linear-gradient(138.75deg, #FFFFFF 50%, #FBFBFB 94.311%)",
               }}

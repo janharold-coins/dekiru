@@ -1,5 +1,5 @@
 /* Shared slide chrome: background, BG blobs, logo, confidentiality footer, accent bar. */
-import { DEFAULT_TOKENS, VAR } from "../theme";
+import { DEFAULT_TOKENS, onBg, VAR } from "../theme";
 import { backgrounds, t, type BackgroundVariant } from "../tokens";
 import { Glow } from "./Glow";
 import type { FooterPosition, LogoVariant } from "../types";
@@ -22,10 +22,22 @@ const LOGOS: Record<LogoVariant, { src: string; left: number; top: number; w: nu
   dark: { src: "/figma/shared/logo-dark.svg", left: 79, top: 125, w: 220.725, h: 52.3417 },
 };
 
+/** The other logo colour, for when the theme switches the slide's text tone (same size and place). */
+const ALT_SRC: Record<LogoVariant, string> = {
+  "white-lg": "/figma/shared/logo-dark.svg", white: "/figma/shared/logo-dark.svg", dark: "/figma/shared/logo-white-sm.svg",
+};
+
 export function Logo({ variant }: { variant: LogoVariant }) {
   const l = LOGOS[variant];
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img alt="coins.ph" src={l.src} style={{ ...abs, left: l.left, top: l.top, width: l.w, height: l.h }} />;
+  const box = { ...abs, left: l.left, top: l.top, width: l.w, height: l.h };
+  return (
+    <>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img alt="coins.ph" src={l.src} style={{ ...box, display: "var(--dk-flip-logo-designed, block)" }} />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img alt="" aria-hidden src={ALT_SRC[variant]} style={{ ...box, display: "var(--dk-flip-logo-alt, none)" }} />
+    </>
+  );
 }
 
 const FOOTER_POS: Record<FooterPosition, { left: number; top: number }> = {
@@ -69,7 +81,7 @@ export function CoBrandLogo({ src, onDark, large }: { src: string; onDark: boole
   const pos = large ? { left: 410, top: 79.5 } : { left: 330, top: 113 };
   return (
     <div style={{ ...abs, ...pos, height: 76, display: "flex", alignItems: "center", gap: 28 }}>
-      <span style={{ width: 2, height: 52, background: onDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)" }} />
+      <span style={{ width: 2, height: 52, background: onBg(onDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)", "rule") }} />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img alt="Partner logo" src={src} style={{ maxHeight: 64, maxWidth: 280, objectFit: "contain" }} />
     </div>

@@ -4,7 +4,8 @@ import { RenderSlide } from "@/deck/RenderSlide";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
 import { patterns } from "@/deck/registry";
 import {
-  DEFAULT_TOKENS, ROLES, checkTheme, gradientCss, themeStyle, type BackgroundRole, type Gradient, type ThemeTokens,
+  DEFAULT_TOKENS, ROLES, bestText, checkTheme, designedText, gradientCss, themeStyle,
+  type BackgroundRole, type Gradient, type TextTone, type ThemeTokens,
 } from "@/deck/theme";
 import type { SlideData } from "@/deck/types";
 import { archiveThemeAction, discardThemeAction, publishThemeAction, saveThemeAction, type Result } from "../actions";
@@ -29,8 +30,13 @@ export function ThemeEditor({ id, name: initialName, tokens: initial, live, hasD
   const dirty = !same(tokens, saved) || name !== initialName;
   const draftExists = hasDraft || !same(saved, initial) || (live != null && !same(saved, live));
 
+  // Changing a colour picks the readable text tone automatically; the Text switch can still override it.
   const setBg = (role: BackgroundRole, patch: Partial<Gradient>) =>
-    setTokens((t) => ({ ...t, backgrounds: { ...t.backgrounds, [role]: { ...t.backgrounds[role], ...patch } } }));
+    setTokens((t) => {
+      const next = { ...t.backgrounds[role], ...patch };
+      if (!("text" in patch) && /^#[0-9a-f]{6}$/i.test(next.from) && /^#[0-9a-f]{6}$/i.test(next.to)) next.text = bestText(next);
+      return { ...t, backgrounds: { ...t.backgrounds, [role]: next } };
+    });
   const run = (fn: () => Promise<Result>, after?: () => void) => start(async () => {
     setResult({});
     const r = await fn();
@@ -48,8 +54,21 @@ export function ThemeEditor({ id, name: initialName, tokens: initial, live, hasD
           return (
             <fieldset key={r.id} className="sf-group">
               <legend>{r.name} background</legend>
-              <p className="hint">{r.use}. Text on it is {r.tone === "dark" ? "white" : "dark"}.</p>
-              <div className="te-swatch" style={{ backgroundImage: gradientCss(g) }} />
+              <p className="hint">{r.use}.</p>
+              <div className="te-swatch" style={{ backgroundImage: gradientCss(g), color: g.text === "dark" ? "#17191d" : "#fff" }}>
+                <span>Aa Text on this background</span>
+              </div>
+              <div className="field">
+                <span>Text</span>
+                <div className="seg te-seg" role="radiogroup" aria-label={`${r.name} text`}>
+                  {(["light", "dark"] as TextTone[]).map((tone) => (
+                    <button key={tone} type="button" role="radio" aria-checked={g.text === tone} className={g.text === tone ? "on" : ""}
+                      onClick={() => setBg(r.id, { text: tone })}>
+                      {tone === "light" ? "White" : "Dark"}{tone === designedText(r.id) ? " (as designed)" : ""}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div className="te-row">
                 <Color label="Start" value={g.from} onChange={(v) => setBg(r.id, { from: v })} />
                 <Num label="at %" value={g.fromAt} min={0} max={100} onChange={(v) => setBg(r.id, { fromAt: v })} />
@@ -98,7 +117,18 @@ export function ThemeEditor({ id, name: initialName, tokens: initial, live, hasD
       <div className="te-preview">
         <div className="te-bar">
           {issues.length > 0
-            ? <ul className="sf-warn">{issues.map((i, k) => <li key={k}>{i.message}</li>)}</ul>
+            ? (
+              <ul className="sf-warn">
+                {issues.map((i, k) => (
+                  <li key={k}>
+                    {i.message}{" "}
+                    {i.fix && i.role !== "accent" && i.role !== "glow" && (
+                      <button className="linkish" onClick={() => setBg(i.role as BackgroundRole, { text: i.fix })}>Use {i.fix === "dark" ? "dark" : "white"} text</button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )
             : <p className="hint ok">All text stays readable.</p>}
           {result.error && <p className="hint warn" role="alert">{result.error}</p>}
           {result.ok && <p className="hint ok" role="status">{result.ok}</p>}

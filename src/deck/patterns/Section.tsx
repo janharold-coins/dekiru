@@ -1,4 +1,5 @@
 import { TitleCage } from "../components/TitleCage";
+import { onBg } from "../theme";
 import { t, noWrap } from "../tokens";
 import type { CageLayout, PatternMeta } from "../types";
 
@@ -48,7 +49,7 @@ function SectionL1({ number, title, subtitle, figma = {} }: SectionProps) {
 }
 
 function SectionL2({ number, parentTitle, title, subtitle }: SectionProps) {
-  const rule = "rgba(255,255,255,0.3)";
+  const rule = onBg("rgba(255,255,255,0.3)", "rule");
   const h = (y: number) => <div style={{ position: "absolute", left: 0, top: y - 0.5, width: 728, height: 0.5, background: rule }} />;
   const v = (x: number) => <div style={{ position: "absolute", left: x - 0.5, top: 252, width: 0.5, height: 70, background: rule }} />;
   return (

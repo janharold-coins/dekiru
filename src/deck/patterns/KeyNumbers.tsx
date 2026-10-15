@@ -1,4 +1,5 @@
 import { t, noWrap } from "../tokens";
+import { onBg } from "../theme";
 import type { PatternMeta } from "../types";
 
 export interface StatCardData {
@@ -29,7 +30,7 @@ const TONE = { orange: "#fa7312", blue: "#1f7aff" };
 
 function StatCard({ c, left, width, inset }: { c: StatCardData; left: number; width: number; inset: number }) {
   return (
-    <div style={{ position: "absolute", left, top: 146, width, height: 618, border: "1px solid #000", borderRadius: 24, boxSizing: "border-box" }}>
+    <div style={{ position: "absolute", left, top: 146, width, height: 618, border: `1px solid ${onBg("#000", "border")}`, borderRadius: 24, boxSizing: "border-box" }}>
       <div style={{ position: "absolute", left: 35 + inset, top: 35, width: 90, height: 90 }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img alt="" src={c.icon} style={{ display: "block", maxWidth: "none", width: c.variant === "enterprise" ? 103.31 : 85.89, marginLeft: c.variant === "enterprise" ? 0 : 3.18, marginTop: c.variant === "enterprise" ? 0 : 2.81 }} />
@@ -55,7 +56,7 @@ export function KeyNumbers({ title, subtitle, callout, statCards, primaryStats, 
     <>
       <h1 style={{ position: "absolute", left: 79, top: 214, margin: 0, ...t(72, 1.15, -2.16, 600, "#204680"), ...noWrap }}>{title}</h1>
       <p style={{ position: "absolute", left: 79, top: 314, width: 678, margin: 0, ...t(48, 1.4, -1.44, 600) }}>{subtitle}</p>
-      <div style={{ position: "absolute", left: 79, top: 542, width: 12, height: 266, background: "#000" }} />
+      <div style={{ position: "absolute", left: 79, top: 542, width: 12, height: 266, background: onBg("#000", "border") }} />
       <div style={{ position: "absolute", left: 126, top: 561, width: 526, ...t(32, 1.4, 0, 400) }}>
         <div style={{ fontWeight: 700 }}>{callout.lead}</div>
         {callout.lines.map((l, i) => <div key={i}>{l}</div>)}

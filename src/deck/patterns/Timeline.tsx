@@ -1,4 +1,5 @@
 import { t, keepBreaks, noWrap } from "../tokens";
+import { onBg } from "../theme";
 import type { PatternMeta } from "../types";
 
 export interface TimelineItem {
@@ -80,7 +81,7 @@ export function Timeline({ title, subtitle, items, flags = [] }: TimelineProps) 
       })}
 
       {bracket.length === 2 && (
-        <div style={{ position: "absolute", left: 1217, top: bracket[0].markerY + 6, width: 59, height: bracket[1].markerY - bracket[0].markerY, border: "1px dashed rgba(0,0,0,0.4)", borderLeft: "none", borderRadius: "0 24px 24px 0" }} />
+        <div style={{ position: "absolute", left: 1217, top: bracket[0].markerY + 6, width: 59, height: bracket[1].markerY - bracket[0].markerY, border: `1px dashed ${onBg("rgba(0,0,0,0.4)", "rule")}`, borderLeft: "none", borderRadius: "0 24px 24px 0" }} />
       )}
 
       {items.map((it, i) =>

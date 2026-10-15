@@ -1,4 +1,5 @@
 import { t, noWrap } from "../tokens";
+import { onBg } from "../theme";
 import type { PatternMeta } from "../types";
 
 export interface ProductIndexProps {
@@ -30,7 +31,7 @@ export function ProductIndex({ titleRuns, subtitle, pillars }: ProductIndexProps
   return (
     <>
       <h1 style={{ position: "absolute", left: 79, top: 440, margin: 0, ...t(72, 1.15, -2.16, 600), ...noWrap }}>
-        {titleRuns.map((r, i) => <span key={i} style={{ color: r.color }}>{r.text}</span>)}
+        {titleRuns.map((r, i) => <span key={i} style={{ color: r.color ? onBg(r.color) : undefined }}>{r.text}</span>)}
       </h1>
       <p style={{ position: "absolute", left: 79, top: 540, width: 661, margin: 0, ...t(48, 1.4, -1.44, 500) }}>{subtitle}</p>
       {pillars.map((p, i) => (

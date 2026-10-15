@@ -1,4 +1,5 @@
 import { Bullets, NumberedGroups, PriceChip, SectionHeader, TierChip, type Chip, type KeyApiGroup, type Tier } from "../components/ProductParts";
+import { onBg } from "../theme";
 import { t, keepBreaks } from "../tokens";
 import type { PatternMeta } from "../types";
 
@@ -82,7 +83,7 @@ export function ProductDetail(p: ProductDetailProps) {
           <Bullets items={p.what} />
         </div>
         {p.keyApis.length > 0 && (
-          <div style={{ width: 460, boxSizing: "border-box", border: "1px solid #000", borderRadius: 12, padding: "35px 23px", display: "flex", flexDirection: "column", gap: 24 }}>
+          <div style={{ width: 460, boxSizing: "border-box", border: `1px solid ${onBg("#000", "border")}`, borderRadius: 12, padding: "35px 23px", display: "flex", flexDirection: "column", gap: 24 }}>
             <SectionHeader label={p.keyApisLabel ?? "Key APIs"} />
             {isGroups(p.keyApis) ? <NumberedGroups groups={p.keyApis} /> : <Bullets items={p.keyApis} />}
           </div>

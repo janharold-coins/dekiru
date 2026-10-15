@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { AccentBar, Background, CoBrandLogo, Footer, Logo } from "../chrome/Chrome";
+import { slideFlipVars } from "../theme";
 import type { Chrome } from "../types";
 
 /**
@@ -11,7 +12,7 @@ export function SlideFrame({ chrome, children, top }: { chrome: Chrome; children
   return (
     <div
       className="dk-slide"
-      style={{ position: "relative", width: 1920, height: 1080, overflow: "hidden", isolation: "isolate" }}
+      style={{ position: "relative", width: 1920, height: 1080, overflow: "hidden", isolation: "isolate", ...slideFlipVars(chrome.background) }}
     >
       <Background variant={chrome.background} overlay={chrome.overlay} opacity={chrome.overlayOpacity} />
       {children}

@@ -6,11 +6,19 @@
  * A theme becomes CSS custom properties on a wrapper element (`themeStyle`). The slide chrome reads them,
  * falling back to the Coins.ph look, so anything rendered outside a themed wrapper looks as approved.
  *
- * v1 covers backgrounds: the three background roles, the glow, and the accent bar.
+ * v1 covers backgrounds: the three background roles (each with the text tone that goes on it), the glow,
+ * and the accent bar.
+ *
+ * Text tone: slides are designed with white text on the dark roles and dark text on the light role. When a
+ * theme gives a role the other tone (e.g. a white "Main dark"), every slide on that role switches its
+ * on-background text, rules, logo and footer to a matching palette. Cards with their own surface keep
+ * their designed colours. See `onBg` and `FLIP` below.
  */
 import type { CSSProperties } from "react";
 
 export type BackgroundRole = "dark" | "dark-navy" | "light";
+
+export type TextTone = "light" | "dark"; // light = white text, dark = near-black text
 
 export interface Gradient {
   angle: number; // degrees, CSS linear-gradient
@@ -18,6 +26,8 @@ export interface Gradient {
   fromAt: number; // %
   to: string;
   toAt: number;
+  /** Text on this background. Missing = as designed (white on the dark roles, dark on light). */
+  text?: TextTone;
 }
 
 export interface ThemeTokens {
@@ -30,7 +40,7 @@ export interface ThemeTokens {
   accent: [string, string, string]; // bottom rule on light slides, left to right
 }
 
-/** What each role is for. Roles keep their tone: text on dark roles is white, on light roles black. */
+/** What each role is for, and the background tone slides on it were designed for. */
 export const ROLES: { id: BackgroundRole; name: string; use: string; tone: "dark" | "light" }[] = [
   { id: "dark", name: "Main dark", use: "Cover and section dividers", tone: "dark" },
   { id: "dark-navy", name: "Closing dark", use: "Contact and thank-you slides", tone: "dark" },
@@ -62,12 +72,12 @@ export const VAR = {
 /** Fills in anything missing (older or partial token sets) from the default. */
 export function normalizeTokens(t: Partial<ThemeTokens> | null | undefined): ThemeTokens {
   const d = DEFAULT_TOKENS;
+  const bg = (r: BackgroundRole) => {
+    const g = { ...d.backgrounds[r], ...t?.backgrounds?.[r] };
+    return { ...g, text: g.text === "light" || g.text === "dark" ? g.text : designedText(r) };
+  };
   return {
-    backgrounds: {
-      dark: { ...d.backgrounds.dark, ...t?.backgrounds?.dark },
-      "dark-navy": { ...d.backgrounds["dark-navy"], ...t?.backgrounds?.["dark-navy"] },
-      light: { ...d.backgrounds.light, ...t?.backgrounds?.light },
-    },
+    backgrounds: { dark: bg("dark"), "dark-navy": bg("dark-navy"), light: bg("light") },
     glow: { ...d.glow, ...t?.glow },
     accent: (t?.accent?.length === 3 ? t.accent : d.accent) as ThemeTokens["accent"],
   };
@@ -78,9 +88,59 @@ export function themeStyle(tokens: Partial<ThemeTokens> | null | undefined): CSS
   if (!tokens) return {};
   const t = normalizeTokens(tokens);
   const vars: Record<string, string> = { [VAR.strength]: String(t.glow.strength), ...glowStops(t.glow) };
-  for (const r of ROLES) vars[VAR.bg(r.id)] = gradientCss(t.backgrounds[r.id]);
+  for (const r of ROLES) {
+    vars[VAR.bg(r.id)] = gradientCss(t.backgrounds[r.id]);
+    // Only a role whose text tone differs from the design gets a palette; the others keep designed colours.
+    const text = t.backgrounds[r.id].text!;
+    if (text !== designedText(r.id)) for (const [k, v] of Object.entries(FLIP[text])) vars[`--dk-${r.id}-${k}`] = v;
+  }
   t.accent.forEach((c, i) => { vars[VAR.accent(i)] = c; });
   return vars as CSSProperties;
+}
+
+/* ---------- text tone ---------- */
+
+/** The text tone slides on this role were designed with. */
+export const designedText = (r: BackgroundRole): TextTone => (ROLES.find((x) => x.id === r)?.tone === "dark" ? "light" : "dark");
+
+/** Palettes used when a role's text tone is switched away from the design. */
+const FLIP: Record<TextTone, Record<FlipLevel, string>> = {
+  dark: {
+    primary: "#17191d", secondary: "#545454", title: "#204680", accent: "#b45309",
+    rule: "rgba(0,0,0,0.25)", border: "#000000", "logo-designed": "none", "logo-alt": "block",
+  },
+  light: {
+    primary: "#ffffff", secondary: "rgba(255,255,255,0.75)", title: "#ffffff", accent: "#efa023",
+    rule: "rgba(255,255,255,0.3)", border: "rgba(255,255,255,0.7)", "logo-designed": "none", "logo-alt": "block",
+  },
+};
+export type FlipLevel = "primary" | "secondary" | "title" | "accent" | "rule" | "border" | "logo-designed" | "logo-alt";
+const LEVELS: FlipLevel[] = ["primary", "secondary", "title", "accent", "rule", "border", "logo-designed", "logo-alt"];
+
+/**
+ * Per-slide variables (set by SlideFrame for the slide's role). When the theme didn't switch this role's
+ * text, the referenced variable is undefined, so every `onBg(...)` falls back to the designed colour.
+ */
+export function slideFlipVars(role: BackgroundRole): CSSProperties {
+  return Object.fromEntries(LEVELS.map((l) => [`--dk-flip-${l}`, `var(--dk-${role}-${l})`])) as CSSProperties;
+}
+
+/** Cards and panels with their own surface: keep designed colours whatever the background does. */
+export const OWN_SURFACE = Object.fromEntries(LEVELS.map((l) => [`--dk-flip-${l}`, "initial"])) as CSSProperties;
+
+/** Designed colours of text that sits on the slide background, by what they are. */
+const LEVEL_OF: Record<string, FlipLevel> = {
+  "#000": "primary", "#000000": "primary", "#17191d": "primary", "#fff": "primary", "#ffffff": "primary",
+  "#204680": "title",
+  "#545454": "secondary", "#606060": "secondary", "#757575": "secondary", "#363636": "secondary", "#3d3d3d": "secondary",
+  "#5b6572": "secondary", "#898989": "secondary", "#474747": "secondary", "#6482a5": "secondary",
+  "#efa023": "accent",
+};
+
+/** A colour for something on the slide background: as designed, unless the theme switched the text tone. */
+export function onBg(designed: string, level?: FlipLevel): string {
+  const l = level ?? LEVEL_OF[designed.toLowerCase()];
+  return l ? `var(--dk-flip-${l}, ${designed})` : designed;
 }
 
 /* ---------- glow ---------- */
@@ -134,17 +194,35 @@ const contrast = (a: number, b: number) => (Math.max(a, b) + 0.05) / (Math.min(a
  * Problems that would make slides hard to read: text on dark roles is white and on light roles near-black,
  * so each background colour needs enough contrast with that text (WCAG 4.5:1 for body text).
  */
-export function checkTheme(tokens: ThemeTokens): { role: BackgroundRole | "accent" | "glow"; message: string }[] {
-  const out: { role: BackgroundRole | "accent" | "glow"; message: string }[] = [];
+const TEXT_LUM: Record<TextTone, number> = { light: 1, dark: 0.0098 }; // white, #17191d
+
+/** Lowest contrast between a text tone and the two ends of a background. */
+export function minContrast(g: Gradient, text: TextTone) {
+  const ends = [luminance(g.from), luminance(g.to)].filter((l): l is number => l != null);
+  return ends.length ? Math.min(...ends.map((l) => contrast(l, TEXT_LUM[text]))) : 0;
+}
+
+/** The text tone that reads best on this background. */
+export const bestText = (g: Gradient): TextTone => (minContrast(g, "light") >= minContrast(g, "dark") ? "light" : "dark");
+
+export interface ThemeIssue { role: BackgroundRole | "accent" | "glow"; message: string; fix?: TextTone }
+
+export function checkTheme(tokens: ThemeTokens): ThemeIssue[] {
+  const out: ThemeIssue[] = [];
   for (const r of ROLES) {
     const g = tokens.backgrounds[r.id];
+    const text = g.text ?? designedText(r.id);
     for (const [label, hex] of [["start", g.from], ["end", g.to]] as const) {
       const l = luminance(hex);
       if (l == null) { out.push({ role: r.id, message: `${r.name}: ${label} colour "${hex}" isn't a 6-digit hex colour.` }); continue; }
-      const text = r.tone === "dark" ? 1 : luminance("#17191d")!;
-      const c = contrast(l, text);
+      const c = contrast(l, TEXT_LUM[text]);
       if (c < 4.5) {
-        out.push({ role: r.id, message: `${r.name}: ${label} colour is too ${r.tone === "dark" ? "light" : "dark"} for ${r.tone === "dark" ? "white" : "dark"} text (contrast ${c.toFixed(1)}:1, needs 4.5:1).` });
+        const other: TextTone = text === "light" ? "dark" : "light";
+        out.push({
+          role: r.id,
+          message: `${r.name}: ${label} colour is too ${text === "light" ? "light" : "dark"} for ${text === "light" ? "white" : "dark"} text (contrast ${c.toFixed(1)}:1, needs 4.5:1).`,
+          ...(minContrast(g, other) >= 4.5 ? { fix: other } : {}),
+        });
       }
     }
   }

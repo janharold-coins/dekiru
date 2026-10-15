@@ -1,4 +1,5 @@
 import { t, keepBreaks, noWrap } from "../tokens";
+import { OWN_SURFACE } from "../theme";
 import type { PatternMeta } from "../types";
 
 export interface FeatureCardsProps {
@@ -47,7 +48,7 @@ export function FeatureCards({ title, cards, decoration }: FeatureCardsProps) {
         <div
           key={i}
           style={{
-            position: "absolute", left: startX + i * pitch, top: i % 2 === 0 ? 331 : 391, width: 300, height: 475, boxSizing: "border-box",
+            ...OWN_SURFACE, position: "absolute", left: startX + i * pitch, top: i % 2 === 0 ? 331 : 391, width: 300, height: 475, boxSizing: "border-box",
             border: "1px solid #000", borderRadius: 8, padding: "60px 30px 30px", display: "flex", flexDirection: "column", gap: 36,
             backgroundImage: "linear-gradient(123.1447deg, #ffffff 50%, #fbfbfb 94.311%)", filter: "drop-shadow(0 0 6px rgba(0,0,0,0.12))",
           }}

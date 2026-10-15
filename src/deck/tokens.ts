@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { onBg } from "./theme";
 
 /** Design tokens taken from the Figma file (Presentation-Decks). Values are in slide px (1920×1080). */
 export const color = {
@@ -48,7 +49,7 @@ export function t(
     lineHeight: lineHeight === "normal" ? "normal" : lineHeight,
     letterSpacing: tracking,
     fontWeight: weight,
-    color: col,
+    color: onBg(col), // follows the theme's text tone when the slide's background role is switched
     fontStyle: "normal",
   };
 }

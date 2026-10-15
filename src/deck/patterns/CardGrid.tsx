@@ -1,4 +1,5 @@
 import { t, noWrap } from "../tokens";
+import { OWN_SURFACE } from "../theme";
 import type { PatternMeta } from "../types";
 
 export interface StatusRow { label: string; status: string; variant: "active" | "live" | "q2" | "q3" | string }
@@ -26,7 +27,7 @@ export function CardGrid({ eyebrow, title, subtitle, body, cards }: CardGridProp
           <div
             key={i}
             style={{
-              width: 260, boxSizing: "border-box", display: "flex", flexDirection: "column", alignItems: "center", gap: 24, padding: 24,
+              ...OWN_SURFACE, width: 260, boxSizing: "border-box", display: "flex", flexDirection: "column", alignItems: "center", gap: 24, padding: 24,
               border: "1px solid #dbdbdb", borderRadius: 12, backgroundImage: "linear-gradient(155.4799deg, #ffffff 13.016%, #eeeeee 105.99%)",
             }}
           >

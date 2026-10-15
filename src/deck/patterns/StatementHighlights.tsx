@@ -1,4 +1,5 @@
 import { t, keepBreaks, noWrap } from "../tokens";
+import { OWN_SURFACE } from "../theme";
 import type { PatternMeta } from "../types";
 
 export interface StatementHighlightsProps {
@@ -21,7 +22,7 @@ export function StatementHighlights({ title, body, highlights }: StatementHighli
       <p style={{ position: "absolute", left: 207, top: 432, width: 1506, margin: 0, textAlign: "center", ...t(32, 1.6, -0.32, 600) }}>{body}</p>
       <div
         style={{
-          position: "absolute", left: "50%", top: 786, transform: "translate(-50%, -50%)",
+          ...OWN_SURFACE, position: "absolute", left: "50%", top: 786, transform: "translate(-50%, -50%)",
           display: "flex", alignItems: "center", gap: 120, padding: "48px 60px", borderRadius: 16,
           backgroundImage: "linear-gradient(142.8718519294768deg, rgb(44,112,216) 21.64%, rgb(19,27,38) 57.452%, rgb(250,115,18) 88.018%)",
           filter: "drop-shadow(0px 0px 12px rgba(0,0,0,0.08))",

@@ -1,5 +1,6 @@
 "use client";
 import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { onBg } from "../theme";
 import type { CageLayout } from "../types";
 
 /**
@@ -60,7 +61,7 @@ export function TitleCage({
   }, [layout, text, left, top, fontSize, lineHeight, bleedX, extend, stroke, lines.length]);
 
   const cage = layout ?? auto;
-  const rule = "rgba(255,255,255,0.3)";
+  const rule = onBg("rgba(255,255,255,0.3)", "rule");
   return (
     <>
       {cage && (

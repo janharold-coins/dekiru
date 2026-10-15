@@ -1,4 +1,5 @@
 import { LogoItem, type LogoData } from "../components/LogoItem";
+import { OWN_SURFACE } from "../theme";
 import { t } from "../tokens";
 import type { PatternMeta } from "../types";
 
@@ -38,7 +39,7 @@ export function LogoWall({ title, body, groups }: LogoWallProps) {
           <fieldset
             key={g.group}
             style={{
-              position: "absolute", left: s.left, top: s.top, width: s.w, height: s.h, margin: 0, boxSizing: "border-box",
+              ...OWN_SURFACE, position: "absolute", left: s.left, top: s.top, width: s.w, height: s.h, margin: 0, boxSizing: "border-box",
               border: `1px solid rgba(255,255,255,${s.alpha})`, borderRadius: 12, padding: s.pad,
               display: "flex", flexWrap: "wrap", justifyContent: "center", alignItems: "center", alignContent: "center", gap: s.gap,
             }}
