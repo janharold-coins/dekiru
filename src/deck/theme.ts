@@ -26,8 +26,11 @@ export interface Gradient {
   fromAt: number; // %
   to: string;
   toAt: number;
-  /** Text on this background. Missing = as designed (white on the dark roles, dark on light). */
-  text?: TextTone;
+  /**
+   * Text on this background. "auto" (Auto contrast, the default) keeps the designed tone while it reads
+   * well and switches to the other tone when the background calls for it; "light"/"dark" fix it by hand.
+   */
+  text?: TextTone | "auto";
 }
 
 export interface ThemeTokens {
@@ -74,7 +77,7 @@ export function normalizeTokens(t: Partial<ThemeTokens> | null | undefined): The
   const d = DEFAULT_TOKENS;
   const bg = (r: BackgroundRole) => {
     const g = { ...d.backgrounds[r], ...t?.backgrounds?.[r] };
-    return { ...g, text: g.text === "light" || g.text === "dark" ? g.text : designedText(r) };
+    return { ...g, text: g.text === "light" || g.text === "dark" ? g.text : "auto" as const };
   };
   return {
     backgrounds: { dark: bg("dark"), "dark-navy": bg("dark-navy"), light: bg("light") },
@@ -91,7 +94,7 @@ export function themeStyle(tokens: Partial<ThemeTokens> | null | undefined): CSS
   for (const r of ROLES) {
     vars[VAR.bg(r.id)] = gradientCss(t.backgrounds[r.id]);
     // Only a role whose text tone differs from the design gets a palette; the others keep designed colours.
-    const text = t.backgrounds[r.id].text!;
+    const text = textFor(t.backgrounds[r.id], r.id);
     if (text !== designedText(r.id)) for (const [k, v] of Object.entries(FLIP[text])) vars[`--dk-${r.id}-${k}`] = v;
   }
   t.accent.forEach((c, i) => { vars[VAR.accent(i)] = c; });
@@ -205,13 +208,27 @@ export function minContrast(g: Gradient, text: TextTone) {
 /** The text tone that reads best on this background. */
 export const bestText = (g: Gradient): TextTone => (minContrast(g, "light") >= minContrast(g, "dark") ? "light" : "dark");
 
+const validHex = (h: string) => /^#[0-9a-f]{6}$/i.test(h);
+
+/** Auto contrast: the designed tone while it reads (4.5:1), otherwise whichever tone reads better. */
+export function autoText(g: Gradient, role: BackgroundRole): TextTone {
+  if (!validHex(g.from) || !validHex(g.to)) return designedText(role);
+  const designed = designedText(role);
+  return minContrast(g, designed) >= 4.5 ? designed : bestText(g);
+}
+
+/** The text tone actually used on a role: the hand-picked one, or Auto contrast's choice. */
+export const textFor = (g: Gradient, role: BackgroundRole): TextTone =>
+  g.text === "light" || g.text === "dark" ? g.text : autoText(g, role);
+
 export interface ThemeIssue { role: BackgroundRole | "accent" | "glow"; message: string; fix?: TextTone }
 
 export function checkTheme(tokens: ThemeTokens): ThemeIssue[] {
   const out: ThemeIssue[] = [];
   for (const r of ROLES) {
     const g = tokens.backgrounds[r.id];
-    const text = g.text ?? designedText(r.id);
+    const text = textFor(g, r.id);
+    const auto = g.text !== "light" && g.text !== "dark";
     for (const [label, hex] of [["start", g.from], ["end", g.to]] as const) {
       const l = luminance(hex);
       if (l == null) { out.push({ role: r.id, message: `${r.name}: ${label} colour "${hex}" isn't a 6-digit hex colour.` }); continue; }
@@ -220,8 +237,10 @@ export function checkTheme(tokens: ThemeTokens): ThemeIssue[] {
         const other: TextTone = text === "light" ? "dark" : "light";
         out.push({
           role: r.id,
-          message: `${r.name}: ${label} colour is too ${text === "light" ? "light" : "dark"} for ${text === "light" ? "white" : "dark"} text (contrast ${c.toFixed(1)}:1, needs 4.5:1).`,
-          ...(minContrast(g, other) >= 4.5 ? { fix: other } : {}),
+          message: auto
+            ? `${r.name}: neither white nor dark text reads well on the ${label} colour (contrast ${c.toFixed(1)}:1, needs 4.5:1). Make the two colours closer in lightness.`
+            : `${r.name}: ${label} colour is too ${text === "light" ? "light" : "dark"} for ${text === "light" ? "white" : "dark"} text (contrast ${c.toFixed(1)}:1, needs 4.5:1).`,
+          ...(!auto && minContrast(g, other) >= 4.5 ? { fix: other } : {}),
         });
       }
     }

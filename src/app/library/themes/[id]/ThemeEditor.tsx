@@ -4,7 +4,7 @@ import { RenderSlide } from "@/deck/RenderSlide";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
 import { patterns } from "@/deck/registry";
 import {
-  DEFAULT_TOKENS, ROLES, bestText, checkTheme, designedText, gradientCss, themeStyle,
+  DEFAULT_TOKENS, ROLES, checkTheme, designedText, gradientCss, textFor, themeStyle,
   type BackgroundRole, type Gradient, type TextTone, type ThemeTokens,
 } from "@/deck/theme";
 import type { SlideData } from "@/deck/types";
@@ -30,13 +30,8 @@ export function ThemeEditor({ id, name: initialName, tokens: initial, live, hasD
   const dirty = !same(tokens, saved) || name !== initialName;
   const draftExists = hasDraft || !same(saved, initial) || (live != null && !same(saved, live));
 
-  // Changing a colour picks the readable text tone automatically; the Text switch can still override it.
   const setBg = (role: BackgroundRole, patch: Partial<Gradient>) =>
-    setTokens((t) => {
-      const next = { ...t.backgrounds[role], ...patch };
-      if (!("text" in patch) && /^#[0-9a-f]{6}$/i.test(next.from) && /^#[0-9a-f]{6}$/i.test(next.to)) next.text = bestText(next);
-      return { ...t, backgrounds: { ...t.backgrounds, [role]: next } };
-    });
+    setTokens((t) => ({ ...t, backgrounds: { ...t.backgrounds, [role]: { ...t.backgrounds[role], ...patch } } }));
   const run = (fn: () => Promise<Result>, after?: () => void) => start(async () => {
     setResult({});
     const r = await fn();
@@ -51,20 +46,26 @@ export function ThemeEditor({ id, name: initialName, tokens: initial, live, hasD
 
         {ROLES.map((r) => {
           const g = tokens.backgrounds[r.id];
+          const tone = textFor(g, r.id);
+          const auto = g.text !== "light" && g.text !== "dark";
           return (
             <fieldset key={r.id} className="sf-group">
               <legend>{r.name} background</legend>
               <p className="hint">{r.use}.</p>
-              <div className="te-swatch" style={{ backgroundImage: gradientCss(g), color: g.text === "dark" ? "#17191d" : "#fff" }}>
+              <div className="te-swatch" style={{ backgroundImage: gradientCss(g), color: tone === "dark" ? "#17191d" : "#fff" }}>
                 <span>Aa Text on this background</span>
               </div>
               <div className="field">
                 <span>Text</span>
-                <div className="seg te-seg" role="radiogroup" aria-label={`${r.name} text`}>
-                  {(["light", "dark"] as TextTone[]).map((tone) => (
-                    <button key={tone} type="button" role="radio" aria-checked={g.text === tone} className={g.text === tone ? "on" : ""}
-                      onClick={() => setBg(r.id, { text: tone })}>
-                      {tone === "light" ? "White" : "Dark"}{tone === designedText(r.id) ? " (as designed)" : ""}
+                <label className="check">
+                  <input type="checkbox" checked={auto} onChange={(e) => setBg(r.id, { text: e.target.checked ? "auto" : tone })} />
+                  <span>Auto contrast <span className="sub">text turns white or dark to suit the background</span></span>
+                </label>
+                <div className={`seg te-seg${auto ? " off" : ""}`} role="radiogroup" aria-label={`${r.name} text`} aria-disabled={auto}>
+                  {(["light", "dark"] as TextTone[]).map((x) => (
+                    <button key={x} type="button" role="radio" aria-checked={tone === x} className={tone === x ? "on" : ""} disabled={auto}
+                      onClick={() => setBg(r.id, { text: x })}>
+                      {x === "light" ? "White" : "Dark"}{x === designedText(r.id) ? " (as designed)" : ""}
                     </button>
                   ))}
                 </div>
