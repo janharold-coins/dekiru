@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { themeStyle } from "@/deck/theme";
 import { RenderSlide } from "@/deck/RenderSlide";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
 import { patterns } from "@/deck/registry";
@@ -15,7 +16,7 @@ export default async function ComparePage({ params }: { params: Promise<{ id: st
   const deck = await getDeck(id);
   if (!deck) notFound();
   return (
-    <main className="shell">
+    <main className="shell" style={themeStyle(deck.theme.tokens)}>
       <Nav on="decks" user={user} />
       <h1 className="page">{deck.title}: Figma vs code</h1>
       <p className="lede">Left: the Figma frame. Right: the same slide rendered from the pattern library. Differences in letterforms usually mean the Cns Manrope / TWK Everett font files aren&apos;t installed on this machine.</p>

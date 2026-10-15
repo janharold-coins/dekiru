@@ -18,7 +18,7 @@ import { accounts, oauthAccessTokens, oauthApplications, oauthConsents, sessions
 export const ALLOWED_DOMAIN = process.env.ALLOWED_EMAIL_DOMAIN || "coins.ph";
 
 export type Role = "admin" | "manager" | "member";
-export interface SignedInUser { id: string; email: string; name: string; image?: string | null; role: Role }
+export interface SignedInUser { id: string; email: string; name: string; image?: string | null; role: Role; canEditThemes?: boolean }
 
 export const appBaseURL = () => baseURL();
 
@@ -69,7 +69,10 @@ function create() {
       },
     },
     user: {
-      additionalFields: { role: { type: "string", defaultValue: "member", input: false } },
+      additionalFields: {
+        role: { type: "string", defaultValue: "member", input: false },
+        canEditThemes: { type: "boolean", defaultValue: false, input: false },
+      },
     },
     session: { expiresIn: 60 * 60 * 24 * 30, updateAge: 60 * 60 * 24 },
     databaseHooks: {
@@ -123,8 +126,8 @@ export async function currentUser(): Promise<SignedInUser | null> {
   if (!authConfigured()) return null;
   const s = await auth().api.getSession({ headers: await headers() });
   if (!s) return null;
-  const u = s.user as typeof s.user & { role?: Role };
-  return { id: u.id, email: u.email, name: u.name, image: u.image, role: u.role ?? "member" };
+  const u = s.user as typeof s.user & { role?: Role; canEditThemes?: boolean };
+  return { id: u.id, email: u.email, name: u.name, image: u.image, role: u.role ?? "member", canEditThemes: Boolean(u.canEditThemes) };
 }
 
 /**

@@ -25,6 +25,8 @@ import type { SlideData } from "@/deck/types";
 import { copyDeck, createDeck, getDeckVersions, publishDraft, saveDraft } from "./decks";
 import type { SignedInUser } from "./auth";
 import { canEdit, canView, deckRow } from "./access";
+import { pickTheme, publishedThemes } from "./themes";
+import { DEFAULT_THEME_ID } from "@/deck/theme";
 
 export { canEdit, canView, deckRow };
 
@@ -58,7 +60,8 @@ export async function checkSlides(slides: SeedSlide[]) {
     let renderError: string | null = null;
     if (!patterns[s.pattern]) renderError = `Unknown pattern "${s.pattern}". Use list_patterns.`;
     else {
-      try { renderToStaticMarkup(createElement(RenderSlide, { slide: s })); }
+      // The glow is chrome (same on every slide, uses a hook this renderer can't run), so it's left out of the check.
+      try { renderToStaticMarkup(createElement(RenderSlide, { slide: { ...s, chrome: { ...s.chrome, overlay: false } } })); }
       catch (e) {
         // On the server, client-only pieces (the measured title cage) can't render; everything up to them did.
         const msg = (e as Error).message;
@@ -231,6 +234,7 @@ export async function listVersions(user: SignedInUser | null, deckId: string) {
       number: deckVersions.number, status: deckVersions.status, note: deckVersions.note,
       createdAt: deckVersions.createdAt, publishedAt: deckVersions.publishedAt,
       slideCount: sql<number>`jsonb_array_length(${deckVersions.slides})`.mapWith(Number),
+      themeId: deckVersions.themeId,
       createdBy: sql<string | null>`coalesce(nullif(${editors.name}, ''), ${editors.email})`,
       publishedBy: sql<string | null>`coalesce(nullif(${publishers.name}, ''), ${publishers.email})`,
     })
@@ -255,7 +259,17 @@ export async function versionSlides(user: SignedInUser | null, deckId: string, n
 export async function restoreVersion(user: SignedInUser | null, deckId: string, number: number) {
   await editable(deckId, user);
   const { version } = await versionSlides(user, deckId, number);
-  await saveDraft(deckId, version.slides, { userId: user?.id ?? null, note: `Restored v${number}` });
+  await saveDraft(deckId, version.slides, { userId: user?.id ?? null, note: `Restored v${number}`, themeId: version.themeId ?? null });
+}
+
+/** Switch the deck's theme (saved to the draft, like any edit). null = the default theme. */
+export async function setDeckTheme(user: SignedInUser | null, deckId: string, themeId: string | null, via: Via = "app") {
+  await editable(deckId, user);
+  const all = await publishedThemes();
+  if (themeId && !all.some((t) => t.id === themeId)) throw new EditError(`No theme "${themeId}". Themes: ${all.map((t) => t.id).join(", ")}.`);
+  const { slides } = await working(deckId);
+  const id = themeId === DEFAULT_THEME_ID ? null : themeId;
+  await saveDraft(deckId, slides, { userId: user?.id ?? null, note: `Theme: ${pickTheme(all, id).name}${via === "claude" ? " (with Claude)" : ""}`, themeId: id });
 }
 
 /** URL-safe id from a title, with a short random suffix so copies never collide. */

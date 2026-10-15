@@ -1,5 +1,7 @@
 /* Shared slide chrome: background, BG blobs, logo, confidentiality footer, accent bar. */
+import { DEFAULT_TOKENS, VAR } from "../theme";
 import { backgrounds, t, type BackgroundVariant } from "../tokens";
+import { Glow } from "./Glow";
 import type { FooterPosition, LogoVariant } from "../types";
 
 const abs = { position: "absolute" } as const;
@@ -7,11 +9,9 @@ const abs = { position: "absolute" } as const;
 export function Background({ variant, overlay, opacity = 1 }: { variant: BackgroundVariant; overlay: boolean; opacity?: number }) {
   return (
     <>
-      <div style={{ ...abs, inset: 0, backgroundImage: backgrounds[variant] }} />
-      {overlay && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img alt="" src="/figma/shared/bg-dark.svg" style={{ ...abs, left: 0, top: 0, width: 1920, height: 1080, opacity }} />
-      )}
+      {/* The deck's theme sets these variables; without one, the approved look. */}
+      <div style={{ ...abs, inset: 0, backgroundImage: `var(${VAR.bg(variant)}, ${backgrounds[variant]})` }} />
+      {overlay && <Glow opacity={opacity} />}
     </>
   );
 }
@@ -57,9 +57,9 @@ export function AccentBar() {
   );
   return (
     <div style={{ ...abs, left: 0, top: 1069, width: 1920, height: 11 }}>
-      {bar(0, 1920, "#1f7aff")}
-      {bar(464, 1432, "#204680")}
-      {bar(867, 968, "#fa7312")}
+      {bar(0, 1920, `var(${VAR.accent(0)}, ${DEFAULT_TOKENS.accent[0]})`)}
+      {bar(464, 1432, `var(${VAR.accent(1)}, ${DEFAULT_TOKENS.accent[1]})`)}
+      {bar(867, 968, `var(${VAR.accent(2)}, ${DEFAULT_TOKENS.accent[2]})`)}
     </div>
   );
 }

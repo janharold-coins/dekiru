@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { themeStyle } from "@/deck/theme";
 import { notFound } from "next/navigation";
 import { hasDb } from "@/db/client";
 import { requireUser } from "@/lib/auth";
@@ -23,7 +24,7 @@ export default async function PresentationsPage({ params, searchParams }: {
   const secs = SHORT_PRESENTATION_MS / 1000;
 
   return (
-    <main className="shell">
+    <main className="shell" style={themeStyle(deck.theme.tokens)}>
       <Nav on="decks" user={user} />
       <p className="mono" style={{ margin: "0 0 4px" }}><Link href={`/decks/${deck.id}`}>← {deck.title}</Link></p>
       <h1 className="page">Presentations</h1>

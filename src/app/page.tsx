@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ThemeScope } from "@/deck/ThemeScope";
 import { RenderSlide } from "@/deck/RenderSlide";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
 import { patterns } from "@/deck/registry";
@@ -9,7 +10,7 @@ import { Nav } from "./Nav";
 function DeckCard({ d }: { d: Awaited<ReturnType<typeof listDecks>>[number] }) {
   return (
     <Link href={`/decks/${d.id}`} className="card">
-      <ScaledSlide className="thumb"><RenderSlide slide={d.slides[0]} /></ScaledSlide>
+      <ThemeScope tokens={d.theme.tokens}><ScaledSlide className="thumb"><RenderSlide slide={d.slides[0]} /></ScaledSlide></ThemeScope>
       <div className="meta">
         <b>{d.title}</b><span className="spacer" />
         {d.hasDraft && <span className="tag warn">draft</span>}

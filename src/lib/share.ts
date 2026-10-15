@@ -12,6 +12,7 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { deckVersions, decks, shareLinks, users } from "@/db/schema";
 import { opensByLink } from "./analytics";
+import { pickTheme, publishedThemes } from "./themes";
 import { resolveSlides } from "@/content/resolve";
 import type { SignedInUser } from "./auth";
 
@@ -98,6 +99,7 @@ export async function createShareLink(deckId: string, input: CreateLinkInput, us
   const expiresAt = input.expiresInDays ? new Date(Date.now() + input.expiresInDays * 86_400_000) : null;
   const [link] = await q.insert(shareLinks).values({
     slug: newSlug(), deckId, versionId: version.id, deckTitle: deck.title, slides,
+    theme: pickTheme(await publishedThemes(), version.themeId).tokens, // frozen with the link
     label: input.label?.trim() || null,
     passwordHash: password ? await hashPassword(password) : null,
     createdBy: user?.id ?? null, expiresAt,

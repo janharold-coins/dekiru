@@ -10,9 +10,10 @@ import { patterns } from "@/deck/registry";
 import type { SlideData } from "@/deck/types";
 import { appBaseURL, type SignedInUser } from "./auth";
 import { getDeck, listDecks } from "./decks";
+import { publishedThemes } from "./themes";
 import {
   addSlide, canEdit, canView, checkSlides, deckRow, duplicateDeck, EditError, moveSlide, newDeck, publish,
-  removeSlide, setHidden, updateSlide, type SlideInput,
+  removeSlide, setDeckTheme, setHidden, updateSlide, type SlideInput,
 } from "./editing";
 
 export const INSTRUCTIONS = `Dekiru builds Coins.ph sales decks from an approved design system. Slides are data: each slide is a
@@ -88,6 +89,7 @@ export function registerTools(server: McpServer, user: SignedInUser) {
     return {
       id: deck.id, title: deck.title, kind: deck.kind, version: deck.version,
       showing: deck.status === "draft" ? "unpublished draft" : "published", canEdit: editable, url: deckUrl(deck.id),
+      theme: { id: deck.theme.id, name: deck.theme.name },
       slides: checks.map(({ slide, overflow, renderError }) => ({
         number: slide.hidden ? null : ++n, id: slide.id, pattern: slide.pattern,
         ...(slide.hidden ? { hidden: true } : {}),
@@ -193,6 +195,22 @@ export function registerTools(server: McpServer, user: SignedInUser) {
     description: "Hidden slides stay in the deck but aren't presented or shared.",
     inputSchema: z.object({ deck_id: z.string(), slide_id: z.string(), hidden: z.boolean() }),
   }, async ({ deck_id, slide_id, hidden }) => run(async () => { await setHidden(user, deck_id, slide_id, hidden); return { saved: "draft", preview: deckUrl(deck_id) }; }));
+
+  server.registerTool("list_themes", {
+    title: "List themes",
+    description: "Looks a deck can use (backgrounds, glow, accent bar). The deck's theme applies to all its slides, approved blocks included.",
+    inputSchema: z.object({}),
+    annotations: { readOnlyHint: true },
+  }, async () => run(async () => (await publishedThemes()).map((t) => ({ id: t.id, name: t.name, version: t.version }))));
+
+  server.registerTool("set_deck_theme", {
+    title: "Set a deck's theme",
+    description: "Switch the deck's theme (saved to the draft). Only when the person asks for a different look.",
+    inputSchema: z.object({ deck_id: z.string(), theme_id: z.string().describe("From list_themes.") }),
+  }, async ({ deck_id, theme_id }) => run(async () => {
+    await setDeckTheme(user, deck_id, theme_id, "claude");
+    return { saved: "draft", preview: deckUrl(deck_id) };
+  }));
 
   server.registerTool("publish_deck", {
     title: "Publish a deck",

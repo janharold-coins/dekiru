@@ -1,6 +1,7 @@
 /* Approved slides ("blocks") to pick from: the company masters' own slides, grouped by their section dividers. */
 import { RenderSlide } from "@/deck/RenderSlide";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
+import { ThemeScope } from "@/deck/ThemeScope";
 import { patterns } from "@/deck/registry";
 import type { SignedInUser } from "@/lib/auth";
 import { listDecks } from "@/lib/decks";
@@ -23,7 +24,7 @@ export async function blockGroups(user: SignedInUser | null): Promise<PickerGrou
       cur.items.push({
         block: `${d.id}/${s.id}`, name: slideName(s), kind: patterns[s.pattern]?.meta.name ?? s.pattern,
         // Keyed: React checks keys on elements passed from the server inside lists.
-        thumb: <ScaledSlide key={`${d.id}/${s.id}`}><RenderSlide slide={s} /></ScaledSlide>,
+        thumb: <ThemeScope key={`${d.id}/${s.id}`} tokens={d.theme.tokens}><ScaledSlide><RenderSlide slide={s} /></ScaledSlide></ThemeScope>,
       });
     }
     groups.push({ deckId: d.id, deckTitle: d.title, sections });

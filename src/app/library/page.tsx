@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { templates } from "@/content/templates";
 import { editableDecks } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
+import { canEditThemes } from "@/lib/themes";
 import { EditError, newDeck } from "@/lib/editing";
 import { Nav } from "../Nav";
 import { BlockPicker } from "../decks/BlockPicker";
@@ -28,7 +29,7 @@ export default async function ApprovedSlidesPage({ searchParams }: { searchParam
     <main className="shell">
       <Nav on="library" user={user} />
       <h1 className="page">Library</h1>
-      <LibraryTabs on="approved" counts={{ approved: count, templates: templates.length }} deck={deck} />
+      <LibraryTabs on="approved" counts={{ approved: count, templates: templates.length }} deck={deck} themes={canEditThemes(user)} />
       <p className="lede">
         The real slides from the company decks, with approved numbers, pricing and claims. Pick the ones you need, in order.
         They keep following the company deck, so updates reach your deck too. To write your own content, start from a template.

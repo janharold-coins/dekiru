@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { ThemeScope } from "@/deck/ThemeScope";
+import { pickTheme, publishedThemes } from "@/lib/themes";
 import { notFound } from "next/navigation";
 import { RenderSlide } from "@/deck/RenderSlide";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
@@ -20,6 +22,7 @@ export default async function VersionPage({ params }: { params: Promise<{ id: st
   let data;
   try { data = await versionSlides(user, id, number); } catch (e) { if (e instanceof EditError) notFound(); throw e; }
   const { version, slides } = data;
+  const theme = pickTheme(await publishedThemes(), version.themeId);
   let k = 0;
   return (
     <main className="shell">
@@ -32,9 +35,9 @@ export default async function VersionPage({ params }: { params: Promise<{ id: st
       </div>
       <p className="lede">
         {version.status === "draft" ? "Current draft" : `Published ${when(version.publishedAt ?? version.createdAt)}`}
-        {version.note ? ` · ${version.note}` : ""}. Approved slides that follow a master are shown as they look today.
+        {version.note ? ` · ${version.note}` : ""} · Theme: {theme.name}. Approved slides that follow a master, and the theme, are shown as they look today.
       </p>
-      <div className="grid">
+      <ThemeScope tokens={theme.tokens}><div className="grid">
         {slides.map((s) => (
           <div key={s.id} className="card" style={s.hidden ? { opacity: 0.45 } : undefined}>
             <ScaledSlide className="thumb"><RenderSlide slide={s} /></ScaledSlide>
@@ -46,7 +49,7 @@ export default async function VersionPage({ params }: { params: Promise<{ id: st
             </div>
           </div>
         ))}
-      </div>
+      </div></ThemeScope>
     </main>
   );
 }

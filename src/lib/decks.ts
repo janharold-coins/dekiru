@@ -12,6 +12,7 @@ import { deckVersions, decks } from "@/db/schema";
 import { resolveSlides, snapshotSlides, type DeckLookup, type SeedSlide } from "@/content/resolve";
 import { seedDecks } from "@/content/decks";
 import type { Deck } from "@/deck/types";
+import { DEFAULT_THEME, pickTheme, publishedThemes, type ThemeInfo } from "./themes";
 
 export interface DeckInfo extends Deck {
   kind: "master" | "copy";
@@ -22,6 +23,9 @@ export interface DeckInfo extends Deck {
   status: "published" | "draft";
   /** True when an unpublished draft exists alongside the version shown. */
   hasDraft: boolean;
+  /** The theme of the version shown (null = default) and its live look. */
+  themeId: string | null;
+  theme: ThemeInfo;
 }
 
 /** The database, or a transaction on it. */
@@ -60,7 +64,7 @@ export async function listDecks(opts: { viewerId?: string | null } = {}): Promis
   if (!hasDb()) {
     return Promise.all(
       seedDecks.map(async (d) => ({
-        ...d, kind: "master" as const, status: "published" as const, hasDraft: false,
+        ...d, kind: "master" as const, status: "published" as const, hasDraft: false, themeId: null, theme: DEFAULT_THEME,
         slides: await resolveSlides(d.slides, seedLookup),
       })),
     );
@@ -69,7 +73,8 @@ export async function listDecks(opts: { viewerId?: string | null } = {}): Promis
   const q = db();
   const all = await q.select().from(decks).where(isNull(decks.archivedAt)).orderBy(decks.kind, decks.createdAt);
   const rows = opts.viewerId ? all.filter((r) => r.kind === "master" || r.ownerId === opts.viewerId) : all;
-  const out = await Promise.all(rows.map((r) => load(q, r, false)));
+  const themes = await publishedThemes();
+  const out = await Promise.all(rows.map((r) => load(q, r, false, themes)));
   return out.filter((d): d is DeckInfo => Boolean(d));
 }
 
@@ -79,16 +84,17 @@ export async function getDeck(id: string, opts: { draft?: boolean } = {}): Promi
   await connection();
   const q = db();
   const [row] = await q.select().from(decks).where(eq(decks.id, id)).limit(1);
-  return row ? load(q, row, Boolean(opts.draft)) : undefined;
+  return row ? load(q, row, Boolean(opts.draft), await publishedThemes()) : undefined;
 }
 
-async function load(q: Db, row: typeof decks.$inferSelect, wantDraft: boolean): Promise<DeckInfo | undefined> {
+async function load(q: Db, row: typeof decks.$inferSelect, wantDraft: boolean, themes: ThemeInfo[]): Promise<DeckInfo | undefined> {
   const [pub, draft] = await Promise.all([latestPublished(q, row.id), draftOf(q, row.id)]);
   const v = (wantDraft && draft) || pub;
   if (!v) return undefined;
   return {
     id: row.id, title: row.title, kind: row.kind, ownerId: row.ownerId,
     version: `v${v.number}`, versionNumber: v.number, versionId: v.id, status: v.status, hasDraft: Boolean(draft),
+    themeId: v.themeId ?? null, theme: pickTheme(themes, v.themeId),
     slides: await resolveSlides(v.slides, dbLookup(q)),
   };
 }
@@ -104,19 +110,23 @@ export async function getDeckVersions(deckId: string) {
 
 export interface Actor { userId?: string | null }
 
-/** Edits land in the deck's single draft; it is created from the newest published version if needed. */
-export async function saveDraft(deckId: string, slides: SeedSlide[], who: Actor & { note?: string } = {}) {
+/**
+ * Edits land in the deck's single draft; it is created from the newest published version if needed.
+ * `themeId`: undefined keeps the current theme; null means the default theme.
+ */
+export async function saveDraft(deckId: string, slides: SeedSlide[], who: Actor & { note?: string; themeId?: string | null } = {}) {
   return db().transaction(async (tx) => {
     const existing = await draftOf(tx, deckId);
     if (existing) {
       const [v] = await tx.update(deckVersions)
-        .set({ slides, note: who.note ?? existing.note })
+        .set({ slides, note: who.note ?? existing.note, ...(who.themeId !== undefined ? { themeId: who.themeId } : {}) })
         .where(eq(deckVersions.id, existing.id)).returning();
       return v;
     }
     const [{ n }] = await tx.select({ n: max(deckVersions.number) }).from(deckVersions).where(eq(deckVersions.deckId, deckId));
+    const themeId = who.themeId !== undefined ? who.themeId : (await latestPublished(tx, deckId))?.themeId ?? null;
     const [v] = await tx.insert(deckVersions)
-      .values({ deckId, number: (n ?? 0) + 1, status: "draft", slides, note: who.note, createdBy: who.userId ?? null })
+      .values({ deckId, number: (n ?? 0) + 1, status: "draft", slides, themeId, note: who.note, createdBy: who.userId ?? null })
       .returning();
     await tx.update(decks).set({ updatedAt: new Date() }).where(eq(decks.id, deckId));
     return v;
@@ -139,7 +149,7 @@ export async function publishDraft(deckId: string, who: Actor = {}) {
 /** Creates a deck with its first published version (used by the seed and by "new deck"). */
 export async function createDeck(
   input: {
-    id: string; title: string; kind: "master" | "copy"; slides: SeedSlide[]; note?: string;
+    id: string; title: string; kind: "master" | "copy"; slides: SeedSlide[]; note?: string; themeId?: string | null;
     copiedFromDeckId?: string; copiedFromVersionId?: string;
   },
   who: Actor = {},
@@ -150,7 +160,7 @@ export async function createDeck(
       copiedFromDeckId: input.copiedFromDeckId, copiedFromVersionId: input.copiedFromVersionId,
     });
     const [v] = await tx.insert(deckVersions).values({
-      deckId: input.id, number: 1, status: "published", slides: input.slides, note: input.note,
+      deckId: input.id, number: 1, status: "published", slides: input.slides, note: input.note, themeId: input.themeId ?? null,
       createdBy: who.userId ?? null, publishedAt: new Date(), publishedBy: who.userId ?? null,
     }).returning();
     return v;
@@ -164,7 +174,7 @@ export async function copyDeck(sourceId: string, input: { id: string; title: str
   if (!src) throw new Error(`Deck ${sourceId} has no published version`);
   const slides = await snapshotSlides(src.slides, dbLookup(q));
   return createDeck({
-    ...input, kind: "copy", slides, note: `Copied from ${sourceId} v${src.number}`,
+    ...input, kind: "copy", slides, themeId: src.themeId, note: `Copied from ${sourceId} v${src.number}`,
     copiedFromDeckId: sourceId, copiedFromVersionId: src.id,
   }, who);
 }

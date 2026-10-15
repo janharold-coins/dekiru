@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { themeStyle } from "@/deck/theme";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { duration, getLinkForReport, linkReport, WHO, type Who } from "@/lib/analytics";
@@ -28,7 +29,7 @@ export default async function LinkReportPage({ params, searchParams }: {
   const status = linkStatus(link);
 
   return (
-    <main className="shell">
+    <main className="shell" style={themeStyle(link.theme)}>
       <Nav on="decks" user={user} />
       <p className="mono" style={{ margin: "0 0 4px" }}><Link href={`/decks/${id}/share`}>← Share · {link.deckTitle}</Link></p>
       <h1 className="page">{link.label ?? "Untitled link"}</h1>

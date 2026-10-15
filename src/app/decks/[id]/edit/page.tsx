@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { themeStyle } from "@/deck/theme";
 import { notFound, redirect } from "next/navigation";
 import { RenderSlide } from "@/deck/RenderSlide";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
@@ -25,7 +26,7 @@ export default async function EditDeckPage({ params }: { params: Promise<{ id: s
     thumb: <ScaledSlide key={s.id}><RenderSlide slide={s} /></ScaledSlide>,
   }));
   return (
-    <main className="shell">
+    <main className="shell" style={themeStyle(deck.theme.tokens)}>
       <Nav on="decks" user={user} />
       <p className="mono" style={{ margin: "0 0 4px" }}><Link href={`/decks/${deck.id}`}>← {deck.title}</Link></p>
       <div className="row" style={{ marginBottom: 8 }}>

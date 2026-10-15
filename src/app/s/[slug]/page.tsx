@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ThemeScope } from "@/deck/ThemeScope";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { hasDb } from "@/db/client";
@@ -42,11 +43,13 @@ export default async function SharedDeck({ params }: Props) {
   }
 
   return (
+    <ThemeScope tokens={link.theme}>
     <TrackedPresenter
       trackUrl={`/s/${slug}/track`}
       slideIds={link.slides.map((s) => s.id)}
       slides={link.slides.map((s) => <RenderSlide key={s.id} slide={s} />)}
     />
+    </ThemeScope>
   );
 }
 

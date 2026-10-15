@@ -1,4 +1,5 @@
 import { requireUser } from "@/lib/auth";
+import { ThemeScope } from "@/deck/ThemeScope";
 import { notFound } from "next/navigation";
 import { RenderSlide } from "@/deck/RenderSlide";
 import { deckFor } from "@/lib/access";
@@ -12,11 +13,13 @@ export default async function PresentPage({ params }: { params: Promise<{ id: st
   const { deck } = found;
   const shown = deck.slides.filter((s) => !s.hidden);
   return (
+    <ThemeScope tokens={deck.theme.tokens}>
     <TrackedPresenter
       trackUrl={`/decks/${deck.id}/present/track`}
       askAudience
       slideIds={shown.map((s) => s.id)}
       slides={shown.map((s) => <RenderSlide key={s.id} slide={s} />)}
     />
+    </ThemeScope>
   );
 }

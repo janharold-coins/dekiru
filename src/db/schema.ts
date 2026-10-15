@@ -1,7 +1,8 @@
 /**
  * Dekiru database (Postgres on Neon).
  *
- *   users ─┬─ decks ── deck_versions (draft | published, slides as JSON)
+ *   users ─┬─ decks ── deck_versions (draft | published, slides as JSON, theme)
+ *          ├─ themes ── theme_versions (draft | published, look as JSON)
  *          ├─ share_links → one frozen published version ── view_sessions ── slide_views
  *          └─ sessions, accounts (Google sign-in, managed by Better Auth) + verifications
  *
@@ -15,6 +16,7 @@ import {
   boolean, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid,
 } from "drizzle-orm/pg-core";
 import type { SeedSlide } from "@/content/resolve";
+import type { ThemeTokens } from "@/deck/theme";
 import type { SlideData } from "@/deck/types";
 
 export const role = pgEnum("role", ["admin", "manager", "member"]);
@@ -38,6 +40,8 @@ export const users = pgTable("users", {
   name: text("name").notNull().default(""),
   image: text("image"),
   role: role("role").notNull().default("member"),
+  /** May create and edit themes (admins always can). Set on the People page. */
+  canEditThemes: boolean("can_edit_themes").notNull().default(false),
   createdAt: created(),
   updatedAt: updated(),
 });
@@ -134,6 +138,40 @@ export const decks = pgTable("decks", {
   updatedAt: updated(),
 });
 
+/**
+ * A theme is the look a deck applies to all its slides (backgrounds first; see src/deck/theme.ts).
+ * Versioned like decks: edits land in one draft, publishing makes a new version, decks using the theme
+ * follow its newest published version, and share links keep the look they were made with.
+ */
+export const themes = pgTable("themes", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  createdBy: uuid("created_by").references(() => users.id),
+  archivedAt: timestamp("archived_at", { withTimezone: true }),
+  createdAt: created(),
+  updatedAt: updated(),
+});
+
+export const themeVersions = pgTable(
+  "theme_versions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    themeId: text("theme_id").notNull().references(() => themes.id, { onDelete: "cascade" }),
+    number: integer("number").notNull(),
+    status: versionStatus("status").notNull().default("draft"),
+    tokens: jsonb("tokens").$type<ThemeTokens>().notNull(),
+    note: text("note"),
+    createdBy: uuid("created_by").references(() => users.id),
+    createdAt: created(),
+    publishedBy: uuid("published_by").references(() => users.id),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("theme_versions_theme_number").on(t.themeId, t.number),
+    uniqueIndex("theme_versions_one_draft").on(t.themeId).where(sql`${t.status} = 'draft'`),
+  ],
+);
+
 export const deckVersions = pgTable(
   "deck_versions",
   {
@@ -144,6 +182,8 @@ export const deckVersions = pgTable(
     status: versionStatus("status").notNull().default("draft"),
     /** Slides: full slide data or references to another deck's slide ({id, ref: "sales/s01"}). */
     slides: jsonb("slides").$type<SeedSlide[]>().notNull(),
+    /** The deck's theme in this version (null = the default Coins.ph theme). Part of history, so Restore brings it back. */
+    themeId: text("theme_id").references(() => themes.id),
     /** What changed — shown in version history and approval requests. */
     note: text("note"),
     createdBy: uuid("created_by").references(() => users.id),
@@ -170,6 +210,8 @@ export const shareLinks = pgTable("share_links", {
   versionId: uuid("version_id").notNull().references(() => deckVersions.id),
   deckTitle: text("deck_title").notNull(),
   slides: jsonb("slides").$type<SlideData[]>().notNull(),
+  /** The deck's look on the day the link was made, so later theme edits don't change a sent link. */
+  theme: jsonb("theme").$type<ThemeTokens>(),
   label: text("label"), // e.g. the merchant it was sent to
   passwordHash: text("password_hash"),
   createdBy: uuid("created_by").references(() => users.id),

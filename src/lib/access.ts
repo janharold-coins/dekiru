@@ -42,5 +42,5 @@ export async function editableDecks(user: SignedInUser | null) {
   return all
     .filter((d) => canEdit(d as unknown as DeckRow, user))
     .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "copy" ? -1 : 1))
-    .map((d) => ({ id: d.id, title: d.kind === "master" ? `${d.title} (company master)` : d.title }));
+    .map((d) => ({ id: d.id, title: d.kind === "master" ? `${d.title} (company master)` : d.title, theme: d.theme.tokens }));
 }

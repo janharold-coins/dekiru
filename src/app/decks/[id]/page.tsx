@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { themeStyle } from "@/deck/theme";
 import { notFound } from "next/navigation";
 import { RenderSlide } from "@/deck/RenderSlide";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
@@ -17,13 +18,14 @@ export default async function DeckPage({ params }: { params: Promise<{ id: strin
   if (!found) notFound();
   const { deck, canEdit } = found;
   return (
-    <main className="shell">
+    <main className="shell" style={themeStyle(deck.theme.tokens)}>
       <Nav on="decks" user={user} />
       <div className="row" style={{ marginBottom: 8 }}>
         <h1 className="page" style={{ margin: 0 }}>{deck.title}</h1>
         <span className="spacer" style={{ flex: 1 }} />
         {deck.kind === "master" && <Link className="btn" href={`/decks/${deck.id}/compare`}>Compare with Figma</Link>}
         {canEdit && <Link className="btn" href={`/decks/${deck.id}/edit`}>Arrange slides</Link>}
+        {canEdit && <Link className="btn" href={`/decks/${deck.id}/theme`}>Theme: {deck.theme.name}</Link>}
         {deck.versionNumber && <Link className="btn" href={`/decks/${deck.id}/history`}>History</Link>}
         <CopyButton deckId={deck.id} />
         <Link className="btn" href={`/decks/${deck.id}/presentations`}>Presentations</Link>
@@ -31,7 +33,7 @@ export default async function DeckPage({ params }: { params: Promise<{ id: strin
         <Link className="btn primary" href={`/decks/${deck.id}/present`}>Present ▶</Link>
       </div>
       {canEdit && deck.status === "draft" && <DraftBar deckId={deck.id} />}
-      <p className="lede">{deck.slides.filter((s) => !s.hidden).length} slides presented{deck.slides.some((s) => s.hidden) ? ` · ${deck.slides.filter((s) => s.hidden).length} hidden` : ""} · {deck.kind === "master" ? "master deck" : "personal copy"}{deck.versionNumber ? ` · ${deck.status === "draft" ? `draft after v${deck.versionNumber - 1}` : `v${deck.versionNumber}`}` : ""}{deck.slides.some((s) => s.ref) ? ` · ${deck.slides.filter((s) => s.ref).length} shared with other decks` : ""}. Overflow flags and image-fit warnings show here in preview only, never in the presented deck.</p>
+      <p className="lede">{deck.slides.filter((s) => !s.hidden).length} slides presented{deck.slides.some((s) => s.hidden) ? ` · ${deck.slides.filter((s) => s.hidden).length} hidden` : ""} · {deck.kind === "master" ? "master deck" : "personal copy"} · {deck.theme.name} theme{deck.versionNumber ? ` · ${deck.status === "draft" ? `draft after v${deck.versionNumber - 1}` : `v${deck.versionNumber}`}` : ""}{deck.slides.some((s) => s.ref) ? ` · ${deck.slides.filter((s) => s.ref).length} shared with other decks` : ""}. Overflow flags and image-fit warnings show here in preview only, never in the presented deck.</p>
       <div className="grid">
         {deck.slides.map((s, i) => {
           const warnings = checkOverflow(s);

@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import {
-  addBlocks, discardDraft, duplicateDeck, EditError, moveSlide, publish, removeSlide, restoreVersion, setHidden,
+  addBlocks, discardDraft, duplicateDeck, EditError, moveSlide, publish, removeSlide, restoreVersion, setDeckTheme, setHidden,
 } from "@/lib/editing";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -59,4 +59,11 @@ export async function addBlocksAction(deckId: string, blocks: string[], position
   const r = await attempt(deckId, (u) => addBlocks(u, deckId, blocks, position, "app"));
   if (!r.error) redirect(`/decks/${deckId}/edit`);
   return r;
+}
+
+/** Switch the deck's theme (draft), then back to the deck to review and publish. */
+export async function themeAction(deckId: string, themeId: string) {
+  const r = await attempt(deckId, (u) => setDeckTheme(u, deckId, themeId, "app"));
+  if (r.error) redirect(`/decks/${deckId}/theme?error=${encodeURIComponent(r.error)}`);
+  redirect(`/decks/${deckId}`);
 }

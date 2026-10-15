@@ -60,7 +60,16 @@ Code: `src/lib/share.ts`, `src/lib/analytics.ts`, `src/app/decks/[id]/present/` 
 - **Templates and layouts** (`/library/templates`): approved slides with placeholder words ("Title of the deck"). Open one, fill it in with a live preview, add it to a deck. Template slides are the deck's own, not linked.
 - Templates are built from the Sales master by `python3 scripts/build-templates.py` → `src/content/templates.json` (placeholder words sized to the approved text). Rerun it after the Sales seed changes; edit `TEMPLATES` / `OVERRIDES` there to add or tune one.
 - `?deck=<id>` on either page preselects that deck (Arrange slides → **+ From a template** uses it).
-- Next: **Themes** (admins and chosen people): the deck decides the look, slides carry only content.
+
+## Themes
+
+- **Rule: the deck decides the look; slides only carry content.** A slide names a background *role* (main dark, closing dark, light); the deck's theme says what each role looks like. Approved slides from any deck take the theme of the deck they're in, so themes never mix.
+- **Pick a deck's theme** (deck → **Theme: …**, `/decks/<id>/theme`, deck editors): previews of the deck's own slides in each theme; switching saves to the draft, publish to go live. Each deck version records its theme, so **History → Restore** brings an earlier theme back.
+- **Edit themes** (Library → **Themes**, `/library/themes`; admins, plus anyone with **Can edit themes** ticked on the People page): background colours and direction per role, glow colours and strength, accent bar. Live preview of every layout, readability (contrast) warnings, Save draft / Publish / Discard, version history with Restore, new theme from an existing one, remove an unused theme.
+- Publishing a theme updates every deck that uses it. **Share links keep the look they were made with** (the theme is copied into the link).
+- How it works: `src/deck/theme.ts` turns a theme into CSS variables on a wrapper (`themeStyle`, `ThemeScope`); `chrome/Chrome.tsx` and `chrome/Glow.tsx` read them and fall back to the approved Figma look. Data: `themes`, `theme_versions`, `deck_versions.theme_id`, `share_links.theme` (`src/lib/themes.ts`). The default **Coins.ph** theme is created automatically.
+- Claude connector: `list_themes`, `set_deck_theme`; `get_deck` reports the theme.
+- Later: per-slide pin to keep its own look, fonts and components in themes, themes that also change layouts.
 
 ## Claude connector (make and edit decks from Claude)
 
@@ -125,8 +134,11 @@ The design uses **Cns Manrope** and **TWK Everett**. If they're installed on the
 ```
 src/deck/
   tokens.ts            colours, backgrounds, font stacks, t() typography helper
+  theme.ts             themes: tokens → CSS variables, default (approved) look, readability checks
+  ThemeScope.tsx       wrapper that applies a theme to the slides inside
   types.ts             Deck, SlideData, Chrome, PatternMeta, budgets
-  chrome/Chrome.tsx    background + glow, logo, confidentiality footer, accent bar, co-brand slot
+  chrome/Chrome.tsx    background, logo, confidentiality footer, accent bar, co-brand slot (theme variables)
+  chrome/Glow.tsx      the approved glow as inline SVG, recoloured by the theme
   frame/               SlideFrame (1920×1080), ScaledSlide (fit to container), PreviewChecks
   components/          TitleCage, LogoItem, ProductParts (section header, bullets, price/tier chips)
   patterns/            15 patterns — each exports Component + meta (default chrome, budgets)
@@ -153,4 +165,4 @@ public/figma/          assets exported from Figma (+ ref/ screenshots for /compa
 
 ## Not built yet (later milestones)
 
-Themes (deck-level look, versioned), approval requests for masters, image uploads and client logos, HTML file export, AI "make it fit" for over-budget text.
+Approval requests for masters, image uploads and client logos, HTML file export, AI "make it fit" for over-budget text.

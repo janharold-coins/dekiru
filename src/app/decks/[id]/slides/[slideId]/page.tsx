@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { themeStyle } from "@/deck/theme";
 import { notFound, redirect } from "next/navigation";
 import { deckFor, deckRow } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
@@ -26,7 +27,7 @@ export default async function EditSlidePage({ params }: { params: Promise<{ id: 
   const { ref, ...plain } = slide;
   const master = ref ? (await deckRow(ref.split("/")[0]))?.title ?? ref.split("/")[0] : null;
   return (
-    <main className="shell">
+    <main className="shell" style={themeStyle(found.deck.theme.tokens)}>
       <Nav on="decks" user={user} />
       <p className="mono" style={{ margin: "0 0 4px" }}><Link href={`/decks/${id}/edit`}>← Arrange {found.deck.title}</Link></p>
       <h1 className="page">Edit slide: {slideName(slide)}</h1>

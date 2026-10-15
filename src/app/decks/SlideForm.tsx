@@ -4,12 +4,13 @@ import { RenderSlide } from "@/deck/RenderSlide";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
 import { countImages, fieldLabel, isEditableKey, itemLabel, listLimits } from "@/deck/fields";
 import { checkOverflow } from "@/deck/overflow";
+import { themeStyle, type ThemeTokens } from "@/deck/theme";
 import type { SlideData } from "@/deck/types";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Props = Record<string, any>;
 
-export interface FormTarget { id: string; title: string }
+export interface FormTarget { id: string; title: string; theme?: ThemeTokens }
 
 /**
  * Fill in a slide's words with a live preview. Layout, images and styling stay as approved; text that runs
@@ -45,7 +46,10 @@ export function SlideForm({ slide, saveLabel, onSave, targets, defaultTarget = "
         <Fields pattern={slide.pattern} value={props} onChange={update} />
       </div>
       <aside className="sf-side">
-        <div className="frame"><ScaledSlide><RenderSlide slide={preview} /></ScaledSlide></div>
+        {/* The slide takes the theme of the deck it goes into. */}
+        <div className="frame" style={themeStyle(targets?.find((t) => t.id === target)?.theme)}>
+          <ScaledSlide><RenderSlide slide={preview} /></ScaledSlide>
+        </div>
         {warnings.length > 0 ? (
           <ul className="sf-warn">
             {warnings.map((w, i) => <li key={i}><b>{fieldLabel(w.slot.split(".").pop()!.split(" ")[0])}</b>: {w.message}</li>)}
