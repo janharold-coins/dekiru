@@ -27,10 +27,10 @@ export interface Gradient {
   to: string;
   toAt: number;
   /**
-   * Text on this background. "auto" (Auto contrast, the default) keeps the designed tone while it reads
-   * well and switches to the other tone when the background calls for it; "light"/"dark" fix it by hand.
+   * Text on this background. "auto" (Auto contrast, the default) keeps the designed white/dark text while it
+   * reads well and switches when the background calls for it; a hex colour sets the text colour by hand.
    */
-  text?: TextTone | "auto";
+  text?: string;
 }
 
 export interface ThemeTokens {
@@ -77,7 +77,9 @@ export function normalizeTokens(t: Partial<ThemeTokens> | null | undefined): The
   const d = DEFAULT_TOKENS;
   const bg = (r: BackgroundRole) => {
     const g = { ...d.backgrounds[r], ...t?.backgrounds?.[r] };
-    return { ...g, text: g.text === "light" || g.text === "dark" ? g.text : "auto" as const };
+    // Older themes stored "light"/"dark"; they become the matching colour.
+    const text = g.text === "light" ? TONE_HEX.light : g.text === "dark" ? TONE_HEX.dark : g.text && validHex(g.text) ? g.text.toLowerCase() : "auto";
+    return { ...g, text };
   };
   return {
     backgrounds: { dark: bg("dark"), "dark-navy": bg("dark-navy"), light: bg("light") },
@@ -93,9 +95,8 @@ export function themeStyle(tokens: Partial<ThemeTokens> | null | undefined): CSS
   const vars: Record<string, string> = { [VAR.strength]: String(t.glow.strength), ...glowStops(t.glow) };
   for (const r of ROLES) {
     vars[VAR.bg(r.id)] = gradientCss(t.backgrounds[r.id]);
-    // Only a role whose text tone differs from the design gets a palette; the others keep designed colours.
-    const text = textFor(t.backgrounds[r.id], r.id);
-    if (text !== designedText(r.id)) for (const [k, v] of Object.entries(FLIP[text])) vars[`--dk-${r.id}-${k}`] = v;
+    // Auto text that stays as designed emits nothing, so slides keep their designed colours exactly.
+    for (const [k, v] of Object.entries(textPalette(t.backgrounds[r.id], r.id))) vars[`--dk-${r.id}-${k}`] = v;
   }
   t.accent.forEach((c, i) => { vars[VAR.accent(i)] = c; });
   return vars as CSSProperties;
@@ -106,7 +107,10 @@ export function themeStyle(tokens: Partial<ThemeTokens> | null | undefined): CSS
 /** The text tone slides on this role were designed with. */
 export const designedText = (r: BackgroundRole): TextTone => (ROLES.find((x) => x.id === r)?.tone === "dark" ? "light" : "dark");
 
-/** Palettes used when a role's text tone is switched away from the design. */
+/** The two text colours Auto contrast chooses between. */
+export const TONE_HEX: Record<TextTone, string> = { light: "#ffffff", dark: "#17191d" };
+
+/** Palettes used when Auto contrast switches a role's text away from the design. */
 const FLIP: Record<TextTone, Record<FlipLevel, string>> = {
   dark: {
     primary: "#17191d", secondary: "#545454", title: "#204680", accent: "#b45309",
@@ -119,6 +123,32 @@ const FLIP: Record<TextTone, Record<FlipLevel, string>> = {
 };
 export type FlipLevel = "primary" | "secondary" | "title" | "accent" | "rule" | "border" | "logo-designed" | "logo-alt";
 const LEVELS: FlipLevel[] = ["primary", "secondary", "title", "accent", "rule", "border", "logo-designed", "logo-alt"];
+
+const rgb = (hex: string) => {
+  const n = parseInt(hex.replace("#", ""), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+};
+const rgba = (hex: string, a: number) => `rgba(${rgb(hex).join(",")},${a})`;
+const toneOf = (hex: string): TextTone => ((luminance(hex) ?? 0) > 0.4 ? "light" : "dark");
+
+/**
+ * The palette for a role's text: nothing while Auto contrast keeps the designed tone; the tuned FLIP palette
+ * when Auto switches it; and, for a hand-picked colour, everything on the background in that colour.
+ */
+function textPalette(g: Gradient, role: BackgroundRole): Partial<Record<FlipLevel, string>> {
+  const designed = designedText(role);
+  if (!isManual(g)) {
+    const tone = autoText(g, role);
+    return tone === designed ? {} : FLIP[tone];
+  }
+  const c = g.text!;
+  const tone = toneOf(c);
+  const logo = tone === designed ? {} : { "logo-designed": "none", "logo-alt": "block" };
+  return {
+    primary: c, secondary: rgba(c, 0.75), title: c, accent: tone === "light" ? "#efa023" : "#b45309",
+    rule: rgba(c, 0.3), border: rgba(c, 0.8), ...logo,
+  };
+}
 
 /**
  * Per-slide variables (set by SlideFrame for the slide's role). When the theme didn't switch this role's
@@ -198,6 +228,10 @@ const contrast = (a: number, b: number) => (Math.max(a, b) + 0.05) / (Math.min(a
  * so each background colour needs enough contrast with that text (WCAG 4.5:1 for body text).
  */
 const TEXT_LUM: Record<TextTone, number> = { light: 1, dark: 0.0098 }; // white, #17191d
+function validHex(h: string) { return /^#[0-9a-f]{6}$/i.test(h); }
+
+/** True when the text colour was picked by hand (Auto contrast off). */
+export const isManual = (g: Gradient) => Boolean(g.text && g.text !== "auto");
 
 /** Lowest contrast between a text tone and the two ends of a background. */
 export function minContrast(g: Gradient, text: TextTone) {
@@ -208,7 +242,6 @@ export function minContrast(g: Gradient, text: TextTone) {
 /** The text tone that reads best on this background. */
 export const bestText = (g: Gradient): TextTone => (minContrast(g, "light") >= minContrast(g, "dark") ? "light" : "dark");
 
-const validHex = (h: string) => /^#[0-9a-f]{6}$/i.test(h);
 
 /** Auto contrast: the designed tone while it reads (4.5:1), otherwise whichever tone reads better. */
 export function autoText(g: Gradient, role: BackgroundRole): TextTone {
@@ -217,30 +250,31 @@ export function autoText(g: Gradient, role: BackgroundRole): TextTone {
   return minContrast(g, designed) >= 4.5 ? designed : bestText(g);
 }
 
-/** The text tone actually used on a role: the hand-picked one, or Auto contrast's choice. */
-export const textFor = (g: Gradient, role: BackgroundRole): TextTone =>
-  g.text === "light" || g.text === "dark" ? g.text : autoText(g, role);
+/** The text colour actually used on a role: the hand-picked one, or Auto contrast's choice. */
+export const textColor = (g: Gradient, role: BackgroundRole): string => (isManual(g) ? g.text! : TONE_HEX[autoText(g, role)]);
 
-export interface ThemeIssue { role: BackgroundRole | "accent" | "glow"; message: string; fix?: TextTone }
+/** fix: "auto" = turning Auto contrast on would make it readable. */
+export interface ThemeIssue { role: BackgroundRole | "accent" | "glow"; message: string; fix?: "auto" }
 
 export function checkTheme(tokens: ThemeTokens): ThemeIssue[] {
   const out: ThemeIssue[] = [];
   for (const r of ROLES) {
     const g = tokens.backgrounds[r.id];
-    const text = textFor(g, r.id);
-    const auto = g.text !== "light" && g.text !== "dark";
+    const manual = isManual(g);
+    if (manual && !validHex(g.text!)) { out.push({ role: r.id, message: `${r.name}: text colour "${g.text}" isn't a 6-digit hex colour.` }); continue; }
+    const textLum = luminance(textColor(g, r.id))!;
+    const autoWorks = minContrast(g, autoText(g, r.id)) >= 4.5;
     for (const [label, hex] of [["start", g.from], ["end", g.to]] as const) {
       const l = luminance(hex);
       if (l == null) { out.push({ role: r.id, message: `${r.name}: ${label} colour "${hex}" isn't a 6-digit hex colour.` }); continue; }
-      const c = contrast(l, TEXT_LUM[text]);
+      const c = contrast(l, textLum);
       if (c < 4.5) {
-        const other: TextTone = text === "light" ? "dark" : "light";
         out.push({
           role: r.id,
-          message: auto
-            ? `${r.name}: neither white nor dark text reads well on the ${label} colour (contrast ${c.toFixed(1)}:1, needs 4.5:1). Make the two colours closer in lightness.`
-            : `${r.name}: ${label} colour is too ${text === "light" ? "light" : "dark"} for ${text === "light" ? "white" : "dark"} text (contrast ${c.toFixed(1)}:1, needs 4.5:1).`,
-          ...(!auto && minContrast(g, other) >= 4.5 ? { fix: other } : {}),
+          message: manual
+            ? `${r.name}: the text colour is hard to read on the ${label} colour (contrast ${c.toFixed(1)}:1, needs 4.5:1).`
+            : `${r.name}: neither white nor dark text reads well on the ${label} colour (contrast ${c.toFixed(1)}:1, needs 4.5:1). Make the two colours closer in lightness.`,
+          ...(manual && autoWorks ? { fix: "auto" as const } : {}),
         });
       }
     }

@@ -272,3 +272,5 @@ code.inline { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-
 .te-seg.off { opacity: 0.55; }
 .te-seg button:disabled { cursor: default; }
 .field .check .sub { font-weight: 400; font-size: 13px; color: var(--mute); margin-left: 4px; }
+.te-color.off { opacity: 0.55; }
+.te-color.off input { cursor: not-allowed; }

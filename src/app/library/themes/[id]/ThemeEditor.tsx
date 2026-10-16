@@ -4,8 +4,8 @@ import { RenderSlide } from "@/deck/RenderSlide";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
 import { patterns } from "@/deck/registry";
 import {
-  DEFAULT_TOKENS, ROLES, checkTheme, designedText, gradientCss, textFor, themeStyle,
-  type BackgroundRole, type Gradient, type TextTone, type ThemeTokens,
+  DEFAULT_TOKENS, ROLES, checkTheme, gradientCss, isManual, textColor, themeStyle,
+  type BackgroundRole, type Gradient, type ThemeTokens,
 } from "@/deck/theme";
 import type { SlideData } from "@/deck/types";
 import { archiveThemeAction, discardThemeAction, publishThemeAction, saveThemeAction, type Result } from "../actions";
@@ -46,30 +46,23 @@ export function ThemeEditor({ id, name: initialName, tokens: initial, live, hasD
 
         {ROLES.map((r) => {
           const g = tokens.backgrounds[r.id];
-          const tone = textFor(g, r.id);
-          const auto = g.text !== "light" && g.text !== "dark";
+          const color = textColor(g, r.id);
+          const auto = !isManual(g);
           return (
             <fieldset key={r.id} className="sf-group">
               <legend>{r.name} background</legend>
               <p className="hint">{r.use}.</p>
-              <div className="te-swatch" style={{ backgroundImage: gradientCss(g), color: tone === "dark" ? "#17191d" : "#fff" }}>
+              <div className="te-swatch" style={{ backgroundImage: gradientCss(g), color }}>
                 <span>Aa Text on this background</span>
               </div>
-              <div className="field">
-                <span>Text</span>
-                <label className="check">
-                  <input type="checkbox" checked={auto} onChange={(e) => setBg(r.id, { text: e.target.checked ? "auto" : tone })} />
-                  <span>Auto contrast <span className="sub">text turns white or dark to suit the background</span></span>
-                </label>
-                <div className={`seg te-seg${auto ? " off" : ""}`} role="radiogroup" aria-label={`${r.name} text`} aria-disabled={auto}>
-                  {(["light", "dark"] as TextTone[]).map((x) => (
-                    <button key={x} type="button" role="radio" aria-checked={tone === x} className={tone === x ? "on" : ""} disabled={auto}
-                      onClick={() => setBg(r.id, { text: x })}>
-                      {x === "light" ? "White" : "Dark"}{x === designedText(r.id) ? " (as designed)" : ""}
-                    </button>
-                  ))}
-                </div>
+              <div className="te-row">
+                {/* While Auto contrast is on, the picker shows the colour it chose and can't be changed. */}
+                <Color label="Text" value={color} disabled={auto} onChange={(v) => setBg(r.id, { text: v })} />
               </div>
+              <label className="check">
+                <input type="checkbox" checked={auto} onChange={(e) => setBg(r.id, { text: e.target.checked ? "auto" : color })} />
+                <span>Auto contrast</span>
+              </label>
               <div className="te-row">
                 <Color label="Start" value={g.from} onChange={(v) => setBg(r.id, { from: v })} />
                 <Num label="at %" value={g.fromAt} min={0} max={100} onChange={(v) => setBg(r.id, { fromAt: v })} />
@@ -124,7 +117,7 @@ export function ThemeEditor({ id, name: initialName, tokens: initial, live, hasD
                   <li key={k}>
                     {i.message}{" "}
                     {i.fix && i.role !== "accent" && i.role !== "glow" && (
-                      <button className="linkish" onClick={() => setBg(i.role as BackgroundRole, { text: i.fix })}>Use {i.fix === "dark" ? "dark" : "white"} text</button>
+                      <button className="linkish" onClick={() => setBg(i.role as BackgroundRole, { text: "auto" })}>Turn on Auto contrast</button>
                     )}
                   </li>
                 ))}
@@ -168,14 +161,14 @@ export function ThemeEditor({ id, name: initialName, tokens: initial, live, hasD
   );
 }
 
-function Color({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function Color({ label, value, onChange, disabled }: { label: string; value: string; onChange: (v: string) => void; disabled?: boolean }) {
   const valid = /^#[0-9a-f]{6}$/i.test(value);
   return (
-    <label className="field te-color">
+    <label className={`field te-color${disabled ? " off" : ""}`}>
       <span>{label}</span>
       <span className="te-color-in">
-        <input type="color" value={valid ? value : "#000000"} onChange={(e) => onChange(e.target.value)} aria-label={`${label} colour`} />
-        <input value={value} onChange={(e) => onChange(e.target.value.trim())} maxLength={7} spellCheck={false} aria-invalid={!valid} />
+        <input type="color" value={valid ? value : "#000000"} onChange={(e) => onChange(e.target.value)} aria-label={`${label} colour`} disabled={disabled} />
+        <input value={value} onChange={(e) => onChange(e.target.value.trim())} maxLength={7} spellCheck={false} aria-invalid={!valid} disabled={disabled} />
       </span>
     </label>
   );
