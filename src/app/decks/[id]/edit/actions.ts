@@ -14,7 +14,7 @@ export type EditorResult = { error?: string };
 const message = (e: unknown) => (e instanceof EditError ? e.message : (e as Error).message);
 
 async function run<T>(deckId: string, fn: (u: Awaited<ReturnType<typeof requireUser>>) => Promise<T>): Promise<{ error?: string; value?: T }> {
-  const user = await requireUser(`/decks/${deckId}/edit`);
+  const user = await requireUser(`/decks/${deckId}`);
   try { return { value: await fn(user) }; } catch (e) { return { error: message(e) }; }
 }
 
@@ -48,6 +48,6 @@ export async function publishDeckAction(deckId: string) {
 }
 export async function discardDraftAction(deckId: string): Promise<EditorResult> {
   const r = await run(deckId, (u) => discardDraft(u, deckId));
-  revalidatePath(`/decks/${deckId}/edit`);
+  revalidatePath(`/decks/${deckId}`);
   return r;
 }

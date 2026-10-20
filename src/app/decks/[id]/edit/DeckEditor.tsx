@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { RenderSlide } from "@/deck/RenderSlide";
+import { PreviewChecks } from "@/deck/frame/PreviewChecks";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
 import { checkOverflow } from "@/deck/overflow";
 import { fieldLabel } from "@/deck/fields";
 import { themeStyle, type ThemeTokens } from "@/deck/theme";
 import type { SlideData } from "@/deck/types";
+import { copyAction } from "../actions";
 import { ContentFields } from "./ContentFields";
 import { Menu } from "./Menu";
 import {
@@ -32,8 +34,10 @@ const SAVE_DELAY = 700;
 const SLIDE_W = 1920;
 const SLIDE_H = 1080;
 
-export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: initialTheme, themes }: {
+export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: initialTheme, themes, readOnly = false }: {
   deck: { id: string; title: string; kind: "master" | "copy"; hasDraft: boolean; versionNumber: number | null };
+  /** People who can see but not change the deck (members on company decks): view, present, share, copy. */
+  readOnly?: boolean;
   slides: EditorSlide[];
   initialSlide: string | null;
   theme: { id: string; name: string; tokens: ThemeTokens };
@@ -181,7 +185,7 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
     e.preventDefault();
     const d = e.key === "ArrowUp" ? -1 : 1;
     if (selectedIndex < 0) return;
-    if (e.altKey) move(slides[selectedIndex].slide.id, selectedIndex + d);
+    if (e.altKey) { if (!readOnly) move(slides[selectedIndex].slide.id, selectedIndex + d); }
     else {
       const next = slides[selectedIndex + d];
       if (next) { setSelectedId(next.slide.id); document.getElementById(`thumb-${next.slide.id}`)?.focus(); }
@@ -191,13 +195,13 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
   return (
     <div className="ed" style={{ ["--ed-panel" as string]: `${panelWidth}px` }}>
       <TopBar
-        deck={deck} title={title} onRename={rename} themes={themes} theme={theme} onTheme={chooseTheme}
+        deck={deck} readOnly={readOnly} title={title} onRename={rename} themes={themes} theme={theme} onTheme={chooseTheme}
         save={save} hasDraft={hasDraft} publishing={publishing} onPublish={publishNow} onDiscard={discard}
         presentHref={`/decks/${deck.id}/present${selected && !selected.slide.hidden ? `#${presentNumber(selectedIndex)}` : ""}`}
       />
       <div className="ed-work" style={themeVars}>
         <Navigator
-          open={navOpen} onToggle={() => setNavOpen((o) => !o)} deckId={deck.id} slides={slides} selectedId={selectedId}
+          open={navOpen} onToggle={() => setNavOpen((o) => !o)} deckId={deck.id} slides={slides} selectedId={selectedId} readOnly={readOnly}
           onSelect={setSelectedId} onMove={move} onRemove={remove} onKey={onNavKey}
         />
         <Canvas selected={selected} number={selected ? (selected.slide.hidden ? "Hidden" : pad2(presentNumber(selectedIndex))) : ""} />
@@ -205,7 +209,8 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
           key={selected?.slide.id}
           deckId={deck.id}
           item={selected}
-          locked={Boolean(selected?.from) && !unlocked.has(selected!.slide.id)}
+          readOnly={readOnly}
+          locked={!readOnly && Boolean(selected?.from) && !unlocked.has(selected!.slide.id)}
           onUnlock={() => selected && setUnlocked((u) => new Set(u).add(selected.slide.id))}
           onChange={(props) => selected && editProps(selected.slide.id, props)}
           onToggleHidden={() => selected && toggleHidden(selected.slide.id)}
@@ -221,8 +226,8 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
 
 /* ================= Top bar ================= */
 
-function TopBar({ deck, title, onRename, themes, theme, onTheme, save, hasDraft, publishing, onPublish, onDiscard, presentHref }: {
-  deck: { id: string; kind: "master" | "copy"; versionNumber: number | null };
+function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save, hasDraft, publishing, onPublish, onDiscard, presentHref }: {
+  deck: { id: string; kind: "master" | "copy"; versionNumber: number | null }; readOnly: boolean;
   title: string; onRename: (t: string) => void;
   themes: ThemeOption[]; theme: ThemeOption; onTheme: (id: string) => void;
   save: SaveState; hasDraft: boolean; publishing: boolean; onPublish: () => void; onDiscard: () => void; presentHref: string;
@@ -233,11 +238,13 @@ function TopBar({ deck, title, onRename, themes, theme, onTheme, save, hasDraft,
   return (
     <header className="ed-top">
       <div className="ed-identity">
-        <Link href={`/decks/${deck.id}`} className="ed-icon-btn" aria-label="Back to deck overview">{ICON("arrow-left")}</Link>
+        <Link href="/" className="ed-icon-btn" aria-label="Back to decks">{ICON("arrow-left")}</Link>
         <span className="ed-divider" aria-hidden />
         <div className="ed-title-block">
           <span className="ed-crumb"><Link href="/">Decks</Link> / {deck.kind === "master" ? "Company decks" : "My decks"}</span>
-          {editing ? (
+          {readOnly ? (
+            <h1 className="ed-title ed-title-static"><span>{title}</span></h1>
+          ) : editing ? (
             <input className="ed-title-input" value={draft} autoFocus maxLength={80} aria-label="Deck name"
               onChange={(e) => setDraft(e.target.value)} onBlur={commit}
               onKeyDown={(e) => { if (e.key === "Enter") commit(); if (e.key === "Escape") { setDraft(title); setEditing(false); } }} />
@@ -249,14 +256,16 @@ function TopBar({ deck, title, onRename, themes, theme, onTheme, save, hasDraft,
         </div>
       </div>
 
-      <ThemePicker themes={themes} theme={theme} onTheme={onTheme} />
+      {readOnly ? (
+        <span className="ed-theme"><span className="ed-theme-btn static"><span>Theme</span><i className="ed-theme-dot" style={{ background: theme.tokens.accent[0] }} aria-hidden /><span>{theme.name}</span></span></span>
+      ) : <ThemePicker themes={themes} theme={theme} onTheme={onTheme} />}
 
       <div className="ed-actions">
-        <span className={`ed-save ${save.kind}`} role="status" aria-live="polite">
+        {readOnly ? <span className="ed-save">View only</span> : <span className={`ed-save ${save.kind}`} role="status" aria-live="polite">
           {save.kind === "error" ? <span className="ed-save-error" title={save.message}>Couldn&apos;t save: {save.message}</span>
             : <>{ICON("cloud-check", 15)}<span>{save.kind === "saving" ? "Saving…" : save.kind === "published" ? `Published v${save.version}` : hasDraft ? "Saved as draft" : "All changes saved"}</span></>}
-        </span>
-        {hasDraft && (
+        </span>}
+        {!readOnly && hasDraft && (
           <button type="button" className="ed-btn ed-btn-publish" onClick={onPublish} disabled={publishing}
             title="Make the draft the live version. Links already sent keep their version.">
             <i aria-hidden />{publishing ? "Publishing…" : "Publish"}
@@ -265,11 +274,11 @@ function TopBar({ deck, title, onRename, themes, theme, onTheme, save, hasDraft,
         <Link className="ed-btn" href={`/decks/${deck.id}/share`}>{ICON("user-plus")}<span>Share</span></Link>
         <Link className="ed-btn ed-btn-primary" href={presentHref}>{ICON("play")}<span>Present</span></Link>
         <Menu label="More deck actions" trigger={ICON("ellipsis")} items={[
-          { label: "Deck overview", href: `/decks/${deck.id}` },
+          { label: "Make a copy", onSelect: () => copyAction(deck.id) },
           { label: "Version history", href: `/decks/${deck.id}/history` },
           { label: "Presentations", href: `/decks/${deck.id}/presentations` },
           { label: "Compare with Figma", href: `/decks/${deck.id}/compare`, hidden: deck.kind !== "master" },
-          { label: "Discard unpublished changes", confirm: "Discard all unpublished changes?", danger: true, onSelect: onDiscard, hidden: !hasDraft },
+          { label: "Discard unpublished changes", confirm: "Discard all unpublished changes?", danger: true, onSelect: onDiscard, hidden: readOnly || !hasDraft },
         ]} />
       </div>
     </header>
@@ -312,8 +321,8 @@ function ThemePicker({ themes, theme, onTheme }: { themes: ThemeOption[]; theme:
 
 /* ================= Slide navigator ================= */
 
-function Navigator({ open, onToggle, deckId, slides, selectedId, onSelect, onMove, onRemove, onKey }: {
-  open: boolean; onToggle: () => void; deckId: string; slides: EditorSlide[]; selectedId: string | null;
+function Navigator({ open, onToggle, deckId, slides, selectedId, readOnly, onSelect, onMove, onRemove, onKey }: {
+  open: boolean; onToggle: () => void; deckId: string; slides: EditorSlide[]; selectedId: string | null; readOnly: boolean;
   onSelect: (id: string) => void; onMove: (id: string, to: number) => void; onRemove: (id: string) => void;
   onKey: (e: React.KeyboardEvent) => void;
 }) {
@@ -341,7 +350,7 @@ function Navigator({ open, onToggle, deckId, slides, selectedId, onSelect, onMov
           return (
             <li key={s.slide.id}
               className={["ed-thumb", on ? "on" : "", s.slide.hidden ? "is-hidden" : "", dragId === s.slide.id ? "dragging" : "", over === i && dragId !== s.slide.id ? "drop" : ""].join(" ")}
-              draggable
+              draggable={!readOnly}
               onDragStart={(e) => { setDragId(s.slide.id); e.dataTransfer.effectAllowed = "move"; }}
               onDragEnd={() => { setDragId(null); setOver(null); }}
               onDragOver={(e) => { e.preventDefault(); setOver(i); }}
@@ -353,7 +362,7 @@ function Navigator({ open, onToggle, deckId, slides, selectedId, onSelect, onMov
               </button>
               <span className="ed-thumb-n" aria-hidden>{number ? pad2(number) : "—"}</span>
               {(s.slide.hidden || s.from) && <span className="ed-thumb-tag">{s.slide.hidden ? "Hidden" : "Approved"}</span>}
-              {slides.length > 1 && (confirm === s.slide.id ? (
+              {!readOnly && slides.length > 1 && (confirm === s.slide.id ? (
                 <button type="button" className="ed-thumb-del armed" onClick={() => { setConfirm(null); onRemove(s.slide.id); }} onBlur={() => setConfirm(null)} autoFocus>Delete?</button>
               ) : (
                 <button type="button" className="ed-thumb-del" aria-label={`Delete ${s.name}`} onClick={() => setConfirm(s.slide.id)}>{ICON("trash-2", 12)}</button>
@@ -362,7 +371,7 @@ function Navigator({ open, onToggle, deckId, slides, selectedId, onSelect, onMov
           );
         })}
       </ol>
-      <div className="ed-nav-f">
+      {!readOnly && <div className="ed-nav-f">
         <Menu className="ed-add" label="Add slide" align="start"
           trigger={<span className="ed-btn ed-btn-block">{ICON("plus")}<span>Add slide</span></span>}
           items={[
@@ -370,7 +379,7 @@ function Navigator({ open, onToggle, deckId, slides, selectedId, onSelect, onMov
             { label: "From a template", href: `/library/templates?deck=${encodeURIComponent(deckId)}` },
           ]} />
         <p className="ed-hint">Drag slides to reorder</p>
-      </div>
+      </div>}
     </nav>
   );
 }
@@ -409,7 +418,8 @@ function Canvas({ selected, number }: { selected: EditorSlide | null; number: st
             </div>
             <div className="ed-slide" style={{ width: SLIDE_W * scale, height: SLIDE_H * scale }}>
               <div style={{ transform: `scale(${scale})`, transformOrigin: "0 0", width: SLIDE_W, height: SLIDE_H }}>
-                <RenderSlide slide={selected.slide} />
+                {/* Preview-only: flags images that don't fit their slot. Never shown when presenting. */}
+                <PreviewChecks key={selected.slide.id}><RenderSlide slide={selected.slide} /></PreviewChecks>
               </div>
             </div>
           </div>
@@ -431,8 +441,8 @@ function Canvas({ selected, number }: { selected: EditorSlide | null; number: st
 
 /* ================= Content panel ================= */
 
-function ContentPanel({ item, locked, onUnlock, onChange, onToggleHidden, onRemove, canRemove, onResize, width }: {
-  deckId: string; item: EditorSlide | null; locked: boolean; onUnlock: () => void;
+function ContentPanel({ deckId, item, readOnly, locked, onUnlock, onChange, onToggleHidden, onRemove, canRemove, onResize, width }: {
+  deckId: string; item: EditorSlide | null; readOnly: boolean; locked: boolean; onUnlock: () => void;
   onChange: (props: Record<string, unknown>) => void; onToggleHidden: () => void; onRemove: () => void; canRemove: boolean;
   onResize: (w: number) => void; width: number;
 }) {
@@ -455,7 +465,7 @@ function ContentPanel({ item, locked, onUnlock, onChange, onToggleHidden, onRemo
       </div>
       <div className="ed-panel-h">
         <h2>Slide Content Editor</h2>
-        {item && (
+        {item && !readOnly && (
           <Menu label="Slide actions" trigger={ICON("ellipsis")} items={[
             { label: item.slide.hidden ? "Show in presentation" : "Hide from presentation", onSelect: onToggleHidden },
             { label: "Delete slide", confirm: "Delete this slide?", danger: true, onSelect: onRemove, hidden: !canRemove },
@@ -465,6 +475,12 @@ function ContentPanel({ item, locked, onUnlock, onChange, onToggleHidden, onRemo
       <div className="ed-form">
         {!item ? <p className="ed-hint">Choose a slide on the left.</p> : (
           <>
+            {readOnly && (
+              <div className="ed-note">
+                <p>You can view, present and share this deck. To change it, make your own copy.</p>
+                <button type="button" className="ed-btn ed-btn-sm" onClick={() => copyAction(deckId)}>Make a copy</button>
+              </div>
+            )}
             {item.slide.hidden && <p className="ed-note">Hidden: kept in the deck but not presented or shared.</p>}
             {locked && item.from && (
               <div className="ed-note">
@@ -478,11 +494,11 @@ function ContentPanel({ item, locked, onUnlock, onChange, onToggleHidden, onRemo
                 {warnings.map((w, i) => <li key={i}><b>{fieldLabel(w.slot.split(".").pop()!.split(" ")[0])}</b>: {w.message}</li>)}
               </ul>
             )}
-            <ContentFields pattern={item.slide.pattern} value={item.slide.props as Record<string, unknown>} onChange={onChange} disabled={locked} />
+            <ContentFields pattern={item.slide.pattern} value={item.slide.props as Record<string, unknown>} onChange={onChange} disabled={locked || readOnly} />
           </>
         )}
       </div>
-      <div className="ed-panel-f">{ICON("info", 12)}<span>Changes appear on your slide automatically</span></div>
+      <div className="ed-panel-f">{ICON("info", 12)}<span>{readOnly ? "View only" : "Changes appear on your slide automatically"}</span></div>
     </aside>
   );
 }

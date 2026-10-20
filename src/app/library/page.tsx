@@ -23,7 +23,7 @@ export default async function ApprovedSlidesPage({ searchParams }: { searchParam
     let id: string;
     try { id = await newDeck(u, title, blocks.map((block) => ({ block })), "app"); }
     catch (e) { return { error: e instanceof EditError ? e.message : (e as Error).message }; }
-    redirect(`/decks/${id}/edit`);
+    redirect(`/decks/${id}`);
   }
   return (
     <main className="shell">

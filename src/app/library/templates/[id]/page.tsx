@@ -26,7 +26,7 @@ export default async function TemplatePage({ params, searchParams }: { params: P
       if (target) await addSlide(u, target, input, undefined, "app");
       else deckId = await newDeck(u, title, [input], "app");
     } catch (e) { return { error: e instanceof EditError ? e.message : (e as Error).message }; }
-    redirect(`/decks/${deckId}/edit`);
+    redirect(`/decks/${deckId}`);
   }
   // Only the limits that apply to this template's content (e.g. not tiered pricing on a rate-chips slide).
   const present = (slot: string) => {

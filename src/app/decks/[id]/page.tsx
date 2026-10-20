@@ -1,66 +1,49 @@
-import Link from "next/link";
-import { themeStyle } from "@/deck/theme";
 import { notFound } from "next/navigation";
-import { RenderSlide } from "@/deck/RenderSlide";
-import { ScaledSlide } from "@/deck/frame/ScaledSlide";
-import { PreviewChecks } from "@/deck/frame/PreviewChecks";
-import { checkOverflow } from "@/deck/overflow";
 import { patterns } from "@/deck/registry";
-import { deckFor } from "@/lib/access";
+import { deckFor, deckRow } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
-import { Nav } from "../../Nav";
-import { CopyButton, DraftBar } from "./DeckActions";
+import { publishedThemes } from "@/lib/themes";
+import { slideName } from "./Report";
+import { DeckEditor, type EditorSlide } from "./edit/DeckEditor";
 
-export default async function DeckPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+/**
+ * A deck opens in the editor: slides on the left, the selected slide in the middle, its content on the right.
+ * Editors' changes save to the deck's draft as you type; Publish makes them live. People who can't edit
+ * the deck (members on company decks) get the same view, read-only, with Present, Share and Make a copy.
+ */
+export default async function DeckPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ slide?: string }> }) {
+  const [{ id }, { slide }] = await Promise.all([params, searchParams]);
   const user = await requireUser(`/decks/${id}`);
   const found = await deckFor(id, user);
   if (!found) notFound();
-  const { deck, canEdit } = found;
+  const { deck } = found;
+  const themes = await publishedThemes();
+
+  // Section each slide sits in (the latest section divider before it), and where approved slides come from.
+  const masters = new Map<string, string>();
+  for (const s of deck.slides) {
+    const m = s.ref?.split("/")[0];
+    if (m && !masters.has(m)) masters.set(m, (await deckRow(m))?.title ?? m);
+  }
+  const slides: EditorSlide[] = [];
+  let section = "Opening";
+  for (const s of deck.slides) {
+    if (s.pattern === "section") section = slideName(s);
+    slides.push({
+      slide: s, name: slideName(s), section, layout: patterns[s.pattern]?.meta.name ?? s.pattern,
+      from: s.ref ? { block: s.ref, deck: masters.get(s.ref.split("/")[0]) ?? s.ref } : null,
+    });
+  }
+
   return (
-    <main className="shell" style={themeStyle(deck.theme.tokens)}>
-      <Nav on="decks" user={user} />
-      <div className="row" style={{ marginBottom: 8 }}>
-        <h1 className="page" style={{ margin: 0 }}>{deck.title}</h1>
-        <span className="spacer" style={{ flex: 1 }} />
-        {deck.kind === "master" && <Link className="btn" href={`/decks/${deck.id}/compare`}>Compare with Figma</Link>}
-        {canEdit && <Link className="btn" href={`/decks/${deck.id}/edit`}>Edit deck</Link>}
-        {canEdit && <Link className="btn" href={`/decks/${deck.id}/theme`}>Theme: {deck.theme.name}</Link>}
-        {deck.versionNumber && <Link className="btn" href={`/decks/${deck.id}/history`}>History</Link>}
-        <CopyButton deckId={deck.id} />
-        <Link className="btn" href={`/decks/${deck.id}/presentations`}>Presentations</Link>
-        <Link className="btn" href={`/decks/${deck.id}/share`}>Share</Link>
-        <Link className="btn primary" href={`/decks/${deck.id}/present`}>Present ▶</Link>
-      </div>
-      {canEdit && deck.status === "draft" && <DraftBar deckId={deck.id} />}
-      <p className="lede">{deck.slides.filter((s) => !s.hidden).length} slides presented{deck.slides.some((s) => s.hidden) ? ` · ${deck.slides.filter((s) => s.hidden).length} hidden` : ""} · {deck.kind === "master" ? "master deck" : "personal copy"} · {deck.theme.name} theme{deck.versionNumber ? ` · ${deck.status === "draft" ? `draft after v${deck.versionNumber - 1}` : `v${deck.versionNumber}`}` : ""}{deck.slides.some((s) => s.ref) ? ` · ${deck.slides.filter((s) => s.ref).length} shared with other decks` : ""}. Overflow flags and image-fit warnings show here in preview only, never in the presented deck.</p>
-      <div className="grid">
-        {deck.slides.map((s, i) => {
-          const warnings = checkOverflow(s);
-          const presentIndex = deck.slides.slice(0, i).filter((x) => !x.hidden).length + 1;
-          return (
-            <div key={s.id} className="card" style={s.hidden ? { opacity: 0.45 } : undefined}>
-              <Link href={s.hidden ? "#" : `/decks/${deck.id}/present#${presentIndex}`}>
-                <ScaledSlide className="thumb">
-                  <PreviewChecks><RenderSlide slide={s} /></PreviewChecks>
-                </ScaledSlide>
-              </Link>
-              <div className="meta">
-                <b>{s.hidden ? "—" : String(presentIndex).padStart(2, "0")}</b>
-                <span>{patterns[s.pattern]?.meta.name ?? s.pattern}</span>
-                {deck.kind === "master" && <span className="mono" title="Position in the Figma file">fig {s.source?.slide ?? i + 1}</span>}
-                <span className="spacer" style={{ flex: 1 }} />
-                {s.ref && <span className="tag" title={`Shared slide — edits to ${s.ref} apply to every deck that uses it`}>Shared · {s.ref.split("/")[0]}</span>}
-                {s.hidden && <span className="tag">Hidden</span>}
-                {warnings.length > 0 && <span className="tag warn">{warnings.length} overflow</span>}
-              </div>
-              {warnings.length > 0 && (
-                <ul className="warnlist">{warnings.map((w, j) => <li key={j}><b>{w.slot}</b>: {w.message}</li>)}</ul>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </main>
+    <DeckEditor
+      key={`${deck.versionId}-${deck.status}`}
+      deck={{ id: deck.id, title: deck.title, kind: deck.kind, hasDraft: deck.status === "draft", versionNumber: deck.versionNumber ?? null }}
+      slides={slides}
+      initialSlide={slides.some((s) => s.slide.id === slide) ? slide! : slides[0]?.slide.id ?? null}
+      theme={deck.theme}
+      themes={themes.map((t) => ({ id: t.id, name: t.name, tokens: t.tokens }))}
+      readOnly={!found.canEdit}
+    />
   );
 }

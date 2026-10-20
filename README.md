@@ -48,10 +48,10 @@ Code: `src/lib/share.ts`, `src/lib/analytics.ts`, `src/app/decks/[id]/present/` 
 
 - **New deck** (Home → + New deck, `/new`): name it, tick approved slides from the company masters (grouped by section, in the order you tick them), Create.
 - **Make a copy** of any deck you can see.
-- **Deck editor** (deck → **Edit deck**, `/decks/<id>/edit?slide=<slideId>`, editors only; design: Figma "Dekiru" file, node 1:4):
-  - Top bar: back to the overview, rename the deck (pencil), **Theme** picker, save status, **Publish** (only when there are unpublished changes), Share, Present (starts at the selected slide), and a menu (overview, history, presentations, compare, discard unpublished changes).
+- **Deck editor** (`/decks/<id>?slide=<slideId>`; clicking a deck opens it; design: Figma "Dekiru" file, node 1:4). People who can't edit the deck (members on company decks) get it **view only**: browse, Present, Share, Make a copy. `/decks/<id>/edit` redirects here.
+  - Top bar: back to the overview, rename the deck (pencil), **Theme** picker, save status, **Publish** (only when there are unpublished changes), Share, Present (starts at the selected slide), and a menu (make a copy, history, presentations, compare with Figma, discard unpublished changes).
   - Left: slide thumbnails in the deck's theme. Click to select; drag (or Alt+↑/↓) to reorder; trash to delete (asks once); "Approved"/"Hidden" tags; **Add slide** → approved slide or template; collapsible.
-  - Middle: the selected slide with zoom (−, +, Fit).
+  - Middle: the selected slide with zoom (−, +, Fit); preview-only image-fit warnings.
   - Right: **Slide Content Editor**, the slide's words as a form; lists of short value/label pairs show as rows. Edits appear on the slide as you type and **save to the draft automatically**. Approved slides stay locked until "Edit for this deck only" (which makes them the deck's own). The panel's menu hides/shows or deletes the slide; the panel can be resized.
 - Approved slides are stored as references and keep following their master until edited.
 - **History** (`/decks/<id>/history`): every version with who and when; View any version; **Restore** puts an old version back as a draft.
