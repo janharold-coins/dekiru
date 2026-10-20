@@ -7,8 +7,9 @@ import { revalidatePath } from "next/cache";
 import type { OverflowWarning } from "@/deck/overflow";
 import { requireUser } from "@/lib/auth";
 import {
-  discardDraft, EditError, moveSlide, publish, removeSlide, renameDeck, setDeckTheme, setHidden, updateSlide,
+  discardDraft, EditError, moveSlide, publish, removeSlide, renameDeck, replaceDraft, setDeckTheme, setHidden, updateSlide,
 } from "@/lib/editing";
+import type { SeedSlide } from "@/content/resolve";
 
 export type EditorResult = { error?: string };
 const message = (e: unknown) => (e instanceof EditError ? e.message : (e as Error).message);
@@ -50,4 +51,9 @@ export async function discardDraftAction(deckId: string): Promise<EditorResult> 
   const r = await run(deckId, (u) => discardDraft(u, deckId));
   revalidatePath(`/decks/${deckId}`);
   return r;
+}
+
+/** Undo/redo: save the editor's whole state (slides in order + theme) as the draft. */
+export async function saveDeckStateAction(deckId: string, slides: SeedSlide[], themeId: string): Promise<EditorResult> {
+  return run(deckId, (u) => replaceDraft(u, deckId, slides, themeId));
 }

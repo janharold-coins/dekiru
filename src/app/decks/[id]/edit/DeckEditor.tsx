@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { RenderSlide } from "@/deck/RenderSlide";
 import { PreviewChecks } from "@/deck/frame/PreviewChecks";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
@@ -14,8 +14,9 @@ import { ContentFields } from "./ContentFields";
 import { Menu } from "./Menu";
 import {
   discardDraftAction, hideSlideAction, moveSlideAction, publishDeckAction, removeSlideAction, renameDeckAction,
-  saveSlideAction, setThemeAction,
+  saveDeckStateAction, saveSlideAction, setThemeAction,
 } from "./actions";
+import type { SeedSlide } from "@/content/resolve";
 
 export interface EditorSlide {
   slide: SlideData;
@@ -26,6 +27,36 @@ export interface EditorSlide {
   from: { block: string; deck: string } | null;
 }
 interface ThemeOption { id: string; name: string; tokens: ThemeTokens }
+/** What undo/redo restores: the slides (order, content, hidden, links to approved slides) and the theme. */
+interface Snapshot { slides: EditorSlide[]; themeId: string }
+const HISTORY_LIMIT = 100;
+const EDIT_BURST_MS = 1200; // typing pauses longer than this start a new undo step
+
+/* "Show hidden slides" is remembered on this computer (off on the server render and when storage is unavailable). */
+const SHOW_HIDDEN_KEY = "dekiru.showHidden";
+const showHiddenListeners = new Set<() => void>();
+let showHiddenMemory = false; // used when the browser won't store it
+const readShowHidden = () => { try { const v = localStorage.getItem(SHOW_HIDDEN_KEY); return v == null ? showHiddenMemory : v === "1"; } catch { return showHiddenMemory; } };
+function setShowHidden(on: boolean) {
+  showHiddenMemory = on;
+  try { localStorage.setItem(SHOW_HIDDEN_KEY, on ? "1" : "0"); } catch { /* storage unavailable */ }
+  showHiddenListeners.forEach((l) => l());
+}
+function useShowHidden() {
+  return useSyncExternalStore(
+    (l) => { showHiddenListeners.add(l); return () => { showHiddenListeners.delete(l); }; },
+    readShowHidden,
+    () => false,
+  );
+}
+
+/** Back to the stored form: approved slides that still follow their master are saved as references. */
+const toSeed = (list: EditorSlide[]): SeedSlide[] => list.map(({ slide, from }) => {
+  if (from && slide.ref) return { id: slide.id, ref: slide.ref, ...(slide.hidden ? { hidden: true } : {}) };
+  const { ref: _ref, ...own } = slide; // eslint-disable-line @typescript-eslint/no-unused-vars
+  return own;
+});
+
 type SaveState = { kind: "saved" } | { kind: "saving" } | { kind: "error"; message: string } | { kind: "published"; version: number };
 
 const ICON = (name: string, size = 16) => <img src={`/editor/${name}.svg`} alt="" width={size} height={size} />;
@@ -53,6 +84,21 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
   const [panelWidth, setPanelWidth] = useState(360);
   const [unlocked, setUnlocked] = useState<Set<string>>(new Set());
   const [publishing, setPublishing] = useState(false);
+  const showHidden = useShowHidden();
+  const past = useRef<Snapshot[]>([]);
+  const future = useRef<Snapshot[]>([]);
+  const lastEdit = useRef<{ slideId: string; t: number } | null>(null);
+  const [historySize, setHistorySize] = useState({ undo: 0, redo: 0 });
+  const syncHistory = () => setHistorySize({ undo: past.current.length, redo: future.current.length });
+  /** Call before any change: remembers the current state as an undo step and clears redo. */
+  const record = () => {
+    past.current.push({ slides, themeId });
+    if (past.current.length > HISTORY_LIMIT) past.current.shift();
+    future.current = [];
+    syncHistory();
+  };
+
+  const toggleShowHidden = setShowHidden;
 
   const theme = themes.find((t) => t.id === themeId) ?? initialTheme;
   const themeVars = useMemo(() => themeStyle(theme.tokens), [theme.tokens]);
@@ -95,6 +141,10 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
   }, [flushOne]);
 
   const editProps = (slideId: string, props: Record<string, unknown>) => {
+    // One undo step per burst of typing on a slide.
+    const now = Date.now();
+    if (!lastEdit.current || lastEdit.current.slideId !== slideId || now - lastEdit.current.t > EDIT_BURST_MS) record();
+    lastEdit.current = { slideId, t: now };
     setSlides((all) => all.map((s) => (s.slide.id === slideId ? { ...s, slide: { ...s.slide, props } } : s)));
     pending.current.set(slideId, props);
     clearTimeout(timers.current.get(slideId));
@@ -112,11 +162,13 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
   /* ---------- slide operations (optimistic) ---------- */
   const structural = async (next: EditorSlide[], action: () => Promise<{ error?: string }>) => {
     const before = slides;
+    record();
+    lastEdit.current = null;
     setSlides(next);
     await flushAll();
     setSave({ kind: "saving" });
     const r = await action();
-    if (r.error) { setSlides(before); setSave({ kind: "error", message: r.error }); return false; }
+    if (r.error) { setSlides(before); past.current.pop(); syncHistory(); setSave({ kind: "error", message: r.error }); return false; }
     setHasDraft(true);
     setSave({ kind: "saved" });
     return true;
@@ -155,12 +207,53 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
   const chooseTheme = async (id: string) => {
     if (id === themeId) return;
     const before = themeId;
+    record();
+    lastEdit.current = null;
     setThemeId(id);
     await flushAll();
     const r = await setThemeAction(deck.id, id);
-    if (r.error) { setThemeId(before); setSave({ kind: "error", message: r.error }); return; }
+    if (r.error) { setThemeId(before); past.current.pop(); syncHistory(); setSave({ kind: "error", message: r.error }); return; }
     setHasDraft(true);
   };
+
+  /* ---------- undo / redo ---------- */
+  const restore = async (from: Snapshot[], to: Snapshot[]) => {
+    const target = from.pop();
+    if (!target) return;
+    // Pending typing belongs to the state being left; the restored state is saved as a whole instead.
+    for (const t of timers.current.values()) clearTimeout(t);
+    timers.current.clear();
+    pending.current.clear();
+    await Promise.all([...inflight.current]);
+    to.push({ slides, themeId });
+    lastEdit.current = null;
+    syncHistory();
+    setSlides(target.slides);
+    setThemeId(target.themeId);
+    if (!target.slides.some((s) => s.slide.id === selectedId)) setSelectedId(target.slides[0]?.slide.id ?? null);
+    setSave({ kind: "saving" });
+    const r = await saveDeckStateAction(deck.id, toSeed(target.slides), target.themeId);
+    if (r.error) { setSave({ kind: "error", message: r.error }); return; }
+    setHasDraft(true);
+    setSave({ kind: "saved" });
+  };
+  const undo = () => void restore(past.current, future.current);
+  const redo = () => void restore(future.current, past.current);
+
+  // ⌘Z / Ctrl+Z undo, ⇧⌘Z / Ctrl+Y redo — except while typing, where the browser undoes the text itself.
+  useEffect(() => {
+    if (readOnly) return;
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (el && (el.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName))) return;
+      if (!(e.metaKey || e.ctrlKey)) return;
+      const k = e.key.toLowerCase();
+      if (k === "z" && !e.shiftKey) { e.preventDefault(); undo(); }
+      else if ((k === "z" && e.shiftKey) || k === "y") { e.preventDefault(); redo(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
   const publishNow = async () => {
     setPublishing(true);
     await flushAll();
@@ -179,15 +272,24 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
     window.location.reload(); // start again from the published version
   };
 
+  /* ---------- the slide list (hidden slides only when asked for) ---------- */
+  const listed = showHidden ? slides : slides.filter((s) => !s.slide.hidden);
+  /** Move to where the listed slide at `i` is (positions in the full deck, hidden slides included). */
+  const moveListed = (id: string, i: number) => {
+    const target = listed[i];
+    if (target) move(id, slides.indexOf(target));
+  };
+
   /* ---------- keyboard: ↑/↓ choose a slide, Alt+↑/↓ move it ---------- */
   const onNavKey = (e: React.KeyboardEvent) => {
     if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
     e.preventDefault();
     const d = e.key === "ArrowUp" ? -1 : 1;
-    if (selectedIndex < 0) return;
-    if (e.altKey) { if (!readOnly) move(slides[selectedIndex].slide.id, selectedIndex + d); }
+    const at = listed.findIndex((s) => s.slide.id === selectedId);
+    if (at < 0) return;
+    if (e.altKey) { if (!readOnly) moveListed(listed[at].slide.id, at + d); }
     else {
-      const next = slides[selectedIndex + d];
+      const next = listed[at + d];
       if (next) { setSelectedId(next.slide.id); document.getElementById(`thumb-${next.slide.id}`)?.focus(); }
     }
   };
@@ -197,12 +299,15 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
       <TopBar
         deck={deck} readOnly={readOnly} title={title} onRename={rename} themes={themes} theme={theme} onTheme={chooseTheme}
         save={save} hasDraft={hasDraft} publishing={publishing} onPublish={publishNow} onDiscard={discard}
+        canUndo={historySize.undo > 0} canRedo={historySize.redo > 0} onUndo={undo} onRedo={redo}
         presentHref={`/decks/${deck.id}/present${selected && !selected.slide.hidden ? `#${presentNumber(selectedIndex)}` : ""}`}
       />
       <div className="ed-work" style={themeVars}>
         <Navigator
-          open={navOpen} onToggle={() => setNavOpen((o) => !o)} deckId={deck.id} slides={slides} selectedId={selectedId} readOnly={readOnly}
-          onSelect={setSelectedId} onMove={move} onRemove={remove} onKey={onNavKey}
+          open={navOpen} onToggle={() => setNavOpen((o) => !o)} deckId={deck.id} slides={listed} selectedId={selectedId} readOnly={readOnly}
+          presented={slides.length - slides.filter((s) => s.slide.hidden).length} hiddenCount={slides.filter((s) => s.slide.hidden).length}
+          showHidden={showHidden} onShowHidden={toggleShowHidden} numberOf={(s) => (s.slide.hidden ? null : presentNumber(slides.indexOf(s)))}
+          onSelect={setSelectedId} onMove={moveListed} onRemove={remove} onKey={onNavKey}
         />
         <Canvas selected={selected} number={selected ? (selected.slide.hidden ? "Hidden" : pad2(presentNumber(selectedIndex))) : ""} />
         <ContentPanel
@@ -226,12 +331,14 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
 
 /* ================= Top bar ================= */
 
-function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save, hasDraft, publishing, onPublish, onDiscard, presentHref }: {
+function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save, hasDraft, publishing, onPublish, onDiscard, presentHref, canUndo, canRedo, onUndo, onRedo }: {
   deck: { id: string; kind: "master" | "copy"; versionNumber: number | null }; readOnly: boolean;
   title: string; onRename: (t: string) => void;
   themes: ThemeOption[]; theme: ThemeOption; onTheme: (id: string) => void;
   save: SaveState; hasDraft: boolean; publishing: boolean; onPublish: () => void; onDiscard: () => void; presentHref: string;
+  canUndo: boolean; canRedo: boolean; onUndo: () => void; onRedo: () => void;
 }) {
+  const mac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(title);
   const commit = () => { setEditing(false); onRename(draft); };
@@ -265,6 +372,12 @@ function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save,
           {save.kind === "error" ? <span className="ed-save-error" title={save.message}>Couldn&apos;t save: {save.message}</span>
             : <>{ICON("cloud-check", 15)}<span>{save.kind === "saving" ? "Saving…" : save.kind === "published" ? `Published v${save.version}` : hasDraft ? "Saved as draft" : "All changes saved"}</span></>}
         </span>}
+        {!readOnly && (
+          <span className="ed-history">
+            <button type="button" className="ed-icon-btn" aria-label="Undo" title={`Undo (${mac ? "⌘Z" : "Ctrl+Z"})`} disabled={!canUndo} onClick={onUndo}>{ICON("undo")}</button>
+            <button type="button" className="ed-icon-btn" aria-label="Redo" title={`Redo (${mac ? "⇧⌘Z" : "Ctrl+Y"})`} disabled={!canRedo} onClick={onRedo}>{ICON("redo")}</button>
+          </span>
+        )}
         {!readOnly && hasDraft && (
           <button type="button" className="ed-btn ed-btn-publish" onClick={onPublish} disabled={publishing}
             title="Make the draft the live version. Links already sent keep their version.">
@@ -321,16 +434,16 @@ function ThemePicker({ themes, theme, onTheme }: { themes: ThemeOption[]; theme:
 
 /* ================= Slide navigator ================= */
 
-function Navigator({ open, onToggle, deckId, slides, selectedId, readOnly, onSelect, onMove, onRemove, onKey }: {
+function Navigator({ open, onToggle, deckId, slides, selectedId, readOnly, presented, hiddenCount, showHidden, onShowHidden, numberOf, onSelect, onMove, onRemove, onKey }: {
   open: boolean; onToggle: () => void; deckId: string; slides: EditorSlide[]; selectedId: string | null; readOnly: boolean;
+  presented: number; hiddenCount: number; showHidden: boolean; onShowHidden: (on: boolean) => void;
+  numberOf: (s: EditorSlide) => number | null;
   onSelect: (id: string) => void; onMove: (id: string, to: number) => void; onRemove: (id: string) => void;
   onKey: (e: React.KeyboardEvent) => void;
 }) {
   const [dragId, setDragId] = useState<string | null>(null);
   const [over, setOver] = useState<number | null>(null);
   const [confirm, setConfirm] = useState<string | null>(null);
-  const hiddenCount = slides.filter((s) => s.slide.hidden).length;
-  let n = 0;
   if (!open) {
     return (
       <nav className="ed-nav closed" aria-label="Slides">
@@ -341,13 +454,20 @@ function Navigator({ open, onToggle, deckId, slides, selectedId, readOnly, onSel
   return (
     <nav className="ed-nav" aria-label="Slides">
       <div className="ed-nav-h">
-        {/* Presented slides; hidden ones stay in the list (dimmed, no number) and are counted separately. */}
-        <span><b>Slides</b><span className="ed-count">{slides.length - hiddenCount}{hiddenCount > 0 && ` · ${hiddenCount} hidden`}</span></span>
-        <button type="button" className="ed-icon-btn" aria-label="Hide slides" onClick={onToggle}>{ICON("panel-left-close")}</button>
+        <div className="ed-nav-row">
+          <span><b>Slides</b><span className="ed-count">{presented}</span></span>
+          <button type="button" className="ed-icon-btn" aria-label="Hide slides" onClick={onToggle}>{ICON("panel-left-close")}</button>
+        </div>
+        {hiddenCount > 0 && (
+          <label className="ed-nav-row ed-show-hidden">
+            <span>Show hidden slides<span className="ed-count">{hiddenCount}</span></span>
+            <input type="checkbox" checked={showHidden} onChange={(e) => onShowHidden(e.target.checked)} />
+          </label>
+        )}
       </div>
       <ol className="ed-thumbs" onKeyDown={onKey}>
         {slides.map((s, i) => {
-          const number = s.slide.hidden ? null : ++n;
+          const number = numberOf(s);
           const on = s.slide.id === selectedId;
           return (
             <li key={s.slide.id}

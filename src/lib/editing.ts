@@ -272,6 +272,34 @@ export async function setDeckTheme(user: SignedInUser | null, deckId: string, th
   await saveDraft(deckId, slides, { userId: user?.id ?? null, note: `Theme: ${pickTheme(all, id).name}${via === "claude" ? " (with Claude)" : ""}`, themeId: id });
 }
 
+/**
+ * Replace the whole draft at once (the editor's undo/redo): slides in order plus the theme.
+ * Every slide is checked like any other edit: approved references must point at a company deck's slide,
+ * own slides must use a known pattern and render.
+ */
+export async function replaceDraft(user: SignedInUser | null, deckId: string, slides: SeedSlide[], themeId: string | null) {
+  await editable(deckId, user);
+  if (!Array.isArray(slides) || !slides.length) throw new EditError("A deck needs at least one slide.");
+  const ids = new Set<string>();
+  for (const s of slides) {
+    if (!s || typeof s.id !== "string" || !s.id || ids.has(s.id)) throw new EditError("Every slide needs its own id.");
+    ids.add(s.id);
+    if (isRef(s)) {
+      const [masterId, slideId] = s.ref.split("/");
+      const master = await deckRow(masterId);
+      if (!master || master.kind !== "master" || !(await lookup(masterId))?.some((x) => x.id === slideId)) {
+        throw new EditError(`"${s.ref}" isn't an approved slide.`);
+      }
+    } else if (!patterns[(s as SlideData).pattern]) throw new EditError(`Unknown pattern "${(s as SlideData).pattern}".`);
+  }
+  const broken = (await checkSlides(slides)).filter((c) => c.renderError);
+  if (broken.length) throw new EditError(`${broken.length} slide(s) don't render.`);
+  const all = await publishedThemes();
+  const theme = themeId === DEFAULT_THEME_ID ? null : themeId;
+  if (theme && !all.some((t) => t.id === theme)) throw new EditError(`No theme "${theme}".`);
+  await saveDraft(deckId, slides, { userId: user?.id ?? null, note: editNote("app"), themeId: theme });
+}
+
 /** Rename a deck. Applies straight away (titles aren't versioned); share links keep the title they were made with. */
 export async function renameDeck(user: SignedInUser | null, deckId: string, title: string) {
   await editable(deckId, user);
