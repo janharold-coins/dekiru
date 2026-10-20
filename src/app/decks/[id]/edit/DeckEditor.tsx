@@ -329,6 +329,7 @@ function Navigator({ open, onToggle, deckId, slides, selectedId, readOnly, onSel
   const [dragId, setDragId] = useState<string | null>(null);
   const [over, setOver] = useState<number | null>(null);
   const [confirm, setConfirm] = useState<string | null>(null);
+  const hiddenCount = slides.filter((s) => s.slide.hidden).length;
   let n = 0;
   if (!open) {
     return (
@@ -340,7 +341,8 @@ function Navigator({ open, onToggle, deckId, slides, selectedId, readOnly, onSel
   return (
     <nav className="ed-nav" aria-label="Slides">
       <div className="ed-nav-h">
-        <span><b>Slides</b><span className="ed-count">{slides.length}</span></span>
+        {/* Presented slides; hidden ones stay in the list (dimmed, no number) and are counted separately. */}
+        <span><b>Slides</b><span className="ed-count">{slides.length - hiddenCount}{hiddenCount > 0 && ` · ${hiddenCount} hidden`}</span></span>
         <button type="button" className="ed-icon-btn" aria-label="Hide slides" onClick={onToggle}>{ICON("panel-left-close")}</button>
       </div>
       <ol className="ed-thumbs" onKeyDown={onKey}>
