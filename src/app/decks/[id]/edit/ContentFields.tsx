@@ -1,5 +1,5 @@
 "use client";
-import { fieldLabel, isEditableKey, itemLabel, listLimits } from "@/deck/fields";
+import { editableEntries, fieldLabel, itemLabel, listLimits } from "@/deck/fields";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Props = Record<string, any>;
@@ -8,8 +8,8 @@ type Props = Record<string, any>;
  * A slide's editable words as a form (layout, images and colours are not editable here).
  * Lists of short two-part items (value + label) show as compact rows, like "Key metrics" in the design.
  */
-export function ContentFields({ pattern, value, onChange, disabled }: {
-  pattern: string; value: Props; onChange: (v: Props) => void; disabled?: boolean;
+export function ContentFields({ pattern, path = pattern, value, onChange, disabled }: {
+  pattern: string; path?: string; value: Props; onChange: (v: Props) => void; disabled?: boolean;
 }) {
   const set = (key: string, v: unknown) => {
     const next: Props = { ...value, [key]: v };
@@ -18,13 +18,13 @@ export function ContentFields({ pattern, value, onChange, disabled }: {
   };
   return (
     <>
-      {Object.entries(value).filter(([k, v]) => isEditableKey(k, v)).map(([k, v]) => {
+      {editableEntries(path, value).map(([k, v]: [string, any]) => {
         if (typeof v === "string") return <TextField key={k} label={fieldLabel(k)} value={v} disabled={disabled} onChange={(x) => set(k, x)} />;
-        if (Array.isArray(v)) return <ListField key={k} pattern={pattern} name={k} items={v} disabled={disabled} onChange={(x) => set(k, x)} />;
+        if (Array.isArray(v)) return <ListField key={k} pattern={pattern} path={`${path}.${k}[]`} name={k} items={v} disabled={disabled} onChange={(x) => set(k, x)} />;
         return (
           <section key={k} className="ed-group">
             <h3 className="ed-group-h"><span>{fieldLabel(k)}</span></h3>
-            <ContentFields pattern={pattern} value={v} disabled={disabled} onChange={(x) => set(k, x)} />
+            <ContentFields pattern={pattern} path={`${path}.${k}`} value={v} disabled={disabled} onChange={(x) => set(k, x)} />
           </section>
         );
       })}
@@ -33,24 +33,24 @@ export function ContentFields({ pattern, value, onChange, disabled }: {
 }
 
 /** Editable string keys of a list item, when every item is a flat object with exactly two short text fields. */
-function compactKeys(items: any[]): [string, string] | null {
+function compactKeys(path: string, items: any[]): [string, string] | null {
   if (!items.length || !items.every((it) => it && typeof it === "object" && !Array.isArray(it))) return null;
-  const keys = Object.entries(items[0]).filter(([k, v]) => isEditableKey(k, v)).map(([k]) => k);
+  const keys = editableEntries(path, items[0]).map(([k]) => k);
   if (keys.length !== 2) return null;
   const short = items.every((it) => keys.every((k) => typeof it[k] === "string" && !it[k].includes("\n") && it[k].length <= 48)
-    && Object.entries(it).filter(([k, v]) => isEditableKey(k, v)).length === 2);
+    && editableEntries(path, it).length === 2);
   return short ? [keys[0], keys[1]] : null;
 }
 
-function ListField({ pattern, name, items, onChange, disabled }: {
-  pattern: string; name: string; items: any[]; onChange: (v: any[]) => void; disabled?: boolean;
+function ListField({ pattern, path, name, items, onChange, disabled }: {
+  pattern: string; path: string; name: string; items: any[]; onChange: (v: any[]) => void; disabled?: boolean;
 }) {
   const { fixed, max } = listLimits(pattern, name, items);
   const setAt = (i: number, v: unknown) => onChange(items.map((x, j) => (j === i ? v : x)));
   const remove = (i: number) => onChange(items.filter((_, j) => j !== i));
   const add = () => onChange([...items, structuredClone(items[items.length - 1])]);
   const one = itemLabel(name, 0).replace(/ \d+$/, "").toLowerCase();
-  const compact = compactKeys(items);
+  const compact = compactKeys(path, items);
   const canRemove = !fixed && items.length > 1 && !disabled;
   return (
     <section className="ed-group">
@@ -80,7 +80,7 @@ function ListField({ pattern, name, items, onChange, disabled }: {
             </div>
             {typeof it === "string"
               ? <TextField label="" value={it} disabled={disabled} onChange={(x) => setAt(i, x)} />
-              : <ContentFields pattern={pattern} value={it} disabled={disabled} onChange={(x) => setAt(i, x)} />}
+              : <ContentFields pattern={pattern} path={path} value={it} disabled={disabled} onChange={(x) => setAt(i, x)} />}
           </div>
         ))
       )}

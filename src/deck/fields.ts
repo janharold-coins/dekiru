@@ -8,6 +8,7 @@ import { patterns } from "./registry";
 const LAYOUT_KEYS = new Set([
   "figma", "product", "variant", "tone", "color", "yearColor", "file", "src", "icon", "flag", "panel", "group", "code",
   "side", "kind", "font", "decoration", "level", "highlight", "valueRuns", "figmaBoldSplit", "fit", "unit",
+  "crop", "chip", "composite", "objectPosition",
 ]);
 /** Items holding any of these are placed by hand on the slide, so the list can't grow or shrink. */
 const POSITION_KEYS = ["x", "y", "markerY", "w", "h"];
@@ -66,4 +67,66 @@ export function countImages(v: unknown): number {
   if (Array.isArray(v)) return v.reduce((n: number, x) => n + countImages(x), 0);
   if (v && typeof v === "object") return Object.values(v).reduce((n: number, x) => n + countImages(x), 0);
   return 0;
+}
+
+/**
+ * Reading order of each slide's fields, top to bottom as they appear on the slide.
+ * Saved slides lose their original key order (the database sorts keys), so the form
+ * sorts by this instead. Paths: pattern, then ".key" for a group and ".key[]" for a list's items.
+ */
+const FIELD_ORDER: Record<string, string[]> = {
+  "agenda": ["title", "items"],
+  "agenda.items[]": ["number", "title", "description"],
+  "card-grid": ["eyebrow", "title", "subtitle", "body", "cards"],
+  "card-grid.cards[]": ["country", "rail", "speed", "statuses"],
+  "card-grid.cards[].statuses[]": ["label", "status"],
+  "closing": ["title"],
+  "cover": ["title", "subtitle"],
+  "cta-contact": ["title", "subtitle", "contacts"],
+  "cta-contact.contacts[]": ["label", "email"],
+  "feature-cards": ["title", "cards"],
+  "feature-cards.cards[]": ["number", "title", "body"],
+  "key-numbers": ["title", "subtitle", "callout", "statCards", "primaryStats", "secondaryStats"],
+  "key-numbers.callout": ["lead", "lines"],
+  "key-numbers.statCards[]": ["value", "eyebrow", "label", "description"],
+  "key-numbers.primaryStats[]": ["value", "label", "note"],
+  "key-numbers.secondaryStats[]": ["value", "label"],
+  "logo-wall": ["title", "body", "groups"],
+  "logo-wall.groups[]": ["header", "logos"],
+  "logo-wall.groups[].logos[]": ["name"],
+  "product-detail": ["eyebrow", "title", "tagline", "description", "whoLabel", "who", "whatLabel", "what", "keyApisLabel", "keyApis", "pricingLabel", "pricing"],
+  "product-detail.keyApis[]": ["title", "items"],
+  "product-detail.pricing": ["chips", "tiers", "text", "subtext"],
+  "product-detail.pricing.chips[]": ["label", "value", "caption"],
+  "product-detail.pricing.tiers[]": ["tierLabel", "tier", "value", "caption", "conditionPrefix", "conditionAmount", "volumeNote"],
+  "product-flow": ["eyebrow", "titleBold", "titleRegular", "steps"],
+  "product-flow.steps[]": ["n", "title", "caption"],
+  "product-hero": ["eyebrow", "title", "tagline"],
+  "product-index": ["titleRuns", "subtitle", "pillars"],
+  "product-index.pillars[]": ["number", "title", "products"],
+  "product-index.pillars[].products[]": ["name", "description"],
+  "section": ["number", "parentTitle", "title", "subtitle"],
+  "statement-highlights": ["title", "body", "highlights"],
+  "statement-highlights.highlights[]": ["title", "description"],
+  "timeline": ["title", "subtitle", "items"],
+  "timeline.items[]": ["year", "leftText", "bracketGroup", "text", "caption"],
+};
+/** For layouts not listed above: headings first, then supporting text, then everything else. */
+const GENERIC_ORDER = [
+  "eyebrow", "number", "n", "parentTitle", "titleRuns", "titleBold", "titleRegular", "title", "tagline", "subtitle",
+  "lead", "description", "body",
+];
+
+/** Fields that are notes for whoever placed the slide, not words on it. */
+const HIDDEN_FIELDS = new Set(["logo-wall.groups[].logos[].note"]);
+
+/** A slide object's editable fields, in the order they read on the slide. */
+export function editableEntries(path: string, value: Record<string, unknown>): [string, unknown][] {
+  const order = FIELD_ORDER[path] ?? GENERIC_ORDER;
+  const rank = (k: string) => { const i = order.indexOf(k); return i < 0 ? order.length : i; };
+  return Object.entries(value)
+    .filter(([k, v]) => isEditableKey(k, v) && !HIDDEN_FIELDS.has(`${path}.${k}`))
+    .map((e, i) => [e, i] as const)
+    .sort(([[a], i], [[b], j]) => rank(a) - rank(b) || i - j)
+    .map(([e]) => e);
 }

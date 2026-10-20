@@ -2,7 +2,7 @@
 import { useMemo, useState, useTransition, type ReactNode } from "react";
 import { RenderSlide } from "@/deck/RenderSlide";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
-import { countImages, fieldLabel, isEditableKey, itemLabel, listLimits } from "@/deck/fields";
+import { countImages, editableEntries, fieldLabel, itemLabel, listLimits } from "@/deck/fields";
 import { checkOverflow } from "@/deck/overflow";
 import { themeStyle, type ThemeTokens } from "@/deck/theme";
 import type { SlideData } from "@/deck/types";
@@ -84,7 +84,7 @@ export function SlideForm({ slide, saveLabel, onSave, targets, defaultTarget = "
 }
 
 /** The editable parts of an object, recursively. */
-function Fields({ pattern, value, onChange }: { pattern: string; value: Props; onChange: (v: Props) => void }) {
+function Fields({ pattern, path = pattern, value, onChange }: { pattern: string; path?: string; value: Props; onChange: (v: Props) => void }) {
   const set = (key: string, v: unknown) => {
     const next: Props = { ...value, [key]: v };
     if (key === "value" && "valueRuns" in next) delete next.valueRuns; // styled runs would hide the new value
@@ -92,13 +92,13 @@ function Fields({ pattern, value, onChange }: { pattern: string; value: Props; o
   };
   return (
     <>
-      {Object.entries(value).filter(([k, v]) => isEditableKey(k, v)).map(([k, v]) => {
+      {editableEntries(path, value).map(([k, v]: [string, any]) => {
         if (typeof v === "string") return <TextField key={k} label={fieldLabel(k)} value={v} onChange={(x) => set(k, x)} />;
-        if (Array.isArray(v)) return <ListField key={k} pattern={pattern} name={k} items={v} onChange={(x) => set(k, x)} />;
+        if (Array.isArray(v)) return <ListField key={k} pattern={pattern} path={`${path}.${k}[]`} name={k} items={v} onChange={(x) => set(k, x)} />;
         return (
           <fieldset key={k} className="sf-group">
             <legend>{fieldLabel(k)}</legend>
-            <Fields pattern={pattern} value={v} onChange={(x) => set(k, x)} />
+            <Fields pattern={pattern} path={`${path}.${k}`} value={v} onChange={(x) => set(k, x)} />
           </fieldset>
         );
       })}
@@ -106,7 +106,7 @@ function Fields({ pattern, value, onChange }: { pattern: string; value: Props; o
   );
 }
 
-function ListField({ pattern, name, items, onChange }: { pattern: string; name: string; items: any[]; onChange: (v: any[]) => void }) {
+function ListField({ pattern, path, name, items, onChange }: { pattern: string; path: string; name: string; items: any[]; onChange: (v: any[]) => void }) {
   const { fixed, max } = listLimits(pattern, name, items);
   const setAt = (i: number, v: unknown) => onChange(items.map((x, j) => (j === i ? v : x)));
   const remove = (i: number) => onChange(items.filter((_, j) => j !== i));
@@ -122,7 +122,7 @@ function ListField({ pattern, name, items, onChange }: { pattern: string; name: 
           </div>
           {typeof it === "string"
             ? <TextField label="" value={it} onChange={(x) => setAt(i, x)} />
-            : <Fields pattern={pattern} value={it} onChange={(x) => setAt(i, x)} />}
+            : <Fields pattern={pattern} path={path} value={it} onChange={(x) => setAt(i, x)} />}
         </div>
       ))}
       {!fixed && items.length < max && items.length > 0 && (
