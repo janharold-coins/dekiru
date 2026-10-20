@@ -15,7 +15,7 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { renderToStaticMarkup } from "react-dom/server.edge";
 import { db } from "@/db/client";
-import { deckVersions, users } from "@/db/schema";
+import { deckVersions, decks, users } from "@/db/schema";
 import { createElement } from "react";
 import { isRef, resolveSlides, type SeedSlide } from "@/content/resolve";
 import { RenderSlide } from "@/deck/RenderSlide";
@@ -270,6 +270,16 @@ export async function setDeckTheme(user: SignedInUser | null, deckId: string, th
   const { slides } = await working(deckId);
   const id = themeId === DEFAULT_THEME_ID ? null : themeId;
   await saveDraft(deckId, slides, { userId: user?.id ?? null, note: `Theme: ${pickTheme(all, id).name}${via === "claude" ? " (with Claude)" : ""}`, themeId: id });
+}
+
+/** Rename a deck. Applies straight away (titles aren't versioned); share links keep the title they were made with. */
+export async function renameDeck(user: SignedInUser | null, deckId: string, title: string) {
+  await editable(deckId, user);
+  const name = title.trim().replace(/\s+/g, " ");
+  if (!name) throw new EditError("A deck needs a name.");
+  if (name.length > 80) throw new EditError("Keep the name under 80 characters.");
+  await db().update(decks).set({ title: name, updatedAt: new Date() }).where(eq(decks.id, deckId));
+  return name;
 }
 
 /** URL-safe id from a title, with a short random suffix so copies never collide. */

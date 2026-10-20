@@ -5,7 +5,7 @@ import "./globals.css";
 // Web fallbacks for the design fonts. If "Cns Manrope" / "TWK Everett" are installed
 // on the viewer's machine they win (see src/deck/tokens.ts font stacks).
 const manrope = Manrope({ variable: "--font-manrope", subsets: ["latin"], weight: ["200", "300", "400", "500", "600", "700", "800"] });
-const numeral = Inter({ variable: "--font-numeral", subsets: ["latin"], weight: ["200", "300", "400", "500", "700"] });
+const numeral = Inter({ variable: "--font-numeral", subsets: ["latin"], weight: ["200", "300", "400", "500", "600", "700"] });
 const encode = Encode_Sans_Semi_Expanded({ variable: "--font-encode", subsets: ["latin"], weight: ["400"] });
 
 export const metadata: Metadata = {

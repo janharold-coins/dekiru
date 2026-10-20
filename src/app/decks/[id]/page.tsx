@@ -24,7 +24,7 @@ export default async function DeckPage({ params }: { params: Promise<{ id: strin
         <h1 className="page" style={{ margin: 0 }}>{deck.title}</h1>
         <span className="spacer" style={{ flex: 1 }} />
         {deck.kind === "master" && <Link className="btn" href={`/decks/${deck.id}/compare`}>Compare with Figma</Link>}
-        {canEdit && <Link className="btn" href={`/decks/${deck.id}/edit`}>Arrange slides</Link>}
+        {canEdit && <Link className="btn" href={`/decks/${deck.id}/edit`}>Edit deck</Link>}
         {canEdit && <Link className="btn" href={`/decks/${deck.id}/theme`}>Theme: {deck.theme.name}</Link>}
         {deck.versionNumber && <Link className="btn" href={`/decks/${deck.id}/history`}>History</Link>}
         <CopyButton deckId={deck.id} />

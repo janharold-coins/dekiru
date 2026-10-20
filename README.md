@@ -48,11 +48,14 @@ Code: `src/lib/share.ts`, `src/lib/analytics.ts`, `src/app/decks/[id]/present/` 
 
 - **New deck** (Home → + New deck, `/new`): name it, tick approved slides from the company masters (grouped by section, in the order you tick them), Create.
 - **Make a copy** of any deck you can see.
-- **Arrange slides** (`/decks/<id>/edit`, editors only): drag or ↑ ↓ to reorder, Hide/Show, Remove (asks once), **+ Add approved slides** (`/decks/<id>/add`).
-- Approved slides are stored as references and keep following their master; the editor says so on each.
-- Every change saves to the draft; the yellow bar offers **Publish** or **Discard**.
+- **Deck editor** (deck → **Edit deck**, `/decks/<id>/edit?slide=<slideId>`, editors only; design: Figma "Dekiru" file, node 1:4):
+  - Top bar: back to the overview, rename the deck (pencil), **Theme** picker, save status, **Publish** (only when there are unpublished changes), Share, Present (starts at the selected slide), and a menu (overview, history, presentations, compare, discard unpublished changes).
+  - Left: slide thumbnails in the deck's theme. Click to select; drag (or Alt+↑/↓) to reorder; trash to delete (asks once); "Approved"/"Hidden" tags; **Add slide** → approved slide or template; collapsible.
+  - Middle: the selected slide with zoom (−, +, Fit).
+  - Right: **Slide Content Editor**, the slide's words as a form; lists of short value/label pairs show as rows. Edits appear on the slide as you type and **save to the draft automatically**. Approved slides stay locked until "Edit for this deck only" (which makes them the deck's own). The panel's menu hides/shows or deletes the slide; the panel can be resized.
+- Approved slides are stored as references and keep following their master until edited.
 - **History** (`/decks/<id>/history`): every version with who and when; View any version; **Restore** puts an old version back as a draft.
-- **Edit** a slide (`/decks/<id>/slides/<slideId>`): a form with the slide's words and a live preview; text over a layout's budget is flagged. Editing an approved slide makes it the deck's own (the form says so first). Layout, images and colours stay as approved.
+- `/decks/<id>/slides/<slideId>` (old slide form) redirects into the editor.
 
 ## Library
 

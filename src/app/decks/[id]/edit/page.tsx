@@ -1,44 +1,48 @@
-import Link from "next/link";
-import { themeStyle } from "@/deck/theme";
 import { notFound, redirect } from "next/navigation";
-import { RenderSlide } from "@/deck/RenderSlide";
-import { ScaledSlide } from "@/deck/frame/ScaledSlide";
-import { checkOverflow } from "@/deck/overflow";
 import { patterns } from "@/deck/registry";
-import { deckFor } from "@/lib/access";
+import { deckFor, deckRow } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
-import { Nav } from "../../../Nav";
-import { DraftBar } from "../DeckActions";
+import { publishedThemes } from "@/lib/themes";
 import { slideName } from "../Report";
-import { SlideEditor } from "./SlideEditor";
+import { DeckEditor, type EditorSlide } from "./DeckEditor";
 
-/** Arrange a deck: reorder, hide, remove, add approved slides. Changes save to the draft as you go. */
-export default async function EditDeckPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+/**
+ * The deck editor: slides on the left, the selected slide in the middle, its content on the right.
+ * Edits save to the deck's draft as you type; Publish makes them live.
+ */
+export default async function EditDeckPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ slide?: string }> }) {
+  const [{ id }, { slide }] = await Promise.all([params, searchParams]);
   const user = await requireUser(`/decks/${id}/edit`);
   const found = await deckFor(id, user);
   if (!found) notFound();
   if (!found.canEdit) redirect(`/decks/${id}`);
   const { deck } = found;
-  const items = deck.slides.map((s) => ({
-    id: s.id, name: slideName(s), kind: patterns[s.pattern]?.meta.name ?? s.pattern, hidden: Boolean(s.hidden),
-    follows: s.ref ?? null, overflow: checkOverflow(s).length,
-    thumb: <ScaledSlide key={s.id}><RenderSlide slide={s} /></ScaledSlide>,
-  }));
+  const themes = await publishedThemes();
+
+  // Section each slide sits in (the latest section divider before it), and where approved slides come from.
+  const masters = new Map<string, string>();
+  for (const s of deck.slides) {
+    const m = s.ref?.split("/")[0];
+    if (m && !masters.has(m)) masters.set(m, (await deckRow(m))?.title ?? m);
+  }
+  const slides: EditorSlide[] = [];
+  let section = "Opening";
+  for (const s of deck.slides) {
+    if (s.pattern === "section") section = slideName(s);
+    slides.push({
+      slide: s, name: slideName(s), section, layout: patterns[s.pattern]?.meta.name ?? s.pattern,
+      from: s.ref ? { block: s.ref, deck: masters.get(s.ref.split("/")[0]) ?? s.ref } : null,
+    });
+  }
+
   return (
-    <main className="shell" style={themeStyle(deck.theme.tokens)}>
-      <Nav on="decks" user={user} />
-      <p className="mono" style={{ margin: "0 0 4px" }}><Link href={`/decks/${deck.id}`}>← {deck.title}</Link></p>
-      <div className="row" style={{ marginBottom: 8 }}>
-        <h1 className="page" style={{ margin: 0 }}>Arrange slides</h1>
-        <span className="spacer" style={{ flex: 1 }} />
-        <Link className="btn" href={`/decks/${deck.id}/add`}>+ Add approved slides</Link>
-        <Link className="btn" href={`/library/templates?deck=${encodeURIComponent(deck.id)}`}>+ From a template</Link>
-        <Link className="btn primary" href={`/decks/${deck.id}`}>Done</Link>
-      </div>
-      <p className="lede">Drag to reorder, or use the arrows. Hidden slides stay in the deck but aren&apos;t presented or shared. Changes save as a draft; publish when you&apos;re happy. Use Edit to change a slide&apos;s words, or ask Claude with the Dekiru connector.</p>
-      {deck.status === "draft" && <DraftBar deckId={deck.id} />}
-      <SlideEditor key={deck.slides.map((s) => s.id + (s.hidden ? "h" : "")).join()} deckId={deck.id} items={items} />
-    </main>
+    <DeckEditor
+      key={`${deck.versionId}-${deck.status}`}
+      deck={{ id: deck.id, title: deck.title, kind: deck.kind, hasDraft: deck.status === "draft", versionNumber: deck.versionNumber ?? null }}
+      slides={slides}
+      initialSlide={slides.some((s) => s.slide.id === slide) ? slide! : slides[0]?.slide.id ?? null}
+      theme={deck.theme}
+      themes={themes.map((t) => ({ id: t.id, name: t.name, tokens: t.tokens }))}
+    />
   );
 }
