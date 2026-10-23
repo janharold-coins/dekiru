@@ -5,10 +5,10 @@
  * with slide references resolved against the referenced deck's newest published version.
  * Without it, the app reads the Figma-built JSON seed directly, so it still runs with no setup.
  */
-import { and, desc, eq, isNull, max } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, max } from "drizzle-orm";
 import { connection } from "next/server";
 import { db, hasDb, type Db } from "@/db/client";
-import { deckVersions, decks } from "@/db/schema";
+import { deckVersions, decks, users } from "@/db/schema";
 import { resolveSlides, snapshotSlides, type DeckLookup, type SeedSlide } from "@/content/resolve";
 import { seedDecks } from "@/content/decks";
 import type { Deck } from "@/deck/types";
@@ -26,6 +26,10 @@ export interface DeckInfo extends Deck {
   /** The theme of the version shown (null = default) and its live look. */
   themeId: string | null;
   theme: ThemeInfo;
+  /** Last change to the deck (draft save or publish), and who made it (name; null when unknown, e.g. seeded). */
+  updatedAt?: Date;
+  updatedById?: string | null;
+  updatedBy?: string | null;
 }
 
 /** The database, or a transaction on it. */
@@ -74,8 +78,11 @@ export async function listDecks(opts: { viewerId?: string | null } = {}): Promis
   const all = await q.select().from(decks).where(isNull(decks.archivedAt)).orderBy(decks.kind, decks.createdAt);
   const rows = opts.viewerId ? all.filter((r) => r.kind === "master" || r.ownerId === opts.viewerId) : all;
   const themes = await publishedThemes();
-  const out = await Promise.all(rows.map((r) => load(q, r, false, themes)));
-  return out.filter((d): d is DeckInfo => Boolean(d));
+  const out = (await Promise.all(rows.map((r) => load(q, r, false, themes)))).filter((d): d is DeckInfo => Boolean(d));
+  const ids = [...new Set(out.map((d) => d.updatedById).filter((x): x is string => Boolean(x)))];
+  const names = ids.length ? await q.select({ id: users.id, name: users.name, email: users.email }).from(users).where(inArray(users.id, ids)) : [];
+  const nameOf = new Map(names.map((u) => [u.id, u.name || u.email]));
+  return out.map((d) => ({ ...d, updatedBy: d.updatedById ? nameOf.get(d.updatedById) ?? null : null }));
 }
 
 /** One deck. `draft: true` returns the draft when there is one (for editors), else the published version. */
@@ -96,6 +103,7 @@ async function load(q: Db, row: typeof decks.$inferSelect, wantDraft: boolean, t
     version: `v${v.number}`, versionNumber: v.number, versionId: v.id, status: v.status, hasDraft: Boolean(draft),
     themeId: v.themeId ?? null, theme: pickTheme(themes, v.themeId),
     slides: await resolveSlides(v.slides, dbLookup(q)),
+    updatedAt: row.updatedAt, updatedById: draft?.createdBy ?? pub?.publishedBy ?? pub?.createdBy ?? null,
   };
 }
 

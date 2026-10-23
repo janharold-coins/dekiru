@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { authClient } from "@/lib/auth-client";
 
 export function SignInButton({ next }: { next: string }) {
@@ -21,18 +21,18 @@ export function SignInButton({ next }: { next: string }) {
   );
 }
 
-export function SignOutButton() {
+export function SignOutButton({ className = "linkish", children = "Sign out" }: { className?: string; children?: ReactNode }) {
   const router = useRouter();
   return (
     <button
-      className="linkish"
+      className={className}
       onClick={async () => {
         await authClient.signOut();
         router.push("/sign-in");
         router.refresh();
       }}
     >
-      Sign out
+      {children}
     </button>
   );
 }
