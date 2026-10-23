@@ -23,7 +23,7 @@ export default async function NewDeckPage() {
       <Nav on="decks" user={user} />
       <p className="mono" style={{ margin: "0 0 4px" }}><Link href="/">← Decks</Link></p>
       <h1 className="page">New deck</h1>
-      <p className="lede">Pick approved slides from the company decks, in the order you want them. You can rearrange after, and ask Claude (Dekiru connector) to tailor the words for a client.</p>
+      <p className="lede">Pick approved slides from the company decks, in the order you want them. A title slide (with your deck&apos;s name) and the closing slide are added for you. You can rearrange after, and ask Claude (Dekiru connector) to tailor the words for a client.</p>
       <BlockPicker groups={groups} submitLabel="Create deck" onSubmit={create} askTitle />
     </main>
   );

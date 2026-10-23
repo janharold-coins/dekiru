@@ -27,6 +27,7 @@ import type { SignedInUser } from "./auth";
 import { canEdit, canView, deckRow } from "./access";
 import { pickTheme, publishedThemes } from "./themes";
 import { DEFAULT_THEME_ID } from "@/deck/theme";
+import { getTemplate } from "@/content/templates";
 
 export { canEdit, canView, deckRow };
 
@@ -119,10 +120,48 @@ const editNote = (via: Via) => (via === "claude" ? "Edited with Claude" : "Edite
 
 /* ---------- operations ---------- */
 
+/** Split a long title over two lines at the space nearest the middle (the cover title doesn't wrap). */
+function coverTitle(title: string) {
+  const t = title.trim();
+  if (t.length <= 22 || t.includes("\n")) return t;
+  const mid = t.length / 2;
+  let best = -1;
+  for (let i = 0; i < t.length; i++) if (t[i] === " " && (best < 0 || Math.abs(i - mid) < Math.abs(best - mid))) best = i;
+  return best < 0 ? t : `${t.slice(0, best)}\n${t.slice(best + 1)}`;
+}
+
+/**
+ * Every new deck opens with a title slide and ends with the closing slide, unless the picked slides already have them.
+ * The cover is the deck's own (approved cover with the deck's title, editable); the closing stays linked to the master.
+ */
+async function withCoverAndClosing(title: string, slides: SeedSlide[]) {
+  const patternsUsed = new Set((await resolveSlides(slides, lookup)).map((s) => s.pattern));
+  const out = [...slides];
+  const cover = getTemplate("cover"), closing = getTemplate("closing");
+  if (!patternsUsed.has("cover") && cover) {
+    const [deckId, slideId] = cover.from.split("/");
+    const approved = (await lookup(deckId))?.find((s) => s.id === slideId);
+    const base = approved && !isRef(approved) && approved.pattern === "cover" ? approved : cover.slide;
+    out.unshift({
+      id: newSlideId(), pattern: "cover", props: { ...base.props, title: coverTitle(title) },
+      ...(base.chrome ? { chrome: base.chrome } : {}),
+    });
+  }
+  if (!patternsUsed.has("closing") && closing) {
+    const [deckId, slideId] = closing.from.split("/");
+    const approved = (await lookup(deckId))?.some((s) => s.id === slideId);
+    out.push(approved
+      ? { id: newSlideId(), ref: closing.from }
+      : { id: newSlideId(), pattern: "closing", props: closing.slide.props, ...(closing.slide.chrome ? { chrome: closing.slide.chrome } : {}) });
+  }
+  return out;
+}
+
 export async function newDeck(user: SignedInUser | null, title: string, inputs: SlideInput[], via: Via = "claude") {
   if (!inputs.length) throw new EditError("A deck needs at least one slide.");
-  const slides: SeedSlide[] = [];
+  let slides: SeedSlide[] = [];
   for (const i of inputs) { const s = await toSlide(i); await validate(s); slides.push(s); }
+  slides = await withCoverAndClosing(title, slides);
   const id = deckSlug(title);
   await createDeck({ id, title: title.trim(), kind: "copy", slides, note: via === "claude" ? "Created with Claude" : "Created in Dekiru" }, { userId: user?.id ?? null });
   return id;
@@ -137,12 +176,20 @@ export async function duplicateDeck(user: SignedInUser | null, sourceId: string,
   return id;
 }
 
+/** Where slides go when no position is given: at the end, but before a closing slide that ends the deck. */
+async function endOf(slides: SeedSlide[]) {
+  const last = slides[slides.length - 1];
+  if (!last) return 0;
+  const [r] = await resolveSlides([last], lookup);
+  return r?.pattern === "closing" ? slides.length - 1 : slides.length;
+}
+
 export async function addSlide(user: SignedInUser | null, deckId: string, input: SlideInput, position?: number, via: Via = "claude") {
   await editable(deckId, user);
   const { slides } = await working(deckId);
   const slide = await toSlide(input);
   const r = await validate(slide);
-  const at = position ? Math.max(0, Math.min(slides.length, position - 1)) : slides.length;
+  const at = position ? Math.max(0, Math.min(slides.length, position - 1)) : await endOf(slides);
   slides.splice(at, 0, slide);
   await save(deckId, slides, user, editNote(via));
   return { slideId: slide.id, overflow: r.overflow };
@@ -210,7 +257,7 @@ export async function addBlocks(user: SignedInUser | null, deckId: string, block
   const { slides } = await working(deckId);
   const added: SeedSlide[] = [];
   for (const b of blocks) added.push(await toSlide({ block: b }));
-  const at = position ? Math.max(0, Math.min(slides.length, position - 1)) : slides.length;
+  const at = position ? Math.max(0, Math.min(slides.length, position - 1)) : await endOf(slides);
   slides.splice(at, 0, ...added);
   await save(deckId, slides, user, editNote(via));
   return added.map((s) => s.id);

@@ -145,7 +145,7 @@ export function registerTools(server: McpServer, user: SignedInUser) {
 
   server.registerTool("create_deck", {
     title: "Create a deck",
-    description: "Create a new deck owned by the person from approved blocks and/or new slides, in order.",
+    description: "Create a new deck owned by the person from approved blocks and/or new slides, in order. A title slide (cover pattern, with the deck title) is added first and the approved closing slide last, unless the slides already include a cover or closing; edit the cover with update_slide.",
     inputSchema: z.object({ title: z.string(), slides: z.array(slideInput).min(1) }),
   }, async ({ title, slides }) => run(async () => {
     const id = await newDeck(user, title, slides as SlideInput[]);
@@ -154,7 +154,7 @@ export function registerTools(server: McpServer, user: SignedInUser) {
 
   server.registerTool("add_slide", {
     title: "Add a slide",
-    description: "Insert an approved block or a new slide. position is the 1-based place in the deck (default: end).",
+    description: "Insert an approved block or a new slide. position is the 1-based place in the deck (default: the end, just before the closing slide).",
     inputSchema: z.object({ deck_id: z.string(), slide: slideInput, position: z.number().int().min(1).optional() }),
   }, async ({ deck_id, slide, position }) => run(async () => {
     const r = await addSlide(user, deck_id, slide as SlideInput, position);
