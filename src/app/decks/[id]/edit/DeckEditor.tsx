@@ -13,10 +13,11 @@ import { themeStyle, type ThemeTokens } from "@/deck/theme";
 import type { SlideData } from "@/deck/types";
 import { copyAction } from "../actions";
 import { ContentFields } from "./ContentFields";
-import { Menu } from "./Menu";
+import { ConfirmDialog, Menu } from "./Menu";
+import { PublishDialog, PublishSplit } from "./Publish";
 import {
   saveTranslationAction,
-  discardDraftAction, hideSlideAction, moveSlideAction, publishDeckAction, removeSlideAction, renameDeckAction,
+  discardDraftAction, draftChangesAction, hideSlideAction, moveSlideAction, publishDeckAction, removeSlideAction, renameDeckAction, resetSlideAction,
   saveDeckStateAction, saveSlideAction, setThemeAction,
 } from "./actions";
 import type { SeedSlide } from "@/content/resolve";
@@ -234,6 +235,26 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
     if (selectedId === id) setSelectedId(next[Math.min(i, next.length - 1)].slide.id);
     void structural(next, () => removeSlideAction(deck.id, id));
   };
+  /** An edited approved slide goes back to the approved content and follows its master again. */
+  const reset = async (id: string) => {
+    const item = slides.find((x) => x.slide.id === id);
+    if (!item) return;
+    // Unlocked but untouched: nothing was saved, so just lock it again.
+    if (item.from) { setUnlocked((u) => { const n = new Set(u); n.delete(id); return n; }); return; }
+    clearTimeout(timers.current.get(id));
+    pending.current.delete(id);
+    record();
+    lastEdit.current = null;
+    await flushAll();
+    setSave({ kind: "saving" });
+    const r = await resetSlideAction(deck.id, id);
+    if (r.error || !r.slide || !r.from) { past.current.pop(); syncHistory(); setSave({ kind: "error", message: r.error ?? "Couldn't reset the slide." }); return; }
+    const { slide, from } = r;
+    setSlides((all) => all.map((x) => (x.slide.id === id ? { ...x, slide: { ...slide, hidden: x.slide.hidden }, from } : x)));
+    setUnlocked((u) => { const n = new Set(u); n.delete(id); return n; });
+    setHasDraft(true);
+    setSave({ kind: "saved" });
+  };
   const toggleHidden = (id: string) => {
     const s = slides.find((x) => x.slide.id === id);
     if (!s) return;
@@ -309,6 +330,9 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
     setHasDraft(false);
     setSave({ kind: "published", version: r.version ?? 0 });
   };
+  /** The confirmation lists what will go live: save pending edits first so the list is complete. */
+  const [publishAsk, setPublishAsk] = useState(false);
+  const loadChanges = useCallback(async () => { await flushAll(); return draftChangesAction(deck.id); }, [flushAll, deck.id]);
   const discard = async () => {
     for (const t of timers.current.values()) clearTimeout(t);
     pending.current.clear();
@@ -344,7 +368,7 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
     <div className="ed" style={{ ["--ed-panel" as string]: `${panelWidth}px` }}>
       <TopBar
         deck={deck} readOnly={readOnly} title={title} onRename={rename} themes={themes} theme={theme} onTheme={chooseTheme}
-        save={save} hasDraft={hasDraft} publishing={publishing} onPublish={publishNow} onDiscard={discard}
+        save={save} hasDraft={hasDraft} publishing={publishing} onPublish={() => setPublishAsk(true)} onDiscard={discard}
         canUndo={historySize.undo > 0} canRedo={historySize.redo > 0} onUndo={undo} onRedo={redo}
         lang={lang} onLang={setLang} translations={deckTranslationStatus(slides.map((s) => s.slide))}
         review={review} onReviewDialog={setReviewDialog} onReviewError={(m) => setSave({ kind: "error", message: m })}
@@ -367,6 +391,8 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
           onUnlock={() => selected && setUnlocked((u) => new Set(u).add(selected.slide.id))}
           onChange={(props) => selected && (lang === "en" ? editProps(selected.slide.id, props) : editTranslation(selected.slide.id, lang, props))}
           onToggleHidden={() => selected && toggleHidden(selected.slide.id)}
+          canReset={Boolean(selected && !readOnly && (selected.from ? unlocked.has(selected.slide.id) : selected.slide.source?.copiedFrom))}
+          onReset={() => selected && void reset(selected.slide.id)}
           onRemove={() => selected && remove(selected.slide.id)}
           canRemove={slides.length > 1}
           onResize={setPanelWidth}
@@ -376,6 +402,7 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
           onReviewError={(m) => setSave({ kind: "error", message: m })}
         />
       </div>
+      {publishAsk && <PublishDialog load={loadChanges} onCancel={() => setPublishAsk(false)} onConfirm={() => { setPublishAsk(false); publishNow(); }} />}
       {reviewDialog && <ReviewDialog deckId={deck.id} dialog={reviewDialog} onClose={() => setReviewDialog(null)} onError={(m) => setSave({ kind: "error", message: m })} />}
     </div>
   );
@@ -417,12 +444,14 @@ function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save,
         </div>
       </div>
 
+      <div className="ed-pickers">
       {readOnly ? (
         <span className="ed-theme"><span className="ed-theme-btn static"><span>Theme</span><i className="ed-theme-dot" style={{ background: theme.tokens.accent[0] }} aria-hidden /><span>{theme.name}</span></span></span>
       ) : <ThemePicker themes={themes} theme={theme} onTheme={onTheme} />}
+        <LanguagePicker lang={lang} onLang={onLang} translations={translations} />
+      </div>
 
       <div className="ed-actions">
-        <LanguagePicker lang={lang} onLang={onLang} translations={translations} />
         <ReviewChip review={review} lang={lang} />
         {readOnly ? <span className="ed-save">{review.canReview[lang] ? "Reviewing" : "View only"}</span> : <span className={`ed-save ${save.kind}`} role="status" aria-live="polite">
           {save.kind === "error" ? <span className="ed-save-error" title={save.message}>Couldn&apos;t save: {save.message}</span>
@@ -434,22 +463,18 @@ function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save,
             <button type="button" className="ed-icon-btn" aria-label="Redo" title={`Redo (${mac ? "⇧⌘Z" : "Ctrl+Y"})`} disabled={!canRedo} onClick={onRedo}>{ICON("redo")}</button>
           </span>
         )}
-        {!readOnly && hasDraft && (
-          <button type="button" className="ed-btn ed-btn-publish" onClick={onPublish} disabled={publishing}
-            title="Make the draft the live version. Links already sent keep their version.">
-            <i aria-hidden />{publishing ? "Publishing…" : "Publish"}
-          </button>
-        )}
-        <Link className="ed-btn" href={`/decks/${deck.id}/share`}>{ICON("user-plus")}<span>Share</span></Link>
-        <ReviewButtons deckId={deck.id} review={review} lang={lang} hasDraft={hasDraft} onError={onReviewError} />
+        {/* One slot: "Publish all changes" while there's a draft; once published, the review action (if any) takes its place. */}
+        {!readOnly && hasDraft ? (
+          <PublishSplit publishing={publishing} onPublish={onPublish} onDiscard={onDiscard} />
+        ) : <ReviewButtons deckId={deck.id} review={review} lang={lang} hasDraft={hasDraft} onError={onReviewError} />}
         <PresentButton href={presentHref} />
+        <Link className="ed-icon-btn ed-share" href={`/decks/${deck.id}/share`} aria-label="Share" title="Share">{ICON("share")}</Link>
         <Menu label="More deck actions" trigger={ICON("ellipsis")} items={[
           ...reviewMenuItems(deck.id, review, lang, deck.kind, hasDraft, onReviewDialog),
           { label: "Make a copy", onSelect: () => copyAction(deck.id) },
           { label: "Version history", href: `/decks/${deck.id}/history` },
           { label: "Presentations", href: `/decks/${deck.id}/presentations` },
           { label: "Compare with Figma", href: `/decks/${deck.id}/compare`, hidden: deck.kind !== "master" },
-          { label: "Discard unpublished changes", confirm: { title: "Discard unpublished changes?", body: "Every edit since the last publish will be lost and the deck goes back to its published version. This can't be undone.", action: "Discard all changes" }, danger: true, onSelect: onDiscard, hidden: readOnly || !hasDraft },
         ]} />
       </div>
     </header>
@@ -697,12 +722,15 @@ function Canvas({ selected, number, lang }: { selected: EditorSlide | null; numb
 
 /* ================= Content panel ================= */
 
-function ContentPanel({ deckId, item, readOnly, locked, onUnlock, onChange, onToggleHidden, onRemove, canRemove, onResize, width, lang, review, onReviewError }: {
+function ContentPanel({ deckId, item, readOnly, locked, onUnlock, onChange, onToggleHidden, onRemove, canRemove, canReset, onReset, onResize, width, lang, review, onReviewError }: {
   deckId: string; item: EditorSlide | null; readOnly: boolean; locked: boolean; onUnlock: () => void; lang: Lang;
   review: ReviewProps; onReviewError: (m: string) => void;
   onChange: (props: Record<string, unknown>) => void; onToggleHidden: () => void; onRemove: () => void; canRemove: boolean;
+  /** The slide is an approved one edited for this deck: it can go back to the approved content. */
+  canReset: boolean; onReset: () => void;
   onResize: (w: number) => void; width: number;
 }) {
+  const [confirmReset, setConfirmReset] = useState(false);
   const warnings = item ? checkOverflow(item.slide, lang) : [];
   const trState = item && lang !== "en" ? translationState(item.slide, lang) : "fresh";
   const startResize = (e: React.PointerEvent) => {
@@ -724,6 +752,13 @@ function ContentPanel({ deckId, item, readOnly, locked, onUnlock, onChange, onTo
       <div className="ed-panel-h">
         <h2>Slide Content Editor</h2>
         {item && <ApproveSlide deckId={deckId} slideId={item.slide.id} review={review} lang={lang} onError={onReviewError} />}
+        {item && !readOnly && canReset && (
+          <button type="button" className="ed-btn ed-btn-sm ed-reset" onClick={() => setConfirmReset(true)}>Reset</button>
+        )}
+        {confirmReset && (
+          <ConfirmDialog title="Reset to the approved slide?" body="Your edits to this slide are dropped and it follows the approved slide again, so updates from the master reach it." action="Reset slide"
+            onCancel={() => setConfirmReset(false)} onConfirm={() => { setConfirmReset(false); onReset(); }} />
+        )}
         {item && !readOnly && (
           <Menu label="Slide actions" trigger={ICON("ellipsis")} items={[
             { label: item.slide.hidden ? "Show in presentation" : "Hide from presentation", onSelect: onToggleHidden },

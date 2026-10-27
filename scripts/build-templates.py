@@ -16,7 +16,7 @@ SALES = {s["id"]: s for s in _sales["slides"]}
 # id, name, source slide, what it's for
 TEMPLATES = [
     ("cover", "Cover", "s01", "Deck title and a short tagline, with optional client name and event details."),
-    ("agenda", "Agenda", "s02", "Up to three topics you'll cover."),
+    ("agenda", "Agenda", "s02", "Up to four topics you'll cover, numbered automatically."),
     ("section", "Section divider", "s03", "Opens a major section."),
     ("subsection", "Sub-section divider", "s10", "Opens a part inside a section."),
     ("key-numbers", "Key numbers", "s04", "Two headline stats plus supporting figures."),

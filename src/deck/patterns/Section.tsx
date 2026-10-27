@@ -11,13 +11,14 @@ export interface SectionProps {
   parentTitle?: string; // level 2: the parent section's name
   figma?: {
     titleWeight?: number; subtitleLineHeight?: number; subtitleTracking?: number;
+    /** Older pixel overrides, no longer used: the level-1 layout follows the text. */
     titleTop?: number; subtitleTop?: number; cage?: CageLayout | null;
   };
 }
 
 export const sectionMeta: PatternMeta = {
   id: "section", name: "Section divider", shape: "chrome",
-  description: "Opens a section. Level 1: ghost number + caged title. Level 2: parent label eyebrow + sub-section title.",
+  description: "Opens a section. Level 1: ghost number + caged title (up to two lines) with a subtitle (up to two lines) under it, vertically centred. Level 2: parent label eyebrow + sub-section title.",
   defaultChrome: { background: "dark", overlay: true, logo: "white", footer: "bottom-left", accentBar: false },
   budgets: [{ slot: "title", maxChars: 26, maxLines: 2 }, { slot: "subtitle", maxChars: 70, maxLines: 2 }],
 };
@@ -26,11 +27,21 @@ export function Section(p: SectionProps) {
   return p.level === 2 ? <SectionL2 {...p} /> : <SectionL1 {...p} />;
 }
 
+/** The title block (ghost number, caged title, subtitle) centres between the logo row and the footer. */
+const BAND_TOP = 177; // logo bottom
+const BAND_BOTTOM = 938; // footer top
+const TITLE_LH = 138; // 120px × 1.15
+const GAP = 18;
+
 function SectionL1({ number, title, subtitle, figma = {} }: SectionProps) {
-  const lines = title.split("\n").length;
-  const titleTop = figma.titleTop ?? (lines > 1 ? 357 : 432);
+  // Positions follow the text, not Figma's pixel overrides: up to two title lines and two subtitle lines, always centred.
+  const titleLines = title.split("\n").length;
+  const subLines = subtitle ? subtitle.split("\n").length : 0;
   const subLh = figma.subtitleLineHeight ?? 1.15;
-  const subtitleTop = figma.subtitleTop ?? titleTop + lines * 138 + 18;
+  const subHeight = subLines ? subLines * 64 * subLh : 0;
+  const block = titleLines * TITLE_LH + (subLines ? GAP + subHeight : 0);
+  const titleTop = Math.round(BAND_TOP + (BAND_BOTTOM - BAND_TOP - block) / 2);
+  const subtitleTop = titleTop + titleLines * TITLE_LH + GAP;
   return (
     <>
       <span style={{ position: "absolute", left: 103, top: titleTop, ...t(120, 1.15, -3.6, 400, "#fff", "everett"), opacity: 0.2, ...noWrap }}>{number}</span>
@@ -41,9 +52,10 @@ function SectionL1({ number, title, subtitle, figma = {} }: SectionProps) {
         fontSize={120}
         bleedX={-40}
         textStyle={t(120, 1.15, -3.6, figma.titleWeight ?? 500, "#fff")}
-        layout={figma.cage}
       />
-      <p style={{ position: "absolute", left: 279, top: subtitleTop, margin: 0, ...t(64, subLh, figma.subtitleTracking ?? -1.92, 400, "#fff"), ...noWrap }}>{subtitle}</p>
+      {subLines > 0 && (
+        <p style={{ position: "absolute", left: 279, top: subtitleTop, margin: 0, ...t(64, subLh, figma.subtitleTracking ?? -1.92, 400, "#fff"), ...noWrap }}>{subtitle}</p>
+      )}
     </>
   );
 }

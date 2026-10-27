@@ -22,6 +22,7 @@ import { RenderSlide } from "@/deck/RenderSlide";
 import { checkOverflow, type OverflowWarning } from "@/deck/overflow";
 import { LANGUAGES, overlayFromEntries, textEntries, translationState, withTranslation, type TargetLang } from "@/deck/i18n";
 import { patterns } from "@/deck/registry";
+import { fieldLabel } from "@/deck/fields";
 import type { SlideData } from "@/deck/types";
 import { copyDeck, createDeck, getDeckVersions, publishDraft, saveDraft } from "./decks";
 import type { SignedInUser } from "./auth";
@@ -280,12 +281,34 @@ export async function updateSlide(
   const wasRef = isRef(current);
   const base = wasRef ? (await resolveSlides([current], lookup))[0] : (current as SlideData);
   const { ref: _ref, ...rest } = base; // eslint-disable-line @typescript-eslint/no-unused-vars
-  const next: SlideData = { ...rest, id: slideId, pattern: pattern ?? base.pattern, props };
+  // An approved slide edited for this deck remembers where it came from, so it can be reset to the approved content.
+  const source = wasRef ? { ...rest.source, copiedFrom: (current as { ref: string }).ref } : rest.source;
+  const next: SlideData = { ...rest, ...(source ? { source } : {}), id: slideId, pattern: pattern ?? base.pattern, props };
   if (pattern && !patterns[pattern]) throw new EditError(`Unknown pattern "${pattern}". Use list_patterns.`);
   const r = await validate(next);
   slides[i] = next;
   await save(deckId, slides, user, editNote(via));
   return { overflow: r.overflow, overridden: wasRef ? (current as { ref: string }).ref : null };
+}
+
+/**
+ * Reset an approved slide that was edited for this deck: its own content is dropped and it follows the
+ * approved slide again (updates from the master reach it once more). Returns the slide as it now reads.
+ */
+export async function resetSlide(user: SignedInUser | null, deckId: string, slideId: string, via: Via = "claude") {
+  await editable(deckId, user);
+  const { slides } = await working(deckId);
+  const i = indexOf(slides, slideId);
+  const current = slides[i];
+  const ref = isRef(current) ? current.ref : current.source?.copiedFrom;
+  if (!ref) throw new EditError(`Slide "${slideId}" isn't an edited approved slide, so there is nothing to reset it to.`);
+  const next: SeedSlide = { id: slideId, ref, ...(current.hidden ? { hidden: true } : {}) };
+  await validate(next);
+  slides[i] = next;
+  await save(deckId, slides, user, editNote(via));
+  const [slide] = await resolveSlides([next], lookup);
+  const [masterId] = ref.split("/");
+  return { slide, from: { block: ref, deck: (await deckRow(masterId))?.title ?? masterId } };
 }
 
 export async function removeSlide(user: SignedInUser | null, deckId: string, slideId: string, via: Via = "claude") {
@@ -517,4 +540,93 @@ export async function newDeckId() {
     if (!(await deckRow(id))) return id;
   }
   throw new EditError("Couldn't pick a deck id. Try again.");
+}
+
+/* ---------- What publishing would change (the "Publish all changes" confirmation) ---------- */
+
+export type DraftChangeKind = "theme" | "added" | "edited" | "moved" | "hidden" | "shown" | "removed" | "first";
+export interface DraftChange { kind: DraftChangeKind; slide?: string; detail?: string }
+
+const oneLine = (v: unknown) => (typeof v === "string" ? v.replace(/\s+/g, " ").trim() : "");
+/** A slide's name for people: its title-like text, else its layout's name. */
+function slideName(s: SlideData) {
+  const p = (s.props ?? {}) as Record<string, unknown>;
+  for (const k of ["title", "heading", "headline", "statement", "name", "label", "eyebrow"]) {
+    const t = oneLine(p[k]);
+    if (t) return t.length > 60 ? `${t.slice(0, 57)}…` : t;
+  }
+  return patterns[s.pattern]?.meta.name ?? s.pattern;
+}
+/** JSON with sorted keys, so two equal objects always compare equal. */
+const stable = (v: unknown): string =>
+  Array.isArray(v) ? `[${v.map(stable).join(",")}]`
+  : v && typeof v === "object" ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${stable((v as Record<string, unknown>)[k])}`).join(",")}}`
+  : JSON.stringify(v) ?? "null";
+
+/** What changed in a slide kept in both versions (raw, unresolved slides), as a short phrase; null when nothing did. */
+function slideEdits(a: SeedSlide, b: SeedSlide): string | null {
+  if (isRef(a) || isRef(b)) {
+    if (isRef(a) && isRef(b)) return a.ref === b.ref ? null : "Now follows a different approved slide";
+    return isRef(b) ? "Now follows the approved slide" : "Unlinked from the approved slide and edited";
+  }
+  const x = a as SlideData, y = b as SlideData;
+  const parts: string[] = [];
+  if (x.pattern !== y.pattern) parts.push(`Layout: ${patterns[x.pattern]?.meta.name ?? x.pattern} → ${patterns[y.pattern]?.meta.name ?? y.pattern}`);
+  else {
+    const px = (x.props ?? {}) as Record<string, unknown>, py = (y.props ?? {}) as Record<string, unknown>;
+    const keys = [...new Set([...Object.keys(px), ...Object.keys(py)])].filter((k) => k !== "figma" && stable(px[k]) !== stable(py[k]));
+    if (keys.length) parts.push(keys.map(fieldLabel).join(", "));
+    if (stable(x.chrome ?? null) !== stable(y.chrome ?? null)) parts.push("Background and logo");
+  }
+  for (const lang of ["zh", "th"] as const) {
+    if (stable(x.i18n?.[lang] ?? null) !== stable(y.i18n?.[lang] ?? null)) parts.push(`${LANGUAGES[lang].english} translation`);
+  }
+  return parts.length ? parts.join(" · ") : null;
+}
+
+/** Ids that changed place: everything outside the longest run kept in the same order. */
+function movedIds(before: string[], after: string[]) {
+  const pos = new Map(before.map((id, i) => [id, i]));
+  const seq = after.filter((id) => pos.has(id));
+  const len = seq.map(() => 1), prev = seq.map(() => -1);
+  for (let i = 0; i < seq.length; i++) for (let j = 0; j < i; j++) {
+    if (pos.get(seq[j])! < pos.get(seq[i])! && len[j] + 1 > len[i]) { len[i] = len[j] + 1; prev[i] = j; }
+  }
+  const keep = new Set<string>();
+  for (let i = len.indexOf(Math.max(0, ...len)); i >= 0; i = prev[i]) keep.add(seq[i]);
+  return new Set(seq.filter((id) => !keep.has(id)));
+}
+
+/** The differences between a deck's draft and its newest published version, in deck order. */
+export async function draftChanges(user: SignedInUser | null, deckId: string): Promise<DraftChange[]> {
+  await editable(deckId, user);
+  const { draft, published } = await getDeckVersions(deckId);
+  if (!draft) return [];
+  const lookup = async (id: string) => (await getDeckVersions(id)).published?.slides as SeedSlide[] | undefined;
+  const after = draft.slides as SeedSlide[];
+  const afterNamed = await resolveSlides(after, lookup);
+  if (!published) return [{ kind: "first", detail: `${after.length} slide${after.length === 1 ? "" : "s"}` }];
+  const before = published.slides as SeedSlide[];
+  const beforeNamed = await resolveSlides(before, lookup);
+
+  const out: DraftChange[] = [];
+  if ((draft.themeId ?? DEFAULT_THEME_ID) !== (published.themeId ?? DEFAULT_THEME_ID)) {
+    const themes = await publishedThemes();
+    const name = (id: string | null) => themes.find((t) => t.id === (id ?? DEFAULT_THEME_ID))?.name ?? id ?? "Default";
+    out.push({ kind: "theme", detail: `${name(published.themeId)} → ${name(draft.themeId)}` });
+  }
+  const old = new Map(before.map((s) => [s.id, s]));
+  const moved = movedIds(before.map((s) => s.id), after.map((s) => s.id));
+  after.forEach((s, i) => {
+    const slide = slideName(afterNamed[i]);
+    const was = old.get(s.id);
+    if (!was) { out.push({ kind: "added", slide }); return; }
+    const edits = slideEdits(was, s);
+    if (edits) out.push({ kind: "edited", slide, detail: edits });
+    if (moved.has(s.id)) out.push({ kind: "moved", slide });
+    if (Boolean(was.hidden) !== Boolean(s.hidden)) out.push({ kind: s.hidden ? "hidden" : "shown", slide });
+  });
+  const kept = new Set(after.map((s) => s.id));
+  before.forEach((s, i) => { if (!kept.has(s.id)) out.push({ kind: "removed", slide: slideName(beforeNamed[i]) }); });
+  return out;
 }

@@ -138,7 +138,7 @@ export function withOptionalFields(path: string, value: Record<string, unknown>)
 }
 
 /** Fields that are notes for whoever placed the slide, not words on it. */
-const HIDDEN_FIELDS = new Set(["logo-wall.groups[].logos[].note"]);
+const HIDDEN_FIELDS = new Set(["logo-wall.groups[].logos[].note", "agenda.items[].number"]); // agenda numbers follow position
 
 /** A slide object's editable fields, in the order they read on the slide. */
 export function editableEntries(path: string, value: Record<string, unknown>): [string, unknown][] {

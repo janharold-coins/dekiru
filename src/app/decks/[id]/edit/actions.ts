@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 import type { OverflowWarning } from "@/deck/overflow";
 import { requireUser } from "@/lib/auth";
 import {
-  discardDraft, EditError, moveSlide, publish, removeSlide, renameDeck, replaceDraft, setDeckTheme, setHidden, updateSlide,
+  discardDraft, draftChanges, EditError, moveSlide, publish, removeSlide, renameDeck, replaceDraft, resetSlide, setDeckTheme, setHidden, updateSlide,
 } from "@/lib/editing";
 import type { SeedSlide } from "@/content/resolve";
 import type { Lang, TargetLang } from "@/deck/i18n";
@@ -26,6 +26,12 @@ async function run<T>(deckId: string, fn: (u: Awaited<ReturnType<typeof requireU
 export async function saveSlideAction(deckId: string, slideId: string, props: Record<string, unknown>) {
   const r = await run(deckId, (u) => updateSlide(u, deckId, slideId, props, undefined, "app"));
   return { error: r.error, overflow: (r.value?.overflow ?? []) as OverflowWarning[], unlinked: Boolean(r.value?.overridden) };
+}
+
+/** Back to the approved content: the slide follows its master slide again. */
+export async function resetSlideAction(deckId: string, slideId: string) {
+  const r = await run(deckId, (u) => resetSlide(u, deckId, slideId, "app"));
+  return { error: r.error, slide: r.value?.slide, from: r.value?.from };
 }
 
 export async function moveSlideAction(deckId: string, slideId: string, position: number): Promise<EditorResult> {
@@ -49,6 +55,11 @@ export async function publishDeckAction(deckId: string) {
   const r = await run(deckId, (u) => publish(u, deckId));
   revalidatePath(`/decks/${deckId}`);
   return { error: r.error, version: r.value?.number };
+}
+/** What "Publish all changes" would publish: the draft's differences from the live version. */
+export async function draftChangesAction(deckId: string) {
+  const r = await run(deckId, (u) => draftChanges(u, deckId));
+  return { error: r.error, changes: r.value };
 }
 export async function discardDraftAction(deckId: string): Promise<EditorResult> {
   const r = await run(deckId, (u) => discardDraft(u, deckId));

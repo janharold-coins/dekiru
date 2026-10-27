@@ -73,7 +73,7 @@ export function ReviewButtons({ deckId, review, lang, hasDraft, onError }: { dec
   }
   if (review.canSend && (!s || s.status === "changes_requested")) {
     return (
-      <button type="button" className="ed-btn" disabled={busy || hasDraft} onClick={() => run(() => sendForReviewAction(deckId, lang))}
+      <button type="button" className="ed-btn ed-btn-publish" disabled={busy || hasDraft} onClick={() => run(() => sendForReviewAction(deckId, lang))}
         title={hasDraft ? "Publish your changes first, so reviewers see what will go out." : `Ask reviewers to approve the ${what}.`}>
         {busy ? "Sending…" : "Send for review"}
       </button>

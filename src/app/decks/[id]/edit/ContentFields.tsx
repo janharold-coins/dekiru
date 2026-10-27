@@ -36,7 +36,7 @@ export function ContentFields({ pattern, path = pattern, value, onChange, disabl
 function compactKeys(path: string, items: any[]): [string, string] | null {
   if (!items.length || !items.every((it) => it && typeof it === "object" && !Array.isArray(it))) return null;
   const keys = editableEntries(path, items[0]).map(([k]) => k);
-  if (keys.length !== 2) return null;
+  if (keys.length !== 2 || keys.includes("description")) return null; // a description is prose, never a compact cell
   const short = items.every((it) => keys.every((k) => typeof it[k] === "string" && !it[k].includes("\n") && it[k].length <= 48)
     && editableEntries(path, it).length === 2);
   return short ? [keys[0], keys[1]] : null;
