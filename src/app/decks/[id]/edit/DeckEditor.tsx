@@ -1,12 +1,13 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { RenderSlide } from "@/deck/RenderSlide";
 import { PreviewChecks } from "@/deck/frame/PreviewChecks";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
 import { checkOverflow } from "@/deck/overflow";
-import { deckTranslationStatus, LANGUAGES, translationState, type Lang } from "@/deck/i18n";
+import { deckTranslationStatus, LANGUAGES, localize, overlayFromEntries, textEntries, translationState, withTranslation, type Lang, type TargetLang } from "@/deck/i18n";
 import { fieldLabel } from "@/deck/fields";
 import { themeStyle, type ThemeTokens } from "@/deck/theme";
 import type { SlideData } from "@/deck/types";
@@ -14,6 +15,7 @@ import { copyAction } from "../actions";
 import { ContentFields } from "./ContentFields";
 import { Menu } from "./Menu";
 import {
+  saveTranslationAction,
   discardDraftAction, hideSlideAction, moveSlideAction, publishDeckAction, removeSlideAction, renameDeckAction,
   saveDeckStateAction, saveSlideAction, setThemeAction,
 } from "./actions";
@@ -125,22 +127,30 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
 
   /* ---------- autosave ---------- */
   const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
-  const pending = useRef(new Map<string, Record<string, unknown>>());
+  /** Keyed by slide id (English content) or "slideId|lang" (a translation's text by path). */
+  type Pending = { kind: "props"; props: Record<string, unknown> } | { kind: "translation"; slideId: string; lang: TargetLang; text: Record<string, string> };
+  const pending = useRef(new Map<string, Pending>());
   const inflight = useRef(new Set<Promise<unknown>>());
 
-  const flushOne = useCallback((slideId: string) => {
-    const props = pending.current.get(slideId);
-    if (!props) return;
-    pending.current.delete(slideId);
-    clearTimeout(timers.current.get(slideId));
-    timers.current.delete(slideId);
+  const flushOne = useCallback((key: string) => {
+    const item = pending.current.get(key);
+    if (!item) return;
+    pending.current.delete(key);
+    clearTimeout(timers.current.get(key));
+    timers.current.delete(key);
     setSave({ kind: "saving" });
-    const p = saveSlideAction(deck.id, slideId, props).then((r) => {
-      if (r.error) { setSave({ kind: "error", message: r.error }); return; }
+    const done = (r: { error?: string }) => {
+      if (r.error) { setSave({ kind: "error", message: r.error }); return false; }
       setHasDraft(true);
-      if (r.unlinked) setSlides((all) => all.map((s) => (s.slide.id === slideId ? { ...s, from: null, slide: { ...s.slide, ref: undefined } } : s)));
       if (!pending.current.size) setSave({ kind: "saved" });
-    }).finally(() => inflight.current.delete(p));
+      return true;
+    };
+    const p = (item.kind === "props"
+      ? saveSlideAction(deck.id, key, item.props).then((r) => {
+        if (done(r) && r.unlinked) setSlides((all) => all.map((s) => (s.slide.id === key ? { ...s, from: null, slide: { ...s.slide, ref: undefined } } : s)));
+      })
+      : saveTranslationAction(deck.id, item.slideId, item.lang, item.text).then(done)
+    ).finally(() => inflight.current.delete(p));
     inflight.current.add(p);
   }, [deck.id]);
 
@@ -155,9 +165,36 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
     if (!lastEdit.current || lastEdit.current.slideId !== slideId || now - lastEdit.current.t > EDIT_BURST_MS) record();
     lastEdit.current = { slideId, t: now };
     setSlides((all) => all.map((s) => (s.slide.id === slideId ? { ...s, slide: { ...s.slide, props } } : s)));
-    pending.current.set(slideId, props);
+    pending.current.set(slideId, { kind: "props", props });
     clearTimeout(timers.current.get(slideId));
     timers.current.set(slideId, setTimeout(() => flushOne(slideId), SAVE_DELAY));
+    setSave({ kind: "saving" });
+  };
+
+  /**
+   * Typing in the form while previewing a translation edits that translation: the form shows the translated
+   * text, and whatever differs from the English becomes the slide's overlay for that language. A field put
+   * back to the English wording simply stops being translated.
+   */
+  const editTranslation = (slideId: string, lang: TargetLang, merged: Record<string, unknown>) => {
+    const item = slides.find((s) => s.slide.id === slideId);
+    if (!item) return;
+    const english = new Map(textEntries(item.slide.props).map((e) => [e.path, e.text]));
+    const text: Record<string, string> = {};
+    for (const e of textEntries(merged)) if (english.has(e.path) && english.get(e.path) !== e.text) text[e.path] = e.text;
+    const now = Date.now();
+    if (!lastEdit.current || lastEdit.current.slideId !== slideId || now - lastEdit.current.t > EDIT_BURST_MS) record();
+    lastEdit.current = { slideId, t: now };
+    const overlay = overlayFromEntries(item.slide.props, text);
+    setSlides((all) => all.map((s) => {
+      if (s.slide.id !== slideId) return s;
+      if (!Object.keys(text).length) { const { [lang]: _gone, ...rest } = s.slide.i18n ?? {}; return { ...s, slide: { ...s.slide, i18n: Object.keys(rest).length ? rest : undefined } }; } // eslint-disable-line @typescript-eslint/no-unused-vars
+      return { ...s, slide: withTranslation(s.slide, lang, overlay) };
+    }));
+    const key = `${slideId}|${lang}`;
+    pending.current.set(key, { kind: "translation", slideId, lang, text });
+    clearTimeout(timers.current.get(key));
+    timers.current.set(key, setTimeout(() => flushOne(key), SAVE_DELAY));
     setSave({ kind: "saving" });
   };
 
@@ -311,7 +348,7 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
         canUndo={historySize.undo > 0} canRedo={historySize.redo > 0} onUndo={undo} onRedo={redo}
         lang={lang} onLang={setLang} translations={deckTranslationStatus(slides.map((s) => s.slide))}
         review={review} onReviewDialog={setReviewDialog} onReviewError={(m) => setSave({ kind: "error", message: m })}
-        presentHref={`/decks/${deck.id}/present${selected && !selected.slide.hidden ? `#${presentNumber(selectedIndex)}` : ""}`}
+        presentHref={`/decks/${deck.id}/present${lang !== "en" ? `?lang=${lang}` : ""}${selected && !selected.slide.hidden ? `#${presentNumber(selectedIndex)}` : ""}`}
       />
       <div className="ed-work" style={themeVars}>
         <Navigator
@@ -328,7 +365,7 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
           readOnly={readOnly}
           locked={!readOnly && Boolean(selected?.from) && !unlocked.has(selected!.slide.id)}
           onUnlock={() => selected && setUnlocked((u) => new Set(u).add(selected.slide.id))}
-          onChange={(props) => selected && editProps(selected.slide.id, props)}
+          onChange={(props) => selected && (lang === "en" ? editProps(selected.slide.id, props) : editTranslation(selected.slide.id, lang, props))}
           onToggleHidden={() => selected && toggleHidden(selected.slide.id)}
           onRemove={() => selected && remove(selected.slide.id)}
           canRemove={slides.length > 1}
@@ -405,7 +442,7 @@ function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save,
         )}
         <Link className="ed-btn" href={`/decks/${deck.id}/share`}>{ICON("user-plus")}<span>Share</span></Link>
         <ReviewButtons deckId={deck.id} review={review} lang={lang} hasDraft={hasDraft} onError={onReviewError} />
-        <Link className="ed-btn ed-btn-primary" href={presentHref}>{ICON("play")}<span>Present</span></Link>
+        <PresentButton href={presentHref} />
         <Menu label="More deck actions" trigger={ICON("ellipsis")} items={[
           ...reviewMenuItems(deck.id, review, lang, deck.kind, hasDraft, onReviewDialog),
           { label: "Make a copy", onSelect: () => copyAction(deck.id) },
@@ -497,6 +534,35 @@ function LanguagePicker({ lang, onLang, translations }: { lang: Lang; onLang: (l
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * Present: goes full screen straight away (allowed here because it's a click), then opens the presentation
+ * with a loading state over the editor until the slides arrive. Full screen survives the page change because
+ * it's a client-side navigation.
+ */
+function PresentButton({ href }: { href: string }) {
+  const router = useRouter();
+  const [opening, setOpening] = useState(false);
+  const open = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return; // new tab: let the browser do it
+    e.preventDefault();
+    setOpening(true);
+    document.documentElement.requestFullscreen?.().catch(() => {});
+    router.push(href);
+  };
+  return (
+    <>
+      <Link className="ed-btn ed-btn-primary" href={href} onClick={open} aria-disabled={opening} aria-busy={opening}>
+        {ICON("play")}<span>{opening ? "Opening…" : "Present"}</span>
+      </Link>
+      {opening && (
+        <div className="ed-opening" role="status" aria-live="polite">
+          <div className="ed-opening-card"><span className="ed-spinner" aria-hidden />Opening presentation…</div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -683,9 +749,9 @@ function ContentPanel({ deckId, item, readOnly, locked, onUnlock, onChange, onTo
             {lang !== "en" && (
               <div className={`ed-note${trState === "fresh" ? "" : " ed-note-warn"}`}>
                 <p>
-                  {trState === "fresh" ? <><b>{LANGUAGES[lang].english}</b> translation is up to date. The fields below are the English; the preview shows the translation.</>
-                    : trState === "stale" ? <><b>{LANGUAGES[lang].english}</b>: the English changed after this slide was translated. Ask Claude to translate the deck again; it updates only the slides that changed.</>
-                    : <><b>{LANGUAGES[lang].english}</b>: not translated yet, so it shows in English. Ask Claude (Dekiru connector) to translate the deck.</>}
+                  {trState === "fresh" ? <>You&apos;re editing the <b>{LANGUAGES[lang].english}</b> translation. Corrections save as you type; switch to English to change the original.</>
+                    : trState === "stale" ? <><b>{LANGUAGES[lang].english}</b>: the English changed after this slide was translated. Fix the translation below, or ask Claude to translate the deck again (it updates only the slides that changed).</>
+                    : <><b>{LANGUAGES[lang].english}</b>: not translated yet, so the slide shows in English. Type the translation below, or ask Claude (Dekiru connector) to translate the deck.</>}
                 </p>
               </div>
             )}
@@ -701,7 +767,7 @@ function ContentPanel({ deckId, item, readOnly, locked, onUnlock, onChange, onTo
                 {warnings.map((w, i) => <li key={i}><b>{fieldLabel(w.slot.split(".").pop()!.split(" ")[0])}</b>: {w.message}</li>)}
               </ul>
             )}
-            <ContentFields pattern={item.slide.pattern} value={item.slide.props as Record<string, unknown>} onChange={onChange} disabled={locked || readOnly} />
+            <ContentFields key={lang} pattern={item.slide.pattern} value={localize(item.slide, lang).props as Record<string, unknown>} onChange={onChange} disabled={locked || readOnly} />
           </>
         )}
       </div>

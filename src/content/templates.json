@@ -2,14 +2,16 @@
  {
   "id": "cover",
   "name": "Cover",
-  "use": "Deck title and a one-line promise.",
+  "use": "Deck title and a short tagline, with optional client name and event details.",
   "from": "dk-645bd167/s01",
   "slide": {
    "id": "cover",
    "pattern": "cover",
    "props": {
     "title": "Title of\nthe deck.",
-    "subtitle": "Key point   ·   Key point   ·   Key point"
+    "subtitle": "Key point   ·   Key point   ·   Key point",
+    "topRight": "",
+    "bottomRight": ""
    }
   }
  },

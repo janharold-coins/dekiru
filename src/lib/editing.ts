@@ -457,7 +457,7 @@ export interface TranslationInput { slide_id: string; text: Record<string, strin
  * Stores translations on the deck's own slides (draft). Each slide's overlay is fingerprinted against the
  * English it was made from. Slides that follow a master can't be translated here: translate the master.
  */
-export async function setTranslation(user: SignedInUser | null, deckId: string, lang: TargetLang, inputs: TranslationInput[]) {
+export async function setTranslation(user: SignedInUser | null, deckId: string, lang: TargetLang, inputs: TranslationInput[], via: Via = "claude") {
   await editable(deckId, user);
   const { slides } = await working(deckId);
   const results: { slide_id: string; translated: number; skipped?: string[]; overflow?: OverflowWarning[] }[] = [];
@@ -468,6 +468,13 @@ export async function setTranslation(user: SignedInUser | null, deckId: string, 
       throw new EditError(`Slide "${input.slide_id}" follows the master slide ${current.ref}; translate that deck (${current.ref.split("/")[0]}) and every deck using it is translated too.`);
     }
     const slide = current as SlideData;
+    if (!Object.keys(input.text).length) {
+      // Nothing differs from the English any more: the slide simply isn't translated in this language.
+      const { [lang]: _gone, ...rest } = slide.i18n ?? {}; // eslint-disable-line @typescript-eslint/no-unused-vars
+      slides[i] = { ...slide, i18n: Object.keys(rest).length ? rest : undefined };
+      results.push({ slide_id: input.slide_id, translated: 0 });
+      continue;
+    }
     const known = new Set(textEntries(slide.props).map((e) => e.path));
     const skipped = Object.keys(input.text).filter((k) => !known.has(k));
     const overlay = overlayFromEntries(slide.props, input.text);
@@ -478,7 +485,7 @@ export async function setTranslation(user: SignedInUser | null, deckId: string, 
     const overflow = checkOverflow(next, lang);
     results.push({ slide_id: input.slide_id, translated, ...(skipped.length ? { skipped } : {}), ...(overflow.length ? { overflow } : {}) });
   }
-  await save(deckId, slides, user, `Translated to ${LANGUAGES[lang].english} with Claude`);
+  await save(deckId, slides, user, via === "claude" ? `Translated to ${LANGUAGES[lang].english} with Claude` : `${LANGUAGES[lang].english} translation edited in Dekiru`);
   return results;
 }
 

@@ -3,16 +3,16 @@ import { useState } from "react";
 import { RenderSlide } from "@/deck/RenderSlide";
 import { asLang, availableLangs, LANGUAGES, type Lang } from "@/deck/i18n";
 import type { SlideData } from "@/deck/types";
-import { TrackedPresenter } from "../../decks/[id]/present/TrackedPresenter";
-import { ReviewNotice } from "../../decks/[id]/present/ReviewNotice";
+import { TrackedPresenter } from "./TrackedPresenter";
+import { ReviewNotice } from "./ReviewNotice";
 
 /**
- * The shared deck with its language selector. Languages are offered only when the link holds a
- * translation for them (translations are frozen with the link, like the slides and the theme).
- * `?lang=zh` on the URL opens the deck in that language; switching updates the URL so the viewer can share it.
+ * A deck being presented — from the Present button or a share link — with its language selector.
+ * Languages are offered only when the deck holds a translation for them (a share link froze its own).
+ * `?lang=zh` on the URL opens the deck in that language; switching updates the URL so it can be shared.
  */
-export function SharedDeckViewer({ slides, trackUrl, initialLang, approved, team }: {
-  slides: SlideData[]; trackUrl: string; initialLang: string; approved: string[]; team: boolean;
+export function DeckViewer({ slides, trackUrl, initialLang, approved, team, askAudience = false }: {
+  slides: SlideData[]; trackUrl: string; initialLang: string; approved: string[]; team: boolean; askAudience?: boolean;
 }) {
   const langs = availableLangs(slides);
   const [lang, setLang] = useState<Lang>(() => {
@@ -30,6 +30,7 @@ export function SharedDeckViewer({ slides, trackUrl, initialLang, approved, team
       <TrackedPresenter
         trackUrl={trackUrl}
         slideIds={slides.map((s) => s.id)}
+        askAudience={askAudience}
         slides={slides.map((s) => <RenderSlide key={s.id} slide={s} lang={lang} />)}
         hudExtra={langs.length ? <LanguageSwitch langs={["en", ...langs]} value={lang} onChange={choose} /> : undefined}
       />

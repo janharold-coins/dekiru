@@ -18,7 +18,8 @@ export default async function ConnectPage({ searchParams }: { searchParams: Prom
   return (
     <main className="signin-wrap">
       <div className="signin-card">
-        <div className="brand"><i />Dekiru</div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="signin-logo" src="/app/dekiru-logo.svg" alt="coins.ph Dekiru" width={124} height={32} />
         <h1>Connect {app.name}?</h1>
         <p className="lede" style={{ margin: 0 }}>
           <b>{app.name}</b> wants to use Dekiru as <b>{user?.email ?? "you"}</b>: read the company decks, and create, edit and

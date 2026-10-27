@@ -22,8 +22,7 @@ export function Nav({ on, user }: { on?: "decks" | "library" | "people"; user: S
       <div className="app-header-l">
         <Link href="/" className="app-brand" aria-label="Dekiru home">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/app/presentation-mark.svg" alt="" width={36.7589} height={35.1587} />
-          <span>DEKIRU</span>
+          <img src="/app/dekiru-logo.svg" alt="" width={124} height={32} />
         </Link>
         <nav className="app-nav" aria-label="Main">
           {item("/", "Decks", "decks")}

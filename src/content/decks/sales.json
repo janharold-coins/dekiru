@@ -8,7 +8,9 @@
    "pattern": "cover",
    "props": {
     "title": "Global money. \nFaster. Always on.",
-    "subtitle": "Accept payments   ·   Move cross-border   ·   Trade crypto"
+    "subtitle": "Accept payments   ·   Move cross-border   ·   Trade crypto",
+    "topRight": "",
+    "bottomRight": ""
    },
    "source": {
     "figmaNode": "511:28904",

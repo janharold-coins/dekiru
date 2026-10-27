@@ -146,6 +146,15 @@ export async function reviewState(deckId: string): Promise<DeckReviewState> {
   return state;
 }
 
+/** Layers approved on the newest published version ("en", "zh", …) — two queries, for pages that only need the notice. */
+export async function approvedLayers(deckId: string): Promise<Lang[]> {
+  const { published } = await getDeckVersions(deckId);
+  if (!published) return [];
+  const rows = await db().select({ kind: reviews.kind, lang: reviews.lang }).from(reviews)
+    .where(and(eq(reviews.versionId, published.id), eq(reviews.status, "approved")));
+  return rows.map((r) => (r.kind === "translation" ? (r.lang as Lang) : "en"));
+}
+
 /** Review events of a deck for its history page, newest first, with names. */
 export async function reviewHistory(deckId: string) {
   const rows = await db().select().from(reviewEvents).where(eq(reviewEvents.deckId, deckId)).orderBy(desc(reviewEvents.createdAt));

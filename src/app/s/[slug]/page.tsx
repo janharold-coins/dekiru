@@ -6,7 +6,7 @@ import { hasDb } from "@/db/client";
 import { getShareLink, isUnlocked, linkStatus, unlockCookieName } from "@/lib/share";
 import { sessionUser } from "@/lib/auth";
 import { PasswordForm } from "./PasswordForm";
-import { SharedDeckViewer } from "./Viewer";
+import { DeckViewer } from "../../decks/[id]/present/DeckViewer";
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ lang?: string }> };
 
@@ -45,7 +45,7 @@ export default async function SharedDeck({ params, searchParams }: Props) {
 
   return (
     <ThemeScope tokens={link.theme}>
-    <SharedDeckViewer slides={link.slides} trackUrl={`/s/${slug}/track`} initialLang={lang} approved={link.approved} team={Boolean(await sessionUser())} />
+    <DeckViewer slides={link.slides} trackUrl={`/s/${slug}/track`} initialLang={lang} approved={link.approved} team={Boolean(await sessionUser())} />
     </ThemeScope>
   );
 }

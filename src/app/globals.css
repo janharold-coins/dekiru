@@ -435,6 +435,12 @@ code.inline { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-
 .ed-lang-note.part::before { background: var(--ed-warn); }
 .ed-lang-note.none::before { background: var(--ed-line); border: 1px solid var(--ed-mute); box-sizing: border-box; }
 .ed-note-warn { background: #fff7ed; border-color: #fed7aa; }
+/* Present: loading state while the presentation page loads */
+.ed-opening { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: rgba(20,22,28,0.55); }
+.ed-opening-card { display: inline-flex; align-items: center; gap: 12px; padding: 14px 20px; border-radius: 10px; background: #fff; color: var(--ed-ink); font-size: 14px; font-weight: 500; box-shadow: 0 24px 64px rgba(32,35,43,0.3); }
+.ed-spinner { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--ed-line); border-top-color: var(--ed-accent); animation: ed-spin 0.8s linear infinite; }
+@keyframes ed-spin { to { transform: rotate(360deg); } }
+.ed-btn[aria-disabled="true"] { pointer-events: none; opacity: 0.7; }
 /* Review (spec §7a): status chip, approve buttons, per-slide state, dialogs */
 .ed-review-chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; background: #f3f4f6; color: var(--ed-mute); }
 .ed-review-chip i { width: 7px; height: 7px; border-radius: 50%; background: var(--ed-faint); }
@@ -519,9 +525,9 @@ html { overflow-x: clip; }
 /* Pages render the header inside .shell: pull it out to the edges. */
 .shell > .app-header { margin: -56px -80px 56px; }
 .app-header-l { display: flex; align-items: center; gap: 64px; min-width: 0; }
-.app-brand { position: relative; display: block; width: 133.2px; height: 38.4px; flex: none; }
-.app-brand img { position: absolute; left: 0; top: 0; display: block; }
-.app-brand span { position: absolute; left: 40.8px; top: 12.49px; font-family: var(--font-wordmark), sans-serif; font-weight: 900; font-size: 18px; line-height: normal; color: var(--app-ink); white-space: nowrap; }
+.app-brand { display: block; flex: none; line-height: 0; }
+.app-brand img { display: block; width: 124px; height: 32px; }
+.signin-logo { display: block; width: 124px; height: 32px; margin-bottom: 4px; }
 .app-nav { display: flex; gap: 20px; align-self: stretch; }
 .app-nav-item { position: relative; width: 70px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 500; color: var(--app-mute); white-space: nowrap; }
 .app-nav-item:hover { color: var(--app-ink); }
@@ -561,7 +567,7 @@ html { overflow-x: clip; }
   .app-viewas { display: none; }
   .app-header { padding: 0 16px; height: 64px; }
   .app-header-l { gap: 12px; }
-  .app-brand { width: 37px; } .app-brand span { display: none; }
+  .app-brand img { width: 108px; height: 28px; }
   .app-nav { gap: 4px; } .app-nav-item { width: auto; padding: 0 8px; font-size: 14px; } .app-nav-item.on::after { left: 8px; right: 8px; width: auto; }
   .app-who-text, .app-divider { display: none; }
   .app-account { gap: 12px; }
@@ -727,3 +733,17 @@ select.nd-input { appearance: none; -webkit-appearance: none; padding-right: 36p
   .nd-main-h { position: static; margin: 0 0 8px; padding: 0; flex-wrap: wrap; gap: 8px 24px; }
   .nd-tabs { flex-basis: 100%; overflow-x: auto; }
 }
+
+/* Sign in (Figma "Dekiru" 246:211) */
+.login { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; background: #dfe9ea url("/app/signin-bg.png") center / cover no-repeat; }
+.login-card { width: 100%; max-width: 420px; min-height: 313px; background: #fff; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 46px 38px 27px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.login-logo { margin: 0 0 45px; line-height: 0; }
+.login-logo img { display: block; width: 210px; height: 54px; }
+.login-google { width: 100%; max-width: 344px; min-height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+.login-google-btn { width: 100%; min-height: 44px; display: flex; justify-content: center; }
+.login-google .signin { width: 100%; margin-top: 0; }
+.login-status { margin: 0; font-size: 13px; color: #8795a8; }
+.login .signin-error { width: 100%; max-width: 344px; margin-top: 16px; text-align: left; }
+.login-google .signin-error { margin-top: 0; }
+.login-off { margin: 0; max-width: 344px; }
+.login-note { margin: auto 0 0; padding-top: 48px; font-family: var(--font-app), var(--ui); font-size: 14px; line-height: normal; color: #8795a8; }

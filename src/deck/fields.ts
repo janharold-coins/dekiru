@@ -44,6 +44,7 @@ const LABELS: Record<string, string> = {
   titleRuns: "Title parts", statCards: "Stat cards", primaryStats: "Main figures", secondaryStats: "More figures",
   parentTitle: "Parent section", leftText: "Earlier milestone", bracketGroup: "Year range", callout: "Callout",
   lead: "Lead-in", lines: "Lines", subtext: "Small print", text: "Text",
+  topRight: "Top right (optional)", bottomRight: "Bottom right (optional)",
 };
 const SINGULAR: Record<string, string> = {
   what: "Point", keyApis: "API line", lines: "Line", titleRuns: "Part", statCards: "Stat card", primaryStats: "Figure",
@@ -81,7 +82,7 @@ const FIELD_ORDER: Record<string, string[]> = {
   "card-grid.cards[]": ["country", "rail", "speed", "statuses"],
   "card-grid.cards[].statuses[]": ["label", "status"],
   "closing": ["title"],
-  "cover": ["title", "subtitle"],
+  "cover": ["title", "subtitle", "topRight", "bottomRight"],
   "cta-contact": ["title", "subtitle", "contacts"],
   "cta-contact.contacts[]": ["label", "email"],
   "feature-cards": ["title", "cards"],
@@ -117,6 +118,25 @@ const GENERIC_ORDER = [
   "lead", "description", "body",
 ];
 
+/**
+ * Optional text fields a pattern can show even when the saved slide has no value for them
+ * (older slides and masters predate them). Keyed by path, then field: the placeholder shown in the form.
+ */
+const OPTIONAL_FIELDS: Record<string, Record<string, string>> = {
+  "cover": { topRight: "e.g. Client name", bottomRight: "e.g. Event name, date and/or location" },
+};
+
+export const fieldPlaceholder = (path: string, key: string) => OPTIONAL_FIELDS[path]?.[key];
+
+/** The slide object with its optional fields present (empty when unset), so the form can offer them. */
+export function withOptionalFields(path: string, value: Record<string, unknown>): Record<string, unknown> {
+  const opt = OPTIONAL_FIELDS[path];
+  if (!opt) return value;
+  const out = { ...value };
+  for (const k of Object.keys(opt)) if (!(k in out)) out[k] = "";
+  return out;
+}
+
 /** Fields that are notes for whoever placed the slide, not words on it. */
 const HIDDEN_FIELDS = new Set(["logo-wall.groups[].logos[].note"]);
 
@@ -124,7 +144,7 @@ const HIDDEN_FIELDS = new Set(["logo-wall.groups[].logos[].note"]);
 export function editableEntries(path: string, value: Record<string, unknown>): [string, unknown][] {
   const order = FIELD_ORDER[path] ?? GENERIC_ORDER;
   const rank = (k: string) => { const i = order.indexOf(k); return i < 0 ? order.length : i; };
-  return Object.entries(value)
+  return Object.entries(withOptionalFields(path, value))
     .filter(([k, v]) => isEditableKey(k, v) && !HIDDEN_FIELDS.has(`${path}.${k}`))
     .map((e, i) => [e, i] as const)
     .sort(([[a], i], [[b], j]) => rank(a) - rank(b) || i - j)

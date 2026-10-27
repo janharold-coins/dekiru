@@ -1,5 +1,5 @@
 "use client";
-import { editableEntries, fieldLabel, itemLabel, listLimits } from "@/deck/fields";
+import { editableEntries, fieldLabel, fieldPlaceholder, itemLabel, listLimits } from "@/deck/fields";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Props = Record<string, any>;
@@ -19,7 +19,7 @@ export function ContentFields({ pattern, path = pattern, value, onChange, disabl
   return (
     <>
       {editableEntries(path, value).map(([k, v]: [string, any]) => {
-        if (typeof v === "string") return <TextField key={k} label={fieldLabel(k)} value={v} disabled={disabled} onChange={(x) => set(k, x)} />;
+        if (typeof v === "string") return <TextField key={k} label={fieldLabel(k)} value={v} placeholder={fieldPlaceholder(path, k)} disabled={disabled} onChange={(x) => set(k, x)} />;
         if (Array.isArray(v)) return <ListField key={k} pattern={pattern} path={`${path}.${k}[]`} name={k} items={v} disabled={disabled} onChange={(x) => set(k, x)} />;
         return (
           <section key={k} className="ed-group">
@@ -91,7 +91,7 @@ function ListField({ pattern, path, name, items, onChange, disabled }: {
   );
 }
 
-function TextField({ label, value, onChange, disabled }: { label: string; value: string; onChange: (v: string) => void; disabled?: boolean }) {
+function TextField({ label, value, placeholder, onChange, disabled }: { label: string; value: string; placeholder?: string; onChange: (v: string) => void; disabled?: boolean }) {
   // Explicit line breaks show on the slide; the box grows with the text where the browser supports it.
   // Short single-line values (years, numbers, labels) get a compact box.
   const short = !value.includes("\n") && value.length <= 24;
@@ -99,7 +99,7 @@ function TextField({ label, value, onChange, disabled }: { label: string; value:
   return (
     <label className="ed-field">
       {label && <span className="ed-label">{label}</span>}
-      <textarea className={`ed-input ed-textarea${short ? " short" : ""}`} rows={short ? 1 : rows} value={value} disabled={disabled} spellCheck
+      <textarea className={`ed-input ed-textarea${short ? " short" : ""}`} rows={short ? 1 : rows} value={value} placeholder={placeholder} disabled={disabled} spellCheck
         onChange={(e) => onChange(e.target.value)} />
     </label>
   );

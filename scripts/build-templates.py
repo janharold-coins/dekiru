@@ -15,7 +15,7 @@ SALES = {s["id"]: s for s in _sales["slides"]}
 
 # id, name, source slide, what it's for
 TEMPLATES = [
-    ("cover", "Cover", "s01", "Deck title and a one-line promise."),
+    ("cover", "Cover", "s01", "Deck title and a short tagline, with optional client name and event details."),
     ("agenda", "Agenda", "s02", "Up to three topics you'll cover."),
     ("section", "Section divider", "s03", "Opens a major section."),
     ("subsection", "Sub-section divider", "s10", "Opens a part inside a section."),
@@ -136,6 +136,8 @@ def build():
 def _cover(p):
     p["title"] = "Title of\nthe deck."
     p["subtitle"] = "Key point   ·   Key point   ·   Key point"
+    p["topRight"] = ""
+    p["bottomRight"] = ""
 
 
 def _agenda(p):

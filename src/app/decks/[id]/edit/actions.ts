@@ -10,7 +10,8 @@ import {
   discardDraft, EditError, moveSlide, publish, removeSlide, renameDeck, replaceDraft, setDeckTheme, setHidden, updateSlide,
 } from "@/lib/editing";
 import type { SeedSlide } from "@/content/resolve";
-import type { Lang } from "@/deck/i18n";
+import type { Lang, TargetLang } from "@/deck/i18n";
+import { setTranslation } from "@/lib/editing";
 import { approveDeck, approveForEveryone, approveSlide, promoteDeck, requestChanges, sendForReview, withdrawReview } from "@/lib/reviews";
 
 export type EditorResult = { error?: string };
@@ -58,6 +59,12 @@ export async function discardDraftAction(deckId: string): Promise<EditorResult> 
 /** Undo/redo: save the editor's whole state (slides in order + theme) as the draft. */
 export async function saveDeckStateAction(deckId: string, slides: SeedSlide[], themeId: string): Promise<EditorResult> {
   return run(deckId, (u) => replaceDraft(u, deckId, slides, themeId));
+}
+
+/** Autosave of one slide's translation (text by path; paths left out stay English; empty = remove the translation). */
+export async function saveTranslationAction(deckId: string, slideId: string, lang: TargetLang, text: Record<string, string>): Promise<EditorResult> {
+  const r = await run(deckId, (u) => setTranslation(u, deckId, lang, [{ slide_id: slideId, text }], "app"));
+  return { error: r.error };
 }
 
 /* Review and approval (src/lib/reviews.ts). The editor reloads after each, so the new state is rendered by the page. */
