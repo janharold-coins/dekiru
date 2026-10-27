@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { hasDb } from "@/db/client";
 import { getShareLink, isUnlocked, linkStatus, unlockCookieName } from "@/lib/share";
+import { sessionUser } from "@/lib/auth";
 import { PasswordForm } from "./PasswordForm";
 import { SharedDeckViewer } from "./Viewer";
 
@@ -44,7 +45,7 @@ export default async function SharedDeck({ params, searchParams }: Props) {
 
   return (
     <ThemeScope tokens={link.theme}>
-    <SharedDeckViewer slides={link.slides} trackUrl={`/s/${slug}/track`} initialLang={lang} />
+    <SharedDeckViewer slides={link.slides} trackUrl={`/s/${slug}/track`} initialLang={lang} approved={link.approved} team={Boolean(await sessionUser())} />
     </ThemeScope>
   );
 }

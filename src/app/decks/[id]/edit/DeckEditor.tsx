@@ -19,6 +19,7 @@ import {
 } from "./actions";
 import type { SeedSlide } from "@/content/resolve";
 import { DeckId } from "../../../DeckId";
+import { ApproveSlide, ReviewButtons, ReviewChip, ReviewDialog, reviewMenuItems, type Dialog, type ReviewProps } from "./Review";
 
 export interface EditorSlide {
   slide: SlideData;
@@ -67,8 +68,11 @@ const SAVE_DELAY = 700;
 const SLIDE_W = 1920;
 const SLIDE_H = 1080;
 
-export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: initialTheme, themes, readOnly = false }: {
+export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: initialTheme, themes, readOnly = false, review, initialLang = "en" }: {
   deck: { id: string; title: string; kind: "master" | "copy"; hasDraft: boolean; versionNumber: number | null };
+  /** Review state and what the signed-in person may do about it (spec §7a). */
+  review: ReviewProps;
+  initialLang?: Lang;
   /** People who can see but not change the deck (members on company decks): view, present, share, copy. */
   readOnly?: boolean;
   slides: EditorSlide[];
@@ -84,7 +88,8 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
   const [save, setSave] = useState<SaveState>({ kind: "saved" });
   const [navOpen, setNavOpen] = useState(true);
   // Preview language: translations are made with Claude (connector); the editor shows them and their status.
-  const [lang, setLang] = useState<Lang>("en");
+  const [lang, setLang] = useState<Lang>(initialLang);
+  const [reviewDialog, setReviewDialog] = useState<Dialog | null>(null);
   const [panelWidth, setPanelWidth] = useState(360);
   const [unlocked, setUnlocked] = useState<Set<string>>(new Set());
   const [publishing, setPublishing] = useState(false);
@@ -305,6 +310,7 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
         save={save} hasDraft={hasDraft} publishing={publishing} onPublish={publishNow} onDiscard={discard}
         canUndo={historySize.undo > 0} canRedo={historySize.redo > 0} onUndo={undo} onRedo={redo}
         lang={lang} onLang={setLang} translations={deckTranslationStatus(slides.map((s) => s.slide))}
+        review={review} onReviewDialog={setReviewDialog} onReviewError={(m) => setSave({ kind: "error", message: m })}
         presentHref={`/decks/${deck.id}/present${selected && !selected.slide.hidden ? `#${presentNumber(selectedIndex)}` : ""}`}
       />
       <div className="ed-work" style={themeVars}>
@@ -329,21 +335,25 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
           onResize={setPanelWidth}
           width={panelWidth}
           lang={lang}
+          review={review}
+          onReviewError={(m) => setSave({ kind: "error", message: m })}
         />
       </div>
+      {reviewDialog && <ReviewDialog deckId={deck.id} dialog={reviewDialog} onClose={() => setReviewDialog(null)} onError={(m) => setSave({ kind: "error", message: m })} />}
     </div>
   );
 }
 
 /* ================= Top bar ================= */
 
-function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save, hasDraft, publishing, onPublish, onDiscard, presentHref, canUndo, canRedo, onUndo, onRedo, lang, onLang, translations }: {
+function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save, hasDraft, publishing, onPublish, onDiscard, presentHref, canUndo, canRedo, onUndo, onRedo, lang, onLang, translations, review, onReviewDialog, onReviewError }: {
   deck: { id: string; kind: "master" | "copy"; versionNumber: number | null }; readOnly: boolean;
   title: string; onRename: (t: string) => void;
   themes: ThemeOption[]; theme: ThemeOption; onTheme: (id: string) => void;
   save: SaveState; hasDraft: boolean; publishing: boolean; onPublish: () => void; onDiscard: () => void; presentHref: string;
   canUndo: boolean; canRedo: boolean; onUndo: () => void; onRedo: () => void;
   lang: Lang; onLang: (l: Lang) => void; translations: ReturnType<typeof deckTranslationStatus>;
+  review: ReviewProps; onReviewDialog: (d: Dialog) => void; onReviewError: (m: string) => void;
 }) {
   const mac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
   const [editing, setEditing] = useState(false);
@@ -376,7 +386,8 @@ function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save,
 
       <div className="ed-actions">
         <LanguagePicker lang={lang} onLang={onLang} translations={translations} />
-        {readOnly ? <span className="ed-save">View only</span> : <span className={`ed-save ${save.kind}`} role="status" aria-live="polite">
+        <ReviewChip review={review} lang={lang} />
+        {readOnly ? <span className="ed-save">{review.canReview[lang] ? "Reviewing" : "View only"}</span> : <span className={`ed-save ${save.kind}`} role="status" aria-live="polite">
           {save.kind === "error" ? <span className="ed-save-error" title={save.message}>Couldn&apos;t save: {save.message}</span>
             : <>{ICON("cloud-check", 15)}<span>{save.kind === "saving" ? "Saving…" : save.kind === "published" ? `Published v${save.version}` : hasDraft ? "Saved as draft" : "All changes saved"}</span></>}
         </span>}
@@ -393,8 +404,10 @@ function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save,
           </button>
         )}
         <Link className="ed-btn" href={`/decks/${deck.id}/share`}>{ICON("user-plus")}<span>Share</span></Link>
+        <ReviewButtons deckId={deck.id} review={review} lang={lang} hasDraft={hasDraft} onError={onReviewError} />
         <Link className="ed-btn ed-btn-primary" href={presentHref}>{ICON("play")}<span>Present</span></Link>
         <Menu label="More deck actions" trigger={ICON("ellipsis")} items={[
+          ...reviewMenuItems(deck.id, review, lang, deck.kind, hasDraft, onReviewDialog),
           { label: "Make a copy", onSelect: () => copyAction(deck.id) },
           { label: "Version history", href: `/decks/${deck.id}/history` },
           { label: "Presentations", href: `/decks/${deck.id}/presentations` },
@@ -618,8 +631,9 @@ function Canvas({ selected, number, lang }: { selected: EditorSlide | null; numb
 
 /* ================= Content panel ================= */
 
-function ContentPanel({ deckId, item, readOnly, locked, onUnlock, onChange, onToggleHidden, onRemove, canRemove, onResize, width, lang }: {
+function ContentPanel({ deckId, item, readOnly, locked, onUnlock, onChange, onToggleHidden, onRemove, canRemove, onResize, width, lang, review, onReviewError }: {
   deckId: string; item: EditorSlide | null; readOnly: boolean; locked: boolean; onUnlock: () => void; lang: Lang;
+  review: ReviewProps; onReviewError: (m: string) => void;
   onChange: (props: Record<string, unknown>) => void; onToggleHidden: () => void; onRemove: () => void; canRemove: boolean;
   onResize: (w: number) => void; width: number;
 }) {
@@ -643,6 +657,7 @@ function ContentPanel({ deckId, item, readOnly, locked, onUnlock, onChange, onTo
       </div>
       <div className="ed-panel-h">
         <h2>Slide Content Editor</h2>
+        {item && <ApproveSlide deckId={deckId} slideId={item.slide.id} review={review} lang={lang} onError={onReviewError} />}
         {item && !readOnly && (
           <Menu label="Slide actions" trigger={ICON("ellipsis")} items={[
             { label: item.slide.hidden ? "Show in presentation" : "Hide from presentation", onSelect: onToggleHidden },
@@ -653,10 +668,15 @@ function ContentPanel({ deckId, item, readOnly, locked, onUnlock, onChange, onTo
       <div className="ed-form">
         {!item ? <p className="ed-hint">Choose a slide on the left.</p> : (
           <>
-            {readOnly && (
+            {readOnly && !review.canReview[lang] && (
               <div className="ed-note">
                 <p>You can view, present and share this deck. To change it, make your own copy.</p>
                 <button type="button" className="ed-btn ed-btn-sm" onClick={() => copyAction(deckId)}>Make a copy</button>
+              </div>
+            )}
+            {readOnly && review.canReview[lang] && (
+              <div className="ed-note">
+                <p>You&apos;re reviewing this {lang === "en" ? "deck" : `${LANGUAGES[lang].english} translation`}. Check each slide and approve it, or approve the whole deck from the top bar. Use Request changes (⋯ menu) to send it back.</p>
               </div>
             )}
             {item.slide.hidden && <p className="ed-note">Hidden: kept in the deck but not presented or shared.</p>}

@@ -20,6 +20,8 @@ export const ALLOWED_DOMAIN = process.env.ALLOWED_EMAIL_DOMAIN || "coins.ph";
 export type Role = "admin" | "manager" | "member";
 export interface SignedInUser {
   id: string; email: string; name: string; image?: string | null; role: Role; canEditThemes?: boolean;
+  /** What they may review (src/lib/reviews.ts); admins review everything. */
+  reviewScopes?: string[];
   /** Set only while an admin is using "View as": their real role. `role` then holds the role being previewed. */
   realRole?: Role;
 }
@@ -136,7 +138,8 @@ export async function sessionUser(): Promise<SignedInUser | null> {
   const s = await auth().api.getSession({ headers: await headers() });
   if (!s) return null;
   const u = s.user as typeof s.user & { role?: Role; canEditThemes?: boolean };
-  return { id: u.id, email: u.email, name: u.name, image: u.image, role: u.role ?? "member", canEditThemes: Boolean(u.canEditThemes) };
+  const [row] = await db().select({ reviewScopes: users.reviewScopes }).from(users).where(eq(users.id, u.id)).limit(1);
+  return { id: u.id, email: u.email, name: u.name, image: u.image, role: u.role ?? "member", canEditThemes: Boolean(u.canEditThemes), reviewScopes: row?.reviewScopes ?? [] };
 }
 
 /**
@@ -148,7 +151,7 @@ export async function currentUser(): Promise<SignedInUser | null> {
   if (!user || user.role !== "admin") return user;
   const viewAs = (await cookies()).get(VIEW_AS_COOKIE)?.value;
   if (!isViewAsRole(viewAs)) return user;
-  return { ...user, role: viewAs, canEditThemes: false, realRole: user.role };
+  return { ...user, role: viewAs, canEditThemes: false, reviewScopes: [], realRole: user.role };
 }
 
 /**

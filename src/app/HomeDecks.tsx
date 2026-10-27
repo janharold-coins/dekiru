@@ -23,16 +23,21 @@ export interface HomeDeck {
   hasDraft: boolean;
   /** One of your own decks that you archived (My Decks only). */
   archived?: boolean;
+  /** For review tab: what kind of review is waiting and how far it is. */
+  review?: { what: string; progress: string; lang: "en" | "zh" | "th" };
 }
 
-type Tab = "company" | "mine";
+type Tab = "company" | "mine" | "review";
 type Sort = "updated" | "name";
 
 const NOTE: Partial<Record<Tab, string>> = {
   company: "Decks are shared with everyone in Coins.ph. All decks are strictly private and confidential.",
+  review: "Decks waiting for your approval. Open one, check each slide, then Approve deck — or request changes.",
 };
 
-export function HomeDecks({ company, mine, initialTab }: { company: HomeDeck[]; mine: HomeDeck[]; initialTab: Tab }) {
+export function HomeDecks({ company, mine, review = [], reviewer = false, initialTab }: {
+  company: HomeDeck[]; mine: HomeDeck[]; review?: HomeDeck[]; reviewer?: boolean; initialTab: Tab;
+}) {
   const [tab, setTab] = useState<Tab>(initialTab);
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>("updated");
@@ -44,7 +49,7 @@ export function HomeDecks({ company, mine, initialTab }: { company: HomeDeck[]; 
   const myDecks = useMemo(() => mine.map((d) => (d.id in archivedNow ? { ...d, archived: archivedNow[d.id] } : d)), [mine, archivedNow]);
   const active = myDecks.filter((d) => !d.archived);
   const archivedCount = myDecks.length - active.length;
-  const all = tab === "company" ? company : showArchived ? myDecks : active;
+  const all = tab === "company" ? company : tab === "review" ? review : showArchived ? myDecks : active;
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
     const list = q ? all.filter((d) => d.title.toLowerCase().includes(q) || d.id.toLowerCase().includes(q)) : [...all];
@@ -67,7 +72,7 @@ export function HomeDecks({ company, mine, initialTab }: { company: HomeDeck[]; 
     setTab(t);
     // Keep the tab in the address so Back and reload return to it.
     const url = new URL(window.location.href);
-    if (t === "mine") url.searchParams.set("tab", "mine"); else url.searchParams.delete("tab");
+    if (t === "company") url.searchParams.delete("tab"); else url.searchParams.set("tab", t);
     window.history.replaceState(null, "", url);
   };
 
@@ -79,6 +84,7 @@ export function HomeDecks({ company, mine, initialTab }: { company: HomeDeck[]; 
           <div className="home-tabs" role="tablist" aria-label="Deck collections">
             <TabButton on={tab === "company"} count={company.length} onClick={() => choose("company")}>Company decks</TabButton>
             <TabButton on={tab === "mine"} count={active.length} onClick={() => choose("mine")}>My decks</TabButton>
+            {(reviewer || review.length > 0) && <TabButton on={tab === "review"} count={review.length} onClick={() => choose("review")}>For review</TabButton>}
           </div>
         </div>
         <div className="home-head-r">
@@ -95,7 +101,7 @@ export function HomeDecks({ company, mine, initialTab }: { company: HomeDeck[]; 
         </div>
       </div>
 
-      <section className="home-collection" role="tabpanel" aria-label={tab === "company" ? "Company decks" : "My decks"}>
+      <section className="home-collection" role="tabpanel" aria-label={tab === "company" ? "Company decks" : tab === "review" ? "For review" : "My decks"}>
         <div className="home-toolbar">
           {NOTE[tab] && <p>{NOTE[tab]}</p>}
           <div className="home-toolbar-r">
@@ -127,6 +133,8 @@ export function HomeDecks({ company, mine, initialTab }: { company: HomeDeck[]; 
           <p className="home-empty">No decks match “{query.trim()}”.</p>
         ) : tab === "mine" && archivedCount ? (
           <p className="home-empty">All your decks are archived. Turn on Show archived decks to see them.</p>
+        ) : tab === "review" ? (
+          <p className="home-empty">Nothing is waiting for your review.</p>
         ) : tab === "mine" ? (
           <p className="home-empty">
             You don&apos;t have any decks yet. <Link href="/new">Create a deck</Link> from approved slides, open a company deck and
@@ -167,8 +175,8 @@ function DeckCard({ d, onArchive }: { d: HomeDeck; onArchive?: (archived: boolea
           <Link href={`/decks/${d.id}`}><h2>{d.title}</h2></Link>
           <p>
             {d.archived && <span className="home-archived-tag">Archived</span>}
-            {d.updatedLabel}
-            {d.hasDraft && <span className="home-draft">{d.updatedLabel ? " · " : ""}Unpublished changes</span>}
+            {d.review ? <><span className="home-review-what">{d.review.what}</span> · {d.review.progress}</> : d.updatedLabel}
+            {d.hasDraft && !d.review && <span className="home-draft">{d.updatedLabel ? " · " : ""}Unpublished changes</span>}
           </p>
         </div>
         <Menu
@@ -176,7 +184,7 @@ function DeckCard({ d, onArchive }: { d: HomeDeck; onArchive?: (archived: boolea
           label={`Options for ${d.title}`}
           trigger={<span aria-hidden>···</span>}
           items={[
-            { label: "Open", href: `/decks/${d.id}` },
+            { label: d.review ? "Review" : "Open", href: d.review && d.review.lang !== "en" ? `/decks/${d.id}?lang=${d.review.lang}` : `/decks/${d.id}` },
             { label: "Present", href: `/decks/${d.id}/present` },
             { label: "Share", href: `/decks/${d.id}/share` },
             { label: "Make a copy", onSelect: () => { void copyAction(d.id); } },

@@ -83,6 +83,17 @@ Code: `src/lib/share.ts`, `src/lib/analytics.ts`, `src/app/decks/[id]/present/` 
 - Code: `src/deck/i18n.ts` (entries, fingerprint, overlay, status), `RenderSlide lang`, `checkOverflow(slide, lang)`, `deckText` / `setTranslation` in `src/lib/editing.ts`, `src/app/s/[slug]/Viewer.tsx`. Re-seeding a master from Figma carries its translations over by slide id.
 - Later: translate in Present mode too; hand-edit a translation in the editor; record the language a visit used; more languages (add to `LANGUAGES` and a script font).
 
+## Review and approval
+
+- **One mechanism, four doors** (spec §7a): new decks by admins/managers, employees' decks, promotion to a company deck, translations. A review is about a deck's newest **published** version (publishing stays free); what it gates is the floating **Not yet reviewed** notice on Present and share links, and promotion.
+- **Levels:** employee deck (a personal copy) 1 approval; company deck (master) 2; translation 2 per language from reviewers of that language. The requester never counts. Admins can **Approve for everyone** (override, recorded in history).
+- **Reviewers:** People → **Can review** per person: employee decks, company-wide decks, each language. Admins review everything. Reviewers can open decks waiting for their review (read-only).
+- **Where:** Decks home → **For review** tab (what's waiting for you, with "1 of 2 approvals · 12/37 slides"). Editor: status chip after the Language picker, **Send for review** (editors, no unpublished changes), **Approve deck** beside Present and **Approve slide** in the content panel (reviewers), ⋯ menu: Request changes…, Withdraw, Approve … for everyone…, Promote to company deck… (admins, approved copies). Everything follows the Language dropdown: in Thai you're approving the Thai translation.
+- **Carry-over:** approvals are per slide with a fingerprint of what was approved (content, or that language's translation); a new version's review starts with the unchanged slides already approved.
+- **Notices:** team members see "Not yet reviewed" for an unapproved deck; everyone, recipients included, sees "<Language> translation not yet reviewed" when switching to an unapproved translation. Share links freeze which layers were approved on the day (`share_links.approved`).
+- **History:** the deck's Version history page lists review events (sent, slide approved, approved, changes requested, override, withdrawn, promoted).
+- Data: `reviews`, `slide_approvals`, `review_events`, `users.review_scopes` (migration 0009). Code: `src/lib/reviews.ts`, `src/app/decks/[id]/edit/Review.tsx`, `ReviewNotice.tsx`, `people/ReviewAccess.tsx`. `get_deck` (connector) reports review status; sending and approving happen in the app.
+
 ## Claude connector (make and edit decks from Claude)
 
 Dekiru is a remote MCP server at **`https://<domain>/api/mcp`**. People add it to Claude as a custom connector and sign in

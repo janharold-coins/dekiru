@@ -180,6 +180,9 @@ code.inline { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-
 .present .langs button { font: inherit; font-family: var(--app), var(--font-noto-sc), var(--font-noto-thai), sans-serif; font-size: 13px; padding: 3px 9px; border-radius: 999px; border: 0; background: transparent; color: rgba(255,255,255,0.6); cursor: pointer; }
 .present .langs button:hover { color: #fff; }
 .present .langs button.on { background: rgba(255,255,255,0.18); color: #fff; }
+/* "Not yet reviewed" over a presented deck (team members for English; everyone for an unreviewed translation) */
+.review-notice { position: fixed; top: 16px; right: 16px; z-index: 20; display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 999px; background: rgba(180,83,9,0.92); color: #fff; font-size: 13px; font-weight: 500; font-family: var(--app), system-ui, sans-serif; box-shadow: 0 4px 16px rgba(0,0,0,0.3); pointer-events: none; }
+.review-notice i { width: 8px; height: 8px; border-radius: 50%; background: #fff; }
 .draftbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: #fff8e6; border: 1px solid #f3d38a; border-radius: var(--radius); padding: 10px 14px; margin: 4px 0 14px; font-size: 14px; }
 
 /* arrange slides */
@@ -316,9 +319,11 @@ code.inline { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-
 .te-color.off input { cursor: not-allowed; }
 
 /* ================= Deck editor (Figma: Dekiru / Quarterly review deck editor, node 1:4) ================= */
-.ed {
+.ed, .ed-dialog {
   --ed-ink: #20232b; --ed-mute: #666c79; --ed-faint: #959ba7; --ed-line: #e5e7ec; --ed-side: #fafafb;
   --ed-canvas: #f3f4f6; --ed-accent: #6357d9; --ed-warn: #b45309;
+}
+.ed {
   height: 100vh; display: flex; flex-direction: column; background: #fff; color: var(--ed-ink);
   font-family: var(--font-numeral), Inter, system-ui, sans-serif; font-size: 13px; line-height: normal; overflow: hidden;
 }
@@ -430,11 +435,26 @@ code.inline { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-
 .ed-lang-note.part::before { background: var(--ed-warn); }
 .ed-lang-note.none::before { background: var(--ed-line); border: 1px solid var(--ed-mute); box-sizing: border-box; }
 .ed-note-warn { background: #fff7ed; border-color: #fed7aa; }
+/* Review (spec §7a): status chip, approve buttons, per-slide state, dialogs */
+.ed-review-chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; background: #f3f4f6; color: var(--ed-mute); }
+.ed-review-chip i { width: 7px; height: 7px; border-radius: 50%; background: var(--ed-faint); }
+.ed-review-chip.ok { background: #e8f7ee; color: #15803d; } .ed-review-chip.ok i { background: #16a34a; }
+.ed-review-chip.wait { background: #f3f2fd; color: #4f46a8; } .ed-review-chip.wait i { background: var(--ed-accent); }
+.ed-review-chip.warn { background: #fff7ed; color: #b45309; } .ed-review-chip.warn i { background: #f59e0b; }
+.ed .ed-btn-approve { background: #16a34a; border-color: #16a34a; color: #fff; }
+.ed .ed-btn-approve:hover { background: #15803d; }
+.ed .ed-btn-approve:disabled { opacity: 0.6; cursor: default; }
+.ed-slide-review-wrap { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; margin-right: 8px; }
+.ed-slide-review { font-size: 12px; color: var(--ed-mute); white-space: nowrap; }
+.ed-slide-review.ok { color: #15803d; font-weight: 600; }
+.ed-review-note { width: 100%; box-sizing: border-box; margin-top: 12px; font: inherit; font-size: 13px; padding: 8px 10px; border: 1px solid var(--ed-line); border-radius: 6px; resize: vertical; }
+.ed-review-note:focus { outline: 2px solid var(--ed-accent); outline-offset: 1px; border-color: transparent; }
+@media (max-width: 1100px) { .ed-review-chip { display: none; } }
 
 /* Content panel */
 .ed-panel { position: relative; width: var(--ed-panel, 360px); flex: none; display: flex; flex-direction: column; background: #fff; border-left: 1px solid var(--ed-line); min-height: 0; }
 .ed-panel-h { height: 56px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
-.ed-panel-h h2 { margin: 0; font-size: 14px; font-weight: 600; }
+.ed-panel-h h2 { margin: 0; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .ed-form { flex: 1; min-height: 0; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
 .ed-panel-f { height: 40px; flex: none; display: flex; align-items: center; gap: 7px; padding: 0 20px; background: var(--ed-side); border-top: 1px solid var(--ed-line); font-size: 10px; color: var(--ed-mute); }
 .ed-resize { position: absolute; left: -6px; top: 50%; transform: translateY(-50%); width: 10px; height: 48px; border-radius: 100px; background: #fff; border: 1px solid var(--ed-line); display: flex; align-items: center; justify-content: center; gap: 2px; cursor: col-resize; z-index: 5; }
@@ -481,6 +501,13 @@ select:not([multiple]) {
 }
 select:not([multiple]):disabled { cursor: default; opacity: 0.6; }
 .links.people td { vertical-align: middle; }
+.review-summary { font-size: 13px; color: var(--mute); }
+.home-review-what { color: var(--blue); font-weight: 600; }
+.btn.btn-sm { height: 32px; padding: 0 12px; font-size: 13px; }
+.review-scopes { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; color: var(--ed-ink); }
+.review-scopes .check { font-size: 13px; }
+.review-scopes-group { display: flex; flex-direction: column; gap: 10px; padding-left: 24px; }
+.review-scopes-h { font-size: 13px; margin-left: -24px; }
 
 /* ---------- App header (Figma "Dekiru" 23:497) — shared by every page except the deck editor ---------- */
 html { overflow-x: clip; }

@@ -23,6 +23,9 @@ export const role = pgEnum("role", ["admin", "manager", "member"]);
 export const deckKind = pgEnum("deck_kind", ["master", "copy"]);
 export const versionStatus = pgEnum("version_status", ["draft", "published"]);
 export const viewKind = pgEnum("view_kind", ["link", "present"]);
+export const reviewKind = pgEnum("review_kind", ["employee", "company", "translation"]);
+export const reviewStatus = pgEnum("review_status", ["for_review", "changes_requested", "approved", "withdrawn"]);
+export const reviewEvent = pgEnum("review_event", ["sent", "slide_approved", "deck_approved", "approved", "changes_requested", "override", "withdrawn", "promoted"]);
 
 const created = () => timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
 
@@ -42,6 +45,8 @@ export const users = pgTable("users", {
   role: role("role").notNull().default("member"),
   /** May create and edit themes (admins always can). Set on the People page. */
   canEditThemes: boolean("can_edit_themes").notNull().default(false),
+  /** What this person may review (see src/lib/reviews.ts): "employee", "company", "lang:zh", … Admins review everything. */
+  reviewScopes: jsonb("review_scopes").$type<string[]>().notNull().default([]),
   createdAt: created(),
   updatedAt: updated(),
 });
@@ -212,6 +217,8 @@ export const shareLinks = pgTable("share_links", {
   slides: jsonb("slides").$type<SlideData[]>().notNull(),
   /** The deck's look on the day the link was made, so later theme edits don't change a sent link. */
   theme: jsonb("theme").$type<ThemeTokens>(),
+  /** Which layers were approved when the link was made: "en" for the content, "zh"/"th" for translations. */
+  approved: jsonb("approved").$type<string[]>().notNull().default([]),
   label: text("label"), // e.g. the merchant it was sent to
   passwordHash: text("password_hash"),
   createdBy: uuid("created_by").references(() => users.id),
@@ -255,6 +262,64 @@ export const slideViews = pgTable(
     ms: integer("ms").notNull().default(0),
   },
   (t) => [uniqueIndex("slide_views_session_slide").on(t.sessionId, t.slideId)],
+);
+
+/*
+ * Review and approval (spec §7a). A review is about one published version of a deck: its content
+ * ("employee" for personal copies, "company" for masters and promotions — 2 approvals) or one of its
+ * translations ("translation" + lang — 2 approvals from reviewers of that language). Per-slide approvals
+ * add up to the deck's; a new version starts a new review, carrying over approvals for unchanged slides.
+ */
+export const reviews = pgTable(
+  "reviews",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    deckId: text("deck_id").notNull().references(() => decks.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    versionId: uuid("version_id").notNull().references(() => deckVersions.id, { onDelete: "cascade" }),
+    kind: reviewKind("kind").notNull(),
+    /** Language for translation reviews; null for content reviews. */
+    lang: text("lang"),
+    status: reviewStatus("status").notNull().default("for_review"),
+    /** Approvals each slide needs (1 for employee decks, 2 for company decks and translations). */
+    required: integer("required").notNull().default(1),
+    requestedBy: uuid("requested_by").references(() => users.id),
+    requestedAt: created(),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+    /** The reviewer's note when changes were requested. */
+    note: text("note"),
+  },
+  (t) => [index("reviews_deck").on(t.deckId, t.requestedAt), index("reviews_version").on(t.versionId)],
+);
+
+/** One person's approval of one slide within a review. `fingerprint` is the slide content approved, so it can carry over. */
+export const slideApprovals = pgTable(
+  "slide_approvals",
+  {
+    reviewId: uuid("review_id").notNull().references(() => reviews.id, { onDelete: "cascade" }),
+    slideId: text("slide_id").notNull(),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    fingerprint: text("fingerprint").notNull(),
+    createdAt: created(),
+  },
+  (t) => [uniqueIndex("slide_approvals_one").on(t.reviewId, t.slideId, t.userId)],
+);
+
+/** What happened in a review, for the deck's history. */
+export const reviewEvents = pgTable(
+  "review_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    deckId: text("deck_id").notNull().references(() => decks.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    reviewId: uuid("review_id").references(() => reviews.id, { onDelete: "cascade" }),
+    event: reviewEvent("event").notNull(),
+    userId: uuid("user_id").references(() => users.id),
+    /** Slide for slide_approved; language for translation reviews; free text for notes. */
+    slideId: text("slide_id"),
+    lang: text("lang"),
+    note: text("note"),
+    createdAt: created(),
+  },
+  (t) => [index("review_events_deck").on(t.deckId, t.createdAt)],
 );
 
 /** Old deck ids (readable slugs, before the uniform "dk-…" ids) → new ids, so old links and prompts still resolve. */

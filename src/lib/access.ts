@@ -35,7 +35,12 @@ export async function deckFor(id: string, user: SignedInUser | null) {
     return deck ? { deck, canEdit: false } : null;
   }
   const row = await deckRow(id);
-  if (!row || !canView(row, user)) return null;
+  if (!row) return null;
+  if (!canView(row, user)) {
+    // Reviewers may open a deck that's waiting for their review (read-only).
+    const { reviewerCanView } = await import("./reviews");
+    if (!(await reviewerCanView(row, user))) return null;
+  }
   const editable = canEdit(row, user);
   const deck = await getDeck(id, { draft: editable });
   return deck ? { deck, canEdit: editable } : null;

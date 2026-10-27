@@ -29,12 +29,13 @@ import { canEdit, canView, deckRow } from "./access";
 import { pickTheme, publishedThemes } from "./themes";
 import { DEFAULT_THEME_ID } from "@/deck/theme";
 import { getTemplate } from "@/content/templates";
+import { EditError } from "./errors";
 import { coverTitle } from "@/content/cover";
 import { agendaFor, analyzeMaster, arrange, sectionNumbers } from "@/content/structure";
 
 export { canEdit, canView, deckRow };
 
-export class EditError extends Error {}
+export { EditError };
 
 async function editable(id: string, user: SignedInUser | null) {
   const row = await deckRow(id);

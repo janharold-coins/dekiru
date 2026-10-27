@@ -4,13 +4,16 @@ import { RenderSlide } from "@/deck/RenderSlide";
 import { asLang, availableLangs, LANGUAGES, type Lang } from "@/deck/i18n";
 import type { SlideData } from "@/deck/types";
 import { TrackedPresenter } from "../../decks/[id]/present/TrackedPresenter";
+import { ReviewNotice } from "../../decks/[id]/present/ReviewNotice";
 
 /**
  * The shared deck with its language selector. Languages are offered only when the link holds a
  * translation for them (translations are frozen with the link, like the slides and the theme).
  * `?lang=zh` on the URL opens the deck in that language; switching updates the URL so the viewer can share it.
  */
-export function SharedDeckViewer({ slides, trackUrl, initialLang }: { slides: SlideData[]; trackUrl: string; initialLang: string }) {
+export function SharedDeckViewer({ slides, trackUrl, initialLang, approved, team }: {
+  slides: SlideData[]; trackUrl: string; initialLang: string; approved: string[]; team: boolean;
+}) {
   const langs = availableLangs(slides);
   const [lang, setLang] = useState<Lang>(() => {
     const l = asLang(initialLang);
@@ -23,12 +26,15 @@ export function SharedDeckViewer({ slides, trackUrl, initialLang }: { slides: Sl
     history.replaceState(null, "", url);
   };
   return (
-    <TrackedPresenter
-      trackUrl={trackUrl}
-      slideIds={slides.map((s) => s.id)}
-      slides={slides.map((s) => <RenderSlide key={s.id} slide={s} lang={lang} />)}
-      hudExtra={langs.length ? <LanguageSwitch langs={["en", ...langs]} value={lang} onChange={choose} /> : undefined}
-    />
+    <>
+      <TrackedPresenter
+        trackUrl={trackUrl}
+        slideIds={slides.map((s) => s.id)}
+        slides={slides.map((s) => <RenderSlide key={s.id} slide={s} lang={lang} />)}
+        hudExtra={langs.length ? <LanguageSwitch langs={["en", ...langs]} value={lang} onChange={choose} /> : undefined}
+      />
+      <ReviewNotice approved={approved} lang={lang} team={team} />
+    </>
   );
 }
 

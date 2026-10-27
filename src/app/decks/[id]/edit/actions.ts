@@ -10,6 +10,8 @@ import {
   discardDraft, EditError, moveSlide, publish, removeSlide, renameDeck, replaceDraft, setDeckTheme, setHidden, updateSlide,
 } from "@/lib/editing";
 import type { SeedSlide } from "@/content/resolve";
+import type { Lang } from "@/deck/i18n";
+import { approveDeck, approveForEveryone, approveSlide, promoteDeck, requestChanges, sendForReview, withdrawReview } from "@/lib/reviews";
 
 export type EditorResult = { error?: string };
 const message = (e: unknown) => (e instanceof EditError ? e.message : (e as Error).message);
@@ -56,4 +58,28 @@ export async function discardDraftAction(deckId: string): Promise<EditorResult> 
 /** Undo/redo: save the editor's whole state (slides in order + theme) as the draft. */
 export async function saveDeckStateAction(deckId: string, slides: SeedSlide[], themeId: string): Promise<EditorResult> {
   return run(deckId, (u) => replaceDraft(u, deckId, slides, themeId));
+}
+
+/* Review and approval (src/lib/reviews.ts). The editor reloads after each, so the new state is rendered by the page. */
+const after = (deckId: string) => { revalidatePath(`/decks/${deckId}`); revalidatePath("/"); };
+export async function sendForReviewAction(deckId: string, lang: Lang): Promise<EditorResult> {
+  const r = await run(deckId, (u) => sendForReview(u, deckId, lang)); after(deckId); return { error: r.error };
+}
+export async function approveSlideAction(deckId: string, slideId: string, lang: Lang): Promise<EditorResult> {
+  const r = await run(deckId, (u) => approveSlide(u, deckId, slideId, lang)); after(deckId); return { error: r.error };
+}
+export async function approveDeckAction(deckId: string, lang: Lang): Promise<EditorResult> {
+  const r = await run(deckId, (u) => approveDeck(u, deckId, lang)); after(deckId); return { error: r.error };
+}
+export async function requestChangesAction(deckId: string, lang: Lang, note: string): Promise<EditorResult> {
+  const r = await run(deckId, (u) => requestChanges(u, deckId, lang, note)); after(deckId); return r;
+}
+export async function approveForEveryoneAction(deckId: string, lang: Lang, note: string): Promise<EditorResult> {
+  const r = await run(deckId, (u) => approveForEveryone(u, deckId, lang, note)); after(deckId); return r;
+}
+export async function withdrawReviewAction(deckId: string, lang: Lang): Promise<EditorResult> {
+  const r = await run(deckId, (u) => withdrawReview(u, deckId, lang)); after(deckId); return r;
+}
+export async function promoteDeckAction(deckId: string): Promise<EditorResult> {
+  const r = await run(deckId, (u) => promoteDeck(u, deckId)); after(deckId); return r;
 }

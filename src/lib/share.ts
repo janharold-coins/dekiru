@@ -15,6 +15,7 @@ import { opensByLink } from "./analytics";
 import { pickTheme, publishedThemes } from "./themes";
 import { resolveSlides } from "@/content/resolve";
 import type { SignedInUser } from "./auth";
+import { reviewState } from "./reviews";
 
 const scrypt = promisify(scryptCb) as (pw: string, salt: Buffer, len: number) => Promise<Buffer>;
 
@@ -100,6 +101,7 @@ export async function createShareLink(deckId: string, input: CreateLinkInput, us
   const [link] = await q.insert(shareLinks).values({
     slug: newSlug(), deckId, versionId: version.id, deckTitle: deck.title, slides,
     theme: pickTheme(await publishedThemes(), version.themeId).tokens, // frozen with the link
+    approved: (await reviewState(deckId)).approved, // which layers were reviewed on the day, also frozen
     label: input.label?.trim() || null,
     passwordHash: password ? await hashPassword(password) : null,
     createdBy: user?.id ?? null, expiresAt,

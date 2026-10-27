@@ -6,7 +6,7 @@ import type { Role, SignedInUser } from "./auth";
 export const ROLES = roleEnum.enumValues as readonly Role[];
 
 export async function listPeople() {
-  return db().select({ id: users.id, email: users.email, name: users.name, image: users.image, role: users.role, canEditThemes: users.canEditThemes, createdAt: users.createdAt })
+  return db().select({ id: users.id, email: users.email, name: users.name, image: users.image, role: users.role, canEditThemes: users.canEditThemes, reviewScopes: users.reviewScopes, createdAt: users.createdAt })
     .from(users).orderBy(sql`case ${users.role} when 'admin' then 0 when 'manager' then 1 else 2 end`, users.createdAt);
 }
 
@@ -20,6 +20,14 @@ export async function setRole(actor: SignedInUser | null, userId: string, next: 
     if (others === 0) throw new Error("There has to be at least one admin. Make someone else admin first.");
   }
   await db().update(users).set({ role: next }).where(eq(users.id, userId));
+}
+
+/** Admins only. What someone may review (src/lib/reviews.ts ALL_SCOPES). */
+export async function setReviewScopes(actor: SignedInUser | null, userId: string, scopes: string[]) {
+  if (actor && actor.role !== "admin") throw new Error("Only admins can choose reviewers");
+  const { ALL_SCOPES } = await import("./reviews");
+  const known = new Set(ALL_SCOPES.map((s) => s.scope as string));
+  await db().update(users).set({ reviewScopes: scopes.filter((s) => known.has(s)) }).where(eq(users.id, userId));
 }
 
 /** Admins only. Lets someone who isn't an admin create and edit themes. */

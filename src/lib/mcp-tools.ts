@@ -16,6 +16,7 @@ import {
   removeSlide, setDeckTheme, setHidden, setTranslation, updateSlide, type SlideInput,
 } from "./editing";
 import { LANGUAGES, TARGET_LANGS } from "@/deck/i18n";
+import { reviewState } from "./reviews";
 
 export const INSTRUCTIONS = `Dekiru builds Coins.ph sales decks from an approved design system. Slides are data: each slide is a
 pattern (a fixed layout from the library) plus props (its content). You never write HTML or CSS.
@@ -93,11 +94,19 @@ export function registerTools(server: McpServer, user: SignedInUser) {
     const deck = await getDeck(deck_id, { draft: editable });
     if (!deck) throw new EditError(`Deck "${deck_id}" has no content yet.`);
     const checks = await checkSlides(deck.slides);
+    const rv = await reviewState(deck_id);
+    const status = (r: { status: string; level: number; required: number } | null | undefined) =>
+      !r ? "not reviewed" : r.status === "for_review" ? `for review (${r.level} of ${r.required} approvals)` : r.status.replace("_", " ");
     let n = 0;
     return {
       id: deck.id, title: deck.title, kind: deck.kind, version: deck.version,
       showing: deck.status === "draft" ? "unpublished draft" : "published", canEdit: editable, url: deckUrl(deck.id),
       theme: { id: deck.theme.id, name: deck.theme.name },
+      review: {
+        content: status(rv.content),
+        ...Object.fromEntries(Object.entries(rv.translations).map(([l, r]) => [LANGUAGES[l as "zh" | "th"].english, status(r)])),
+        note: "Reviews are sent and approved in the Dekiru app (Send for review / Approve). Unreviewed decks and translations show a notice when presented or shared.",
+      },
       slides: checks.map(({ slide, overflow, renderError }) => ({
         number: slide.hidden ? null : ++n, id: slide.id, pattern: slide.pattern,
         ...(slide.hidden ? { hidden: true } : {}),

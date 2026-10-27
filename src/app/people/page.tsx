@@ -5,11 +5,13 @@ import { listPeople, ROLES } from "@/lib/people";
 import { Nav } from "../Nav";
 import { RoleSelect } from "./RoleSelect";
 import { ThemeAccess } from "./ThemeAccess";
+import { ReviewAccess } from "./ReviewAccess";
+import { ALL_SCOPES } from "@/lib/reviews";
 
 const ROLE_HELP: Record<string, string> = {
   admin: "Everything, including roles",
-  manager: "Edit master decks, approve changes",
-  member: "Use and copy decks, share links, suggest changes",
+  manager: "Edit master decks; review what they're set up for",
+  member: "Use and copy decks, share links, send decks for review",
 };
 
 export default async function PeoplePage() {
@@ -24,7 +26,7 @@ export default async function PeoplePage() {
         {ROLES.map((r) => <div key={r}><dt>{r[0].toUpperCase() + r.slice(1)}</dt><dd>{ROLE_HELP[r]}</dd></div>)}
       </dl>
       <table className="links people" style={{ maxWidth: 980 }}>
-        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Themes</th></tr></thead>
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Themes</th><th>Can review</th></tr></thead>
         <tbody>
           {people.map((p) => (
             <tr key={p.id}>
@@ -32,6 +34,7 @@ export default async function PeoplePage() {
               <td>{p.email}</td>
               <td><RoleSelect userId={p.id} role={p.role} roles={ROLES} /></td>
               <td><ThemeAccess userId={p.id} allowed={p.canEditThemes} admin={p.role === "admin"} /></td>
+              <td><ReviewAccess userId={p.id} scopes={p.reviewScopes} admin={p.role === "admin"} options={ALL_SCOPES} /></td>
             </tr>
           ))}
         </tbody>

@@ -158,6 +158,33 @@ export function localize(slide: SlideData, lang: Lang): SlideData {
   return { ...slide, props: mergeText(slide.props, tr.props) };
 }
 
+/**
+ * What a reviewer approved on a slide: in English the slide's content (pattern, props, chrome), in another
+ * language that translation. A later version with the same fingerprint keeps the approval.
+ */
+export function fingerprint(slide: SlideData, lang: Lang): string {
+  const { i18n: _i18n, ...content } = slide; // eslint-disable-line @typescript-eslint/no-unused-vars
+  const subject = lang === "en"
+    ? { pattern: content.pattern, props: content.props, chrome: content.chrome ?? null }
+    : { source: sourceHash(slide.props), props: slide.i18n?.[lang]?.props ?? null };
+  return fnv(canon(subject));
+}
+
+/** JSON with sorted keys, so the database's key order doesn't change the fingerprint. */
+const canon = (v: unknown): string =>
+  Array.isArray(v) ? `[${v.map(canon).join(",")}]`
+  : v && typeof v === "object" ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon((v as Record<string, unknown>)[k])}`).join(",")}}`
+  : JSON.stringify(v);
+
+function fnv(text: string): string {
+  let h = 0x811c9dc5;
+  for (const ch of text) {
+    h ^= ch.codePointAt(0)!;
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(16).padStart(8, "0");
+}
+
 /* ---------- status ---------- */
 
 export type TranslationState = "fresh" | "stale" | "missing";

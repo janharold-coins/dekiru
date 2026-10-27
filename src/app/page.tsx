@@ -2,6 +2,8 @@ import { listDecks } from "@/lib/decks";
 import { requireUser } from "@/lib/auth";
 import { Nav } from "./Nav";
 import { HomeDecks, type HomeDeck } from "./HomeDecks";
+import { ALL_SCOPES, hasScope, reviewQueue } from "@/lib/reviews";
+import { LANGUAGES } from "@/deck/i18n";
 
 const fmt = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Manila" });
 
@@ -10,8 +12,20 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   const user = await requireUser("/");
   const { tab } = await searchParams;
   const decks = await listDecks({ viewerId: user?.id ?? null, includeArchived: true });
+  const reviewer = ALL_SCOPES.some((s) => hasScope(user, s.scope));
+  const queue = reviewer ? await reviewQueue(user) : [];
+  // Decks waiting for review may belong to other people, so they aren't in `decks`; load them by id.
+  const { getDeck } = await import("@/lib/decks");
+  const forReview = (await Promise.all(queue.map(async (q) => {
+    const d = decks.find((x) => x.id === q.deckId) ?? (await getDeck(q.deckId));
+    if (!d) return null;
+    const what = q.kind === "translation" ? `${LANGUAGES[q.lang].english} translation` : q.kind === "company" ? "Company deck" : `Employee deck${q.requestedByName ? ` by ${q.requestedByName}` : ""}`;
+    const progress = `${q.summary.level} of ${q.summary.required} approvals · ${q.summary.approvedSlides}/${q.summary.totalSlides} slides`;
+    return { deck: d, review: { what, progress, lang: q.lang } };
+  }))).filter((x): x is NonNullable<typeof x> => Boolean(x));
   const canEditMasters = user?.role === "admin" || user?.role === "manager";
-  const toCard = (d: (typeof decks)[number]): HomeDeck => ({
+  const toCard = (d: (typeof decks)[number], review?: HomeDeck["review"]): HomeDeck => ({
+    review,
     id: d.id,
     title: d.title,
     kind: d.kind,
@@ -28,9 +42,11 @@ export default async function Home({ searchParams }: PageProps<"/">) {
     <div className="home">
       <Nav on="decks" user={user} />
       <HomeDecks
-        company={decks.filter((d) => d.kind === "master" && !d.archivedAt).map(toCard)}
-        mine={decks.filter((d) => d.kind !== "master").map(toCard)}
-        initialTab={tab === "mine" ? "mine" : "company"}
+        company={decks.filter((d) => d.kind === "master" && !d.archivedAt).map((d) => toCard(d))}
+        mine={decks.filter((d) => d.kind !== "master").map((d) => toCard(d))}
+        review={forReview.map((x) => toCard(x.deck, x.review))}
+        reviewer={reviewer}
+        initialTab={tab === "mine" ? "mine" : tab === "review" ? "review" : "company"}
       />
     </div>
   );
