@@ -24,12 +24,8 @@ export default async function SharePage({ params }: { params: Promise<{ id: stri
   return (
     <main className="shell">
       <Nav on="decks" user={user} />
-      <p className="mono" style={{ margin: "0 0 4px" }}><Link href={`/decks/${deck.id}`}>← {deck.title}</Link></p>
+      <p className="crumb"><Link href={`/decks/${deck.id}`}>← {deck.title}</Link></p>
       <h1 className="page">Share</h1>
-      <p className="lede">
-        A link shows this deck exactly as it is now{deck.versionNumber ? ` (v${deck.versionNumber})` : ""}. Later edits to the deck never change a link
-        you&apos;ve sent; make a new link to send an update. Links are password-protected unless you choose otherwise.
-      </p>
       {!hasDb() ? (
         <p className="hint warn">Sharing needs the database. Add DATABASE_URL to .env.local.</p>
       ) : (

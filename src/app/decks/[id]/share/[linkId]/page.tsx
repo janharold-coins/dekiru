@@ -31,10 +31,10 @@ export default async function LinkReportPage({ params, searchParams }: {
   return (
     <main className="shell" style={themeStyle(link.theme)}>
       <Nav on="decks" user={user} />
-      <p className="mono" style={{ margin: "0 0 4px" }}><Link href={`/decks/${id}/share`}>← Share · {link.deckTitle}</Link></p>
+      <p className="crumb"><Link href={`/decks/${id}/share`}>← Share · {link.deckTitle}</Link></p>
       <h1 className="page">{link.label ?? "Untitled link"}</h1>
-      <p className="lede">
-        <code className="inline">/s/{link.slug}</code> · {status === "live" ? "live" : status} · counts time only while the deck is on screen.
+      <p className="page-meta">
+        <code className="inline">/s/{link.slug}</code> · {status === "live" ? "Live" : status[0].toUpperCase() + status.slice(1)}
       </p>
 
       <nav className="seg" aria-label="Whose visits">
@@ -54,7 +54,6 @@ export default async function LinkReportPage({ params, searchParams }: {
       </div>
 
       <h2 className="section-h">Time per slide</h2>
-      <p className="lede" style={{ marginBottom: 12 }}>Total time across all visits, and how many visits reached each slide.</p>
       {r.opens === 0 ? (
         <p className="mono">{r.counts.all === 0 ? "No visits yet. Numbers appear here as soon as someone opens the link." : `No ${WHO_LABEL[who].toLowerCase()} visits yet.`}</p>
       ) : (

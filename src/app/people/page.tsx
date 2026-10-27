@@ -20,13 +20,10 @@ export default async function PeoplePage() {
     <main className="shell">
       <Nav on="people" user={user} />
       <h1 className="page">People</h1>
-      <p className="lede">
-        Everyone who has signed in with a coins.ph account. New people start as members. Role and theme-access changes apply on their next page load. Admins can always edit themes; tick “Can edit themes” for anyone else who should.
-      </p>
       <dl className="roles-key">
         {ROLES.map((r) => <div key={r}><dt>{r[0].toUpperCase() + r.slice(1)}</dt><dd>{ROLE_HELP[r]}</dd></div>)}
       </dl>
-      <table className="links" style={{ maxWidth: 980 }}>
+      <table className="links people" style={{ maxWidth: 980 }}>
         <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Themes</th></tr></thead>
         <tbody>
           {people.map((p) => (

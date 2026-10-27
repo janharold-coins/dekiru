@@ -9,7 +9,9 @@ Run after the Sales seed changes:  python3 scripts/build-templates.py
 import copy, json, pathlib, re
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-SALES = {s["id"]: s for s in json.loads((ROOT / "src/content/decks/sales.json").read_text())["slides"]}
+_sales = json.loads((ROOT / "src/content/decks/sales.json").read_text())
+SALES_ID = _sales["id"]
+SALES = {s["id"]: s for s in _sales["slides"]}
 
 # id, name, source slide, what it's for
 TEMPLATES = [
@@ -125,7 +127,7 @@ def build():
         slide = {"id": tid, "pattern": s["pattern"], "props": props}
         if s.get("chrome"):
             slide["chrome"] = s["chrome"]
-        out.append({"id": tid, "name": name, "use": use, "from": f"sales/{src}", "slide": slide})
+        out.append({"id": tid, "name": name, "use": use, "from": f"{SALES_ID}/{src}", "slide": slide})
     path = ROOT / "src/content/templates.json"
     path.write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n")
     print(f"wrote {len(out)} templates to {path.relative_to(ROOT)}")

@@ -49,9 +49,8 @@ export default async function TemplatePage({ params, searchParams }: { params: P
   return (
     <main className="shell">
       <Nav on="library" user={user} />
-      <p className="mono" style={{ margin: "0 0 4px" }}><Link href={back}>← Templates</Link></p>
+      <p className="crumb"><Link href={back}>← Templates</Link></p>
       <h1 className="page">{t.name}</h1>
-      <p className="lede" style={{ marginBottom: 12 }}>{t.use} Replace the placeholder words with yours; the preview updates as you type.</p>
       {budgets.length > 0 && (
         <div className="chips limits" style={{ margin: "0 0 24px" }}>
           <span><b>{patterns[t.slide.pattern]?.meta.name} layout limits</b></span>

@@ -2,16 +2,18 @@ import type { ReactNode } from "react";
 import { AccentBar, Background, CoBrandLogo, Footer, Logo } from "../chrome/Chrome";
 import { slideFlipVars } from "../theme";
 import type { Chrome } from "../types";
+import type { Lang } from "../i18n";
 
 /**
  * A 1920×1080 slide in design pixels. Paint order:
  * background → BG blobs → pattern content → logo / footer → accent bar → `top` layer.
  */
-export function SlideFrame({ chrome, children, top }: { chrome: Chrome; children: ReactNode; top?: ReactNode }) {
+export function SlideFrame({ chrome, children, top, lang = "en" }: { chrome: Chrome; children: ReactNode; top?: ReactNode; lang?: Lang }) {
   const onDark = chrome.background !== "light";
   return (
     <div
       className="dk-slide"
+      lang={lang}
       style={{ position: "relative", width: 1920, height: 1080, overflow: "hidden", isolation: "isolate", ...slideFlipVars(chrome.background) }}
     >
       <Background variant={chrome.background} overlay={chrome.overlay} opacity={chrome.overlayOpacity} />

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { SignedInUser } from "@/lib/auth";
 import { SignOutButton } from "./sign-in/SignInButton";
+import { ViewAsBanner, ViewAsSelect } from "./view-as/ViewAs";
 
 /** "Jan Harold Diaz" → "JD": first and last initials. */
 function initials(name: string) {
@@ -14,8 +15,10 @@ export function Nav({ on, user }: { on?: "decks" | "library" | "people"; user: S
   const item = (href: string, label: string, key: typeof on) => (
     <Link href={href} className={`app-nav-item${on === key ? " on" : ""}`} aria-current={on === key ? "page" : undefined}>{label}</Link>
   );
+  const isAdmin = user?.realRole === "admin" || user?.role === "admin";
   return (
     <header className="app-header">
+      {user?.realRole && <ViewAsBanner role={user.role} />}
       <div className="app-header-l">
         <Link href="/" className="app-brand" aria-label="Dekiru home">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -30,11 +33,12 @@ export function Nav({ on, user }: { on?: "decks" | "library" | "people"; user: S
       </div>
       {user ? (
         <div className="app-account">
+          {isAdmin && <ViewAsSelect role={user.role} />}
           <div className="app-who">
             <span className="app-avatar" aria-hidden>{initials(user.name || user.email)}</span>
             <span className="app-who-text">
               <b>{user.name || user.email}</b>
-              <span>{user.role.toUpperCase()}</span>
+              <span>{user.role.toUpperCase()}{user.realRole && " (VIEW AS)"}</span>
             </span>
           </div>
           <span className="app-divider" aria-hidden />

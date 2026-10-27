@@ -12,16 +12,17 @@ import { appBaseURL, type SignedInUser } from "./auth";
 import { getDeck, listDecks } from "./decks";
 import { publishedThemes } from "./themes";
 import {
-  addSlide, canEdit, canView, checkSlides, deckRow, duplicateDeck, EditError, moveSlide, newDeck, publish,
-  removeSlide, setDeckTheme, setHidden, updateSlide, type SlideInput,
+  addSlide, canEdit, canView, checkSlides, deckRow, deckText, duplicateDeck, EditError, moveSlide, newDeck, publish,
+  removeSlide, setDeckTheme, setHidden, setTranslation, updateSlide, type SlideInput,
 } from "./editing";
+import { LANGUAGES, TARGET_LANGS } from "@/deck/i18n";
 
 export const INSTRUCTIONS = `Dekiru builds Coins.ph sales decks from an approved design system. Slides are data: each slide is a
 pattern (a fixed layout from the library) plus props (its content). You never write HTML or CSS.
 
 How to work
-1. Start from what exists. list_decks, then get_deck on a company master (e.g. "sales", "ramp") to see approved slides.
-   Reuse approved slides as blocks ("sales/s04") instead of rewriting them: they stay correct when the master changes.
+1. Start from what exists. list_decks, then get_deck on a company master (kind "master") to see approved slides. Deck ids look like "dk-1a2b3c4d".
+   Reuse approved slides as blocks ("<master deck id>/<slide id>", e.g. "dk-1a2b3c4d/s04") instead of rewriting them: they stay correct when the master changes.
 2. Make changes in the person's own deck: copy_deck (start from a master) or create_deck (pick blocks + new slides).
    Company masters can only be changed by admins and managers.
 3. For a new slide, call get_pattern first and follow its example props exactly. Omit "figma" keys (pixel overrides).
@@ -29,7 +30,14 @@ How to work
    shorter phrasing that keeps the meaning; if it can't fit, propose a different pattern. Never shrink text.
 5. Never invent figures, rates, corridors or claims. Take them from the masters or from what the person gives you.
    If a number is missing, ask.
-6. Share the preview link so the person can review. Publish only when they say so.`;
+6. Share the preview link so the person can review. Publish only when they say so.
+
+Translations (Chinese zh, Thai th). Decks keep their English; a translation is a layer of text per slide that
+viewers switch to on share links. Translate a company master and every deck reusing its slides is translated too.
+   get_deck_text lists each slide's text by path and whether its translation is current; translate slide by slide
+   with set_translation, sending the same paths back. Keep product names (Coins.ph, Coins Pro, QRPh, InstaPay),
+   figures, rates, corridors, currency codes, URLs and brand names exactly as written; keep "\n" line breaks.
+   Read the overflow warnings and rephrase shorter where flagged. Publish when the person says so.`;
 
 const ok = (data: unknown) => ({ content: [{ type: "text" as const, text: JSON.stringify(data, null, 1) }] });
 const fail = (message: string) => ({ content: [{ type: "text" as const, text: message }], isError: true });
@@ -48,7 +56,7 @@ function cleanProps(props: Record<string, unknown>) {
 }
 
 const slideInput = z.union([
-  z.object({ block: z.string().describe('An approved master slide, "deck/slideId", e.g. "sales/s04".') }),
+  z.object({ block: z.string().describe('An approved master slide, "deckId/slideId", e.g. "dk-1a2b3c4d/s04".') }),
   z.object({
     pattern: z.string().describe("Pattern id from list_patterns."),
     props: z.record(z.string(), z.unknown()).describe("Slide content. Shape must match get_pattern's example."),
@@ -145,7 +153,10 @@ export function registerTools(server: McpServer, user: SignedInUser) {
 
   server.registerTool("create_deck", {
     title: "Create a deck",
-    description: "Create a new deck owned by the person from approved blocks and/or new slides, in order. A title slide (cover pattern, with the deck title) is added first and the approved closing slide last, unless the slides already include a cover or closing; edit the cover with update_slide.",
+    description: "Create a new deck owned by the person from approved blocks and/or new slides, in order. A title slide (cover pattern, with the deck title) is added first and the approved closing slide last, unless the slides already include a cover or closing; edit the cover with update_slide. "
+      + "Products are added whole: any slide of a product (product-hero, its detail/flow, and slides that travel with it such as Corridor Readiness after Multi-Currency) brings all of them. "
+      + "Product sections are built automatically where the first product sits: the section divider always, the product index when 3+ products (cut down to the picked ones), and pillar dividers when products span 2+ pillars; don't pick those yourself. "
+      + "Agenda and section numbers: when the deck has 3+ level-1 sections, an agenda listing exactly those sections is added after the cover and the sections are numbered 01, 02, 03…; otherwise neither. Don't pick the agenda yourself.",
     inputSchema: z.object({ title: z.string(), slides: z.array(slideInput).min(1) }),
   }, async ({ title, slides }) => run(async () => {
     const id = await newDeck(user, title, slides as SlideInput[]);
@@ -211,6 +222,31 @@ export function registerTools(server: McpServer, user: SignedInUser) {
     await setDeckTheme(user, deck_id, theme_id, "claude");
     return { saved: "draft", preview: deckUrl(deck_id) };
   }));
+
+  const langSchema = z.enum(TARGET_LANGS).describe("zh = Chinese (Simplified), th = Thai.");
+
+  server.registerTool("get_deck_text", {
+    title: "Get a deck's text for translation",
+    description: "Every slide's translatable text by path (e.g. \"title\", \"cards[1].body\") and its translation status in a language. "
+      + "By default only slides whose translation is missing or out of date carry text (the rest just report their status); only=\"all\" sends everything. "
+      + "Slides that follow a master are translated in that master (translateIn).",
+    inputSchema: z.object({ deck_id: z.string(), lang: langSchema, only: z.enum(["outdated", "all"]).optional() }),
+    annotations: { readOnlyHint: true },
+  }, async ({ deck_id, lang, only }) => run(async () => ({
+    language: LANGUAGES[lang].english, deck: deck_id, slides: await deckText(user, deck_id, lang, only ?? "outdated"),
+  })));
+
+  server.registerTool("set_translation", {
+    title: "Save slide translations",
+    description: "Store translated text for one or more slides in a language (saved to the draft). Send each slide's text keyed by the "
+      + "same paths get_deck_text gave; paths left out stay English. Returns overflow warnings per slide in that language: rephrase shorter where flagged.",
+    inputSchema: z.object({
+      deck_id: z.string(), lang: langSchema,
+      slides: z.array(z.object({ slide_id: z.string(), text: z.record(z.string(), z.string()) })).min(1),
+    }),
+  }, async ({ deck_id, lang, slides }) => run(async () => ({
+    saved: "draft", language: LANGUAGES[lang].english, preview: deckUrl(deck_id), slides: await setTranslation(user, deck_id, lang, slides),
+  })));
 
   server.registerTool("publish_deck", {
     title: "Publish a deck",

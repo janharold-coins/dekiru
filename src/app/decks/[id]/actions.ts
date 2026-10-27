@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import {
-  addBlocks, duplicateDeck, EditError, restoreVersion, setDeckTheme,
+  addBlocks, duplicateDeck, EditError, restoreVersion, setArchived, setDeckTheme,
 } from "@/lib/editing";
 
 export async function copyAction(deckId: string) {
@@ -38,6 +38,11 @@ export async function addBlocksAction(deckId: string, blocks: string[], position
   const r = await attempt(deckId, (u) => addBlocks(u, deckId, blocks, position, "app"));
   if (!r.error) redirect(`/decks/${deckId}`);
   return r;
+}
+
+/** Archive or unarchive one of your own decks (home page, My Decks). */
+export async function archiveAction(deckId: string, archived: boolean) {
+  return attempt(deckId, (u) => setArchived(u, deckId, archived));
 }
 
 /** Switch the deck's theme (draft), then back to the deck to review and publish. */

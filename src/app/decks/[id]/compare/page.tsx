@@ -19,7 +19,6 @@ export default async function ComparePage({ params }: { params: Promise<{ id: st
     <main className="shell" style={themeStyle(deck.theme.tokens)}>
       <Nav on="decks" user={user} />
       <h1 className="page">{deck.title}: Figma vs code</h1>
-      <p className="lede">Left: the Figma frame. Right: the same slide rendered from the pattern library. Differences in letterforms usually mean the Cns Manrope / TWK Everett font files aren&apos;t installed on this machine.</p>
       {deck.slides.map((s, i) => (
         <div key={s.id} className="compare">
           <div className="slidehead">

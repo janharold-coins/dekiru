@@ -74,6 +74,15 @@ Code: `src/lib/share.ts`, `src/lib/analytics.ts`, `src/app/decks/[id]/present/` 
 - Claude connector: `list_themes`, `set_deck_theme`; `get_deck` reports the theme.
 - Later: per-slide pin to keep its own look, fonts and components in themes, themes that also change layouts.
 
+## Translated decks (Chinese, Thai)
+
+- **Rule: English is the content; a translation is a layer of text on the slide** (`slide.i18n[lang]`, only the text people edit in the slide form — images, colours and layout stay as approved). It travels with the slide: translate a master and every deck that reuses its slides is translated; copies snapshot it; **share links freeze it**; version history keeps it.
+- **Claude translates, through the connector** — nothing in the app does: `get_deck_text` lists a deck's text by path and each slide's status (translated / English changed since / not translated), `set_translation` saves a language for one or more slides and reports overflow in that language. Each translation remembers a fingerprint of the English it came from, so the app knows when it's out of date without any AI. Slides that follow a master are translated in the master.
+- **Where it shows:** share links get a language selector in the bottom bar (`English · 中文 · ไทย`, only for languages the link holds) and `?lang=zh` / `?lang=th` on the URL opens in that language. The editor's status bar previews the deck in each language (dot = complete / partial / none; hover for counts) and the content panel says whether the selected slide's translation is current; the fields stay English.
+- **Fonts:** Manrope and Inter have no Chinese or Thai glyphs, so `Noto Sans SC` / `Noto Sans Thai` come after the design font in every stack (`--dk-script`, by `lang` on the slide) — Latin letters and numbers keep the design font. Thai gets slightly taller lines (`--dk-lh`). Overflow budgets are in Latin-character widths; `textWidth()` counts a Chinese character as two and a Thai letter as 1.6 (its marks as none), so one budget serves every language.
+- Code: `src/deck/i18n.ts` (entries, fingerprint, overlay, status), `RenderSlide lang`, `checkOverflow(slide, lang)`, `deckText` / `setTranslation` in `src/lib/editing.ts`, `src/app/s/[slug]/Viewer.tsx`. Re-seeding a master from Figma carries its translations over by slide id.
+- Later: translate in Present mode too; hand-edit a translation in the editor; record the language a visit used; more languages (add to `LANGUAGES` and a script font).
+
 ## Claude connector (make and edit decks from Claude)
 
 Dekiru is a remote MCP server at **`https://<domain>/api/mcp`**. People add it to Claude as a custom connector and sign in
@@ -82,7 +91,7 @@ Every tool call then acts as that person.
 
 Tools: `list_decks`, `get_deck`, `list_patterns`, `get_pattern` (real example props from the masters), `copy_deck`,
 `create_deck`, `add_slide` (an approved block like `sales/s04`, or a new slide), `update_slide`, `remove_slide`, `move_slide`,
-`hide_slide`, `publish_deck`. Server instructions tell Claude how to work: reuse blocks, one slide at a time, respect budgets,
+`hide_slide`, `list_themes`, `set_deck_theme`, `get_deck_text`, `set_translation`, `publish_deck`. Server instructions tell Claude how to work: reuse blocks, one slide at a time, respect budgets,
 never invent figures, publish only when asked.
 
 Rules enforced on the server:

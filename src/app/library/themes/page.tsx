@@ -10,7 +10,7 @@ import { db, hasDb } from "@/db/client";
 import { themeVersions } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { Nav } from "../../Nav";
-import { blockGroups } from "../../decks/blocks";
+import { blockGroups, slideCount } from "../../decks/blocks";
 import { LibraryTabs } from "../Tabs";
 import { NewTheme } from "./NewTheme";
 import { glanceSamples, layoutSamples } from "./samples";
@@ -23,19 +23,16 @@ export default async function ThemesPage() {
     publishedThemes(), themeUsage(), blockGroups(user), layoutSamples(user?.id ?? null),
     db().select({ themeId: themeVersions.themeId }).from(themeVersions).where(eq(themeVersions.status, "draft")),
   ]);
-  const approved = groups.reduce((n, g) => n + g.sections.reduce((m, s) => m + s.items.length, 0), 0);
+  const approved = slideCount(groups);
   const glance = glanceSamples(samples);
   const drafted = new Set(drafts.map((d) => d.themeId));
   return (
     <main className="shell">
       <Nav on="library" user={user} />
-      <h1 className="page">Library</h1>
-      <LibraryTabs on="themes" counts={{ approved, templates: templates.length, themes: themes.length }} themes />
-      <p className="lede">
-        A theme is the look a deck gives every slide in it: backgrounds and glow for now, more later.
-        Slides only carry content, so approved slides from any deck take the theme of the deck they&apos;re in.
-        Publishing a theme updates every deck that uses it; links already sent keep their look.
-      </p>
+      <div className="page-head">
+        <h1 className="page">Library</h1>
+        <LibraryTabs on="themes" counts={{ approved, templates: templates.length, themes: themes.length }} themes />
+      </div>
       <NewTheme themes={themes.map((t) => ({ id: t.id, name: t.name }))} />
       <div className="theme-list">
         {themes.map((t) => (

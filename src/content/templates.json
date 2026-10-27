@@ -3,7 +3,7 @@
   "id": "cover",
   "name": "Cover",
   "use": "Deck title and a one-line promise.",
-  "from": "sales/s01",
+  "from": "dk-645bd167/s01",
   "slide": {
    "id": "cover",
    "pattern": "cover",
@@ -17,7 +17,7 @@
   "id": "agenda",
   "name": "Agenda",
   "use": "Up to three topics you'll cover.",
-  "from": "sales/s02",
+  "from": "dk-645bd167/s02",
   "slide": {
    "id": "agenda",
    "pattern": "agenda",
@@ -47,7 +47,7 @@
   "id": "section",
   "name": "Section divider",
   "use": "Opens a major section.",
-  "from": "sales/s03",
+  "from": "dk-645bd167/s03",
   "slide": {
    "id": "section",
    "pattern": "section",
@@ -63,7 +63,7 @@
   "id": "subsection",
   "name": "Sub-section divider",
   "use": "Opens a part inside a section.",
-  "from": "sales/s10",
+  "from": "dk-645bd167/s10",
   "slide": {
    "id": "subsection",
    "pattern": "section",
@@ -80,7 +80,7 @@
   "id": "key-numbers",
   "name": "Key numbers",
   "use": "Two headline stats plus supporting figures.",
-  "from": "sales/s04",
+  "from": "dk-645bd167/s04",
   "slide": {
    "id": "key-numbers",
    "pattern": "key-numbers",
@@ -167,7 +167,7 @@
   "id": "timeline",
   "name": "Timeline",
   "use": "Milestones by year.",
-  "from": "sales/s05",
+  "from": "dk-645bd167/s05",
   "slide": {
    "id": "timeline",
    "pattern": "timeline",
@@ -307,7 +307,7 @@
   "id": "statement",
   "name": "Statement and highlights",
   "use": "A big statement with three proof points.",
-  "from": "sales/s07",
+  "from": "dk-645bd167/s07",
   "slide": {
    "id": "statement",
    "pattern": "statement-highlights",
@@ -335,7 +335,7 @@
   "id": "product-index",
   "name": "Product overview",
   "use": "Products grouped under up to three pillars.",
-  "from": "sales/s09",
+  "from": "dk-645bd167/s09",
   "slide": {
    "id": "product-index",
    "pattern": "product-index",
@@ -413,7 +413,7 @@
   "id": "product-hero",
   "name": "Product intro",
   "use": "Introduces one product with its image.",
-  "from": "sales/s11",
+  "from": "dk-645bd167/s11",
   "slide": {
    "id": "product-hero",
    "pattern": "product-hero",
@@ -437,7 +437,7 @@
   "id": "product-detail",
   "name": "Product detail, rate chips",
   "use": "Who it's for, what it is, APIs and rates.",
-  "from": "sales/s12",
+  "from": "dk-645bd167/s12",
   "slide": {
    "id": "product-detail",
    "pattern": "product-detail",
@@ -495,7 +495,7 @@
   "id": "product-detail-note",
   "name": "Product detail, pricing note",
   "use": "Same, with a written pricing note.",
-  "from": "sales/s15",
+  "from": "dk-645bd167/s15",
   "slide": {
    "id": "product-detail-note",
    "pattern": "product-detail",
@@ -533,7 +533,7 @@
   "id": "product-flow",
   "name": "Product flow",
   "use": "How it works in up to five steps.",
-  "from": "sales/s13",
+  "from": "dk-645bd167/s13",
   "slide": {
    "id": "product-flow",
    "pattern": "product-flow",
@@ -576,7 +576,7 @@
   "id": "card-grid",
   "name": "Status cards",
   "use": "Up to eight cards with statuses, e.g. corridors.",
-  "from": "sales/s30",
+  "from": "dk-645bd167/s30",
   "slide": {
    "id": "card-grid",
    "pattern": "card-grid",
@@ -738,7 +738,7 @@
   "id": "feature-cards",
   "name": "Feature cards",
   "use": "Up to five reasons or features.",
-  "from": "sales/s38",
+  "from": "dk-645bd167/s38",
   "slide": {
    "id": "feature-cards",
    "pattern": "feature-cards",
@@ -779,7 +779,7 @@
   "id": "cta-contact",
   "name": "Contact",
   "use": "Call to action with contact emails.",
-  "from": "sales/s39",
+  "from": "dk-645bd167/s39",
   "slide": {
    "id": "cta-contact",
    "pattern": "cta-contact",
@@ -806,7 +806,7 @@
   "id": "closing",
   "name": "Closing",
   "use": "Final slide.",
-  "from": "sales/s40",
+  "from": "dk-645bd167/s40",
   "slide": {
    "id": "closing",
    "pattern": "closing",

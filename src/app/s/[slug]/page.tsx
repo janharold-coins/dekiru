@@ -3,12 +3,11 @@ import { ThemeScope } from "@/deck/ThemeScope";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { hasDb } from "@/db/client";
-import { RenderSlide } from "@/deck/RenderSlide";
 import { getShareLink, isUnlocked, linkStatus, unlockCookieName } from "@/lib/share";
-import { TrackedPresenter } from "../../decks/[id]/present/TrackedPresenter";
 import { PasswordForm } from "./PasswordForm";
+import { SharedDeckViewer } from "./Viewer";
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ lang?: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const link = hasDb() ? await getShareLink((await params).slug) : null;
@@ -16,8 +15,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 /** Public deck link. No sign-in; password unless the creator turned it off. */
-export default async function SharedDeck({ params }: Props) {
+export default async function SharedDeck({ params, searchParams }: Props) {
   const { slug } = await params;
+  const { lang = "en" } = await searchParams;
   if (!hasDb()) notFound();
   const link = await getShareLink(slug);
   if (!link) notFound();
@@ -44,11 +44,7 @@ export default async function SharedDeck({ params }: Props) {
 
   return (
     <ThemeScope tokens={link.theme}>
-    <TrackedPresenter
-      trackUrl={`/s/${slug}/track`}
-      slideIds={link.slides.map((s) => s.id)}
-      slides={link.slides.map((s) => <RenderSlide key={s.id} slide={s} />)}
-    />
+    <SharedDeckViewer slides={link.slides} trackUrl={`/s/${slug}/track`} initialLang={lang} />
     </ThemeScope>
   );
 }

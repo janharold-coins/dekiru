@@ -1,11 +1,18 @@
 /** Who may see and change a deck. Masters: everyone sees, admins/managers edit. Copies: owner (admins can see). */
 import { eq } from "drizzle-orm";
 import { db, hasDb } from "@/db/client";
-import { decks } from "@/db/schema";
+import { deckIdRenames, decks } from "@/db/schema";
 import type { SignedInUser } from "./auth";
 import { getDeck } from "./decks";
 
 export type DeckRow = typeof decks.$inferSelect;
+
+/** The current id for an old one (decks were renamed to "dk-…" ids), or null. */
+export async function renamedDeckId(oldId: string) {
+  if (!hasDb()) return null;
+  const [row] = await db().select({ newId: deckIdRenames.newId }).from(deckIdRenames).where(eq(deckIdRenames.oldId, oldId)).limit(1);
+  return row?.newId ?? null;
+}
 
 export async function deckRow(id: string) {
   const [row] = await db().select().from(decks).where(eq(decks.id, id)).limit(1);

@@ -6,7 +6,7 @@
  * - Masters (company decks): admins and managers edit; everyone can copy.
  * - Copies: only the owner edits (admins can see them).
  * - Every edit lands in the deck's draft; nothing is visible to others until published.
- * - Approved content (blocks) = slides of the master decks, inserted as references ("sales/s04")
+ * - Approved content (blocks) = slides of the master decks, inserted as references ("dk-1a2b3c4d/s04")
  *   so they keep following the master. Editing a referenced slide turns it into the deck's own
  *   slide (an override) and the response says so.
  */
@@ -20,6 +20,7 @@ import { createElement } from "react";
 import { isRef, resolveSlides, type SeedSlide } from "@/content/resolve";
 import { RenderSlide } from "@/deck/RenderSlide";
 import { checkOverflow, type OverflowWarning } from "@/deck/overflow";
+import { LANGUAGES, overlayFromEntries, textEntries, translationState, withTranslation, type TargetLang } from "@/deck/i18n";
 import { patterns } from "@/deck/registry";
 import type { SlideData } from "@/deck/types";
 import { copyDeck, createDeck, getDeckVersions, publishDraft, saveDraft } from "./decks";
@@ -28,6 +29,8 @@ import { canEdit, canView, deckRow } from "./access";
 import { pickTheme, publishedThemes } from "./themes";
 import { DEFAULT_THEME_ID } from "@/deck/theme";
 import { getTemplate } from "@/content/templates";
+import { coverTitle } from "@/content/cover";
+import { agendaFor, analyzeMaster, arrange, sectionNumbers } from "@/content/structure";
 
 export { canEdit, canView, deckRow };
 
@@ -96,7 +99,7 @@ async function toSlide(input: SlideInput): Promise<SeedSlide> {
   if ("block" in input) {
     const [deckId, slideId] = input.block.split("/");
     const master = await deckRow(deckId);
-    if (!master || master.kind !== "master") throw new EditError(`"${input.block}" isn't an approved block. Blocks are master slides like "sales/s04" (see get_deck on a master).`);
+    if (!master || master.kind !== "master") throw new EditError(`"${input.block}" isn't an approved block. Blocks are master slides like "<deck id>/s04" (see get_deck on a master).`);
     const src = (await lookup(deckId))?.find((s) => s.id === slideId);
     if (!src) throw new EditError(`No slide "${slideId}" in master "${deckId}".`);
     return { id: newSlideId(), ref: input.block };
@@ -120,30 +123,27 @@ const editNote = (via: Via) => (via === "claude" ? "Edited with Claude" : "Edite
 
 /* ---------- operations ---------- */
 
-/** Split a long title over two lines at the space nearest the middle (the cover title doesn't wrap). */
-function coverTitle(title: string) {
-  const t = title.trim();
-  if (t.length <= 22 || t.includes("\n")) return t;
-  const mid = t.length / 2;
-  let best = -1;
-  for (let i = 0; i < t.length; i++) if (t[i] === " " && (best < 0 || Math.abs(i - mid) < Math.abs(best - mid))) best = i;
-  return best < 0 ? t : `${t.slice(0, best)}\n${t.slice(best + 1)}`;
+/** The cover a new deck starts from: the approved master cover when it exists, else the cover template. */
+export async function coverBase(): Promise<SlideData | undefined> {
+  const cover = getTemplate("cover");
+  if (!cover) return undefined;
+  const [deckId, slideId] = cover.from.split("/");
+  const approved = (await lookup(deckId))?.find((s) => s.id === slideId);
+  return approved && !isRef(approved) && approved.pattern === "cover" ? approved : cover.slide;
 }
 
 /**
  * Every new deck opens with a title slide and ends with the closing slide, unless the picked slides already have them.
  * The cover is the deck's own (approved cover with the deck's title, editable); the closing stays linked to the master.
  */
-async function withCoverAndClosing(title: string, slides: SeedSlide[]) {
+async function withCoverAndClosing(title: string, slides: SeedSlide[], applyTitle = true) {
   const patternsUsed = new Set((await resolveSlides(slides, lookup)).map((s) => s.pattern));
   const out = [...slides];
-  const cover = getTemplate("cover"), closing = getTemplate("closing");
-  if (!patternsUsed.has("cover") && cover) {
-    const [deckId, slideId] = cover.from.split("/");
-    const approved = (await lookup(deckId))?.find((s) => s.id === slideId);
-    const base = approved && !isRef(approved) && approved.pattern === "cover" ? approved : cover.slide;
+  const closing = getTemplate("closing");
+  const base = await coverBase();
+  if (!patternsUsed.has("cover") && base) {
     out.unshift({
-      id: newSlideId(), pattern: "cover", props: { ...base.props, title: coverTitle(title) },
+      id: newSlideId(), pattern: "cover", props: applyTitle ? { ...base.props, title: coverTitle(title) } : { ...base.props },
       ...(base.chrome ? { chrome: base.chrome } : {}),
     });
   }
@@ -157,13 +157,87 @@ async function withCoverAndClosing(title: string, slides: SeedSlide[]) {
   return out;
 }
 
-export async function newDeck(user: SignedInUser | null, title: string, inputs: SlideInput[], via: Via = "claude") {
+/** Follows a block that is itself shared from another master to the slide it comes from. */
+async function origin(ref: string) {
+  for (let hops = 0; hops < 5; hops++) {
+    const [deckId, slideId] = ref.split("/");
+    const s = (await lookup(deckId))?.find((x) => x.id === slideId);
+    if (!s || !isRef(s)) return ref;
+    ref = s.ref;
+  }
+  return ref;
+}
+
+/**
+ * The New deck rules (see src/content/structure.ts): products bring all their slides, their section divider,
+ * the product index (3+ products) and pillar dividers (2+ pillars); with 3+ sections an agenda of exactly those
+ * sections is added and the sections are numbered 01, 02…; otherwise no agenda and no numbers.
+ */
+async function withStructure(input: SeedSlide[]) {
+  const slides = await Promise.all(input.map(async (s) => (isRef(s) ? { ...s, ref: await origin(s.ref) } : s)));
+  const deckIds = [...new Set(slides.filter(isRef).map((s) => s.ref.split("/")[0]))];
+  const structures = [];
+  for (const d of deckIds) {
+    const row = await deckRow(d);
+    const stored = row?.kind === "master" ? await lookup(d) : undefined;
+    if (stored) structures.push(analyzeMaster(d, stored));
+  }
+  const own = new Map<string, SeedSlide>();
+  const picks = slides.map((s, i) => { if (isRef(s)) return s.ref; own.set(`#own/${i}`, s); return `#own/${i}`; });
+  let out: SeedSlide[] = [];
+  for (const b of arrange(picks, structures)) {
+    if (b.slide) { const s = { ...b.slide, id: newSlideId() }; delete s.ref; await validate(s); out.push(s); }
+    else if (b.block && own.has(b.block)) out.push(own.get(b.block)!);
+    else if (b.block) out.push({ id: newSlideId(), ref: b.block });
+  }
+  // Agenda (3+ sections): right after a picked cover, else first (the deck's own cover goes before it).
+  const first = await resolveSlides(out, lookup);
+  const isL1 = (x: SlideData) => x.pattern === "section" && (x.props as { level?: number }).level !== 2;
+  const agenda = agendaFor(first.flatMap((x, i) => (isL1(x) ? [{ block: isRef(out[i]) ? (out[i] as { ref: string }).ref : undefined, slide: x }] : [])), structures);
+  if (agenda) {
+    const cover = first.findIndex((x) => x.pattern === "cover");
+    let slide: SeedSlide;
+    if (agenda.slide) { const s = { ...agenda.slide, id: newSlideId() }; delete s.ref; await validate(s); slide = s; }
+    else slide = { id: newSlideId(), ref: agenda.block! };
+    out.splice(cover + 1, 0, slide);
+  }
+  // Section numbers: a linked divider whose number changes becomes this deck's own copy.
+  const resolved = await resolveSlides(out, lookup);
+  const numbers = sectionNumbers(resolved);
+  out = out.map((s, i) => {
+    const want = numbers.get(i);
+    const r = resolved[i];
+    if (want === undefined || (r.props as { number?: string }).number === want) return s;
+    const { ref, ...data } = r;
+    return { ...data, id: s.id, props: { ...data.props, number: want }, ...(ref ? { source: { ...data.source, copiedFrom: ref } } : {}) };
+  });
+  return out;
+}
+
+export interface NewDeckOptions {
+  /** false: the deck starts as an unpublished draft ("Save as draft"). Default: published. */
+  publish?: boolean;
+  /** false: the cover keeps the approved title instead of taking the deck's name. Default: the deck's name. */
+  coverTitle?: boolean;
+  /** Theme id; null or undefined = the default company theme. */
+  themeId?: string | null;
+}
+
+export async function newDeck(user: SignedInUser | null, title: string, inputs: SlideInput[], via: Via = "claude", opts: NewDeckOptions = {}) {
   if (!inputs.length) throw new EditError("A deck needs at least one slide.");
   let slides: SeedSlide[] = [];
   for (const i of inputs) { const s = await toSlide(i); await validate(s); slides.push(s); }
-  slides = await withCoverAndClosing(title, slides);
-  const id = deckSlug(title);
-  await createDeck({ id, title: title.trim(), kind: "copy", slides, note: via === "claude" ? "Created with Claude" : "Created in Dekiru" }, { userId: user?.id ?? null });
+  slides = await withStructure(slides);
+  slides = await withCoverAndClosing(title, slides, opts.coverTitle !== false);
+  if (opts.themeId) {
+    const all = await publishedThemes();
+    if (!all.some((t) => t.id === opts.themeId)) throw new EditError(`No theme "${opts.themeId}". Themes: ${all.map((t) => t.id).join(", ")}.`);
+  }
+  const id = await newDeckId();
+  await createDeck({
+    id, title: title.trim(), kind: "copy", slides, note: via === "claude" ? "Created with Claude" : "Created in Dekiru",
+    themeId: opts.themeId && opts.themeId !== DEFAULT_THEME_ID ? opts.themeId : null, status: opts.publish === false ? "draft" : "published",
+  }, { userId: user?.id ?? null });
   return id;
 }
 
@@ -171,7 +245,7 @@ export async function duplicateDeck(user: SignedInUser | null, sourceId: string,
   const row = await deckRow(sourceId);
   if (!row || !canView(row, user)) throw new EditError(`No deck called "${sourceId}".`);
   const name = title?.trim() || `${row.title} (copy)`;
-  const id = deckSlug(name);
+  const id = await newDeckId();
   await copyDeck(sourceId, { id, title: name }, { userId: user?.id ?? null });
   return id;
 }
@@ -347,6 +421,66 @@ export async function replaceDraft(user: SignedInUser | null, deckId: string, sl
   await saveDraft(deckId, slides, { userId: user?.id ?? null, note: editNote("app"), themeId: theme });
 }
 
+/* ---------- translations (see src/deck/i18n.ts) ---------- */
+
+/**
+ * The deck's translatable text, slide by slide, with each slide's translation status per language.
+ * Slides that follow a master are reported with the master they belong to: translate them there.
+ */
+export async function deckText(user: SignedInUser | null, deckId: string, lang: TargetLang, only: "all" | "outdated" = "outdated") {
+  const row = await deckRow(deckId);
+  if (!row || !canView(row, user)) throw new EditError(`No deck called "${deckId}".`);
+  const { draft, published } = await getDeckVersions(deckId);
+  const v = (canEdit(row, user) && draft) || published;
+  if (!v) throw new EditError(`Deck "${deckId}" has no content yet.`);
+  const resolved = await resolveSlides(v.slides, lookup);
+  let n = 0;
+  return resolved.map((slide) => {
+    const number = slide.hidden ? null : ++n;
+    const state = translationState(slide, lang);
+    const entries = textEntries(slide.props);
+    const include = only === "all" || state !== "fresh";
+    return {
+      number, id: slide.id, pattern: slide.pattern, ...(slide.hidden ? { hidden: true } : {}),
+      status: state === "fresh" ? "translated" : state === "stale" ? "english changed since translation" : "not translated",
+      ...(slide.ref ? { followsMaster: slide.ref, translateIn: slide.ref.split("/")[0] } : {}),
+      ...(include && !slide.ref ? { text: Object.fromEntries(entries.map((e) => [e.path, e.text])) } : {}),
+      ...(include && state === "stale" && !slide.ref ? { current: slide.i18n?.[lang]?.props } : {}),
+    };
+  });
+}
+
+export interface TranslationInput { slide_id: string; text: Record<string, string> }
+
+/**
+ * Stores translations on the deck's own slides (draft). Each slide's overlay is fingerprinted against the
+ * English it was made from. Slides that follow a master can't be translated here: translate the master.
+ */
+export async function setTranslation(user: SignedInUser | null, deckId: string, lang: TargetLang, inputs: TranslationInput[]) {
+  await editable(deckId, user);
+  const { slides } = await working(deckId);
+  const results: { slide_id: string; translated: number; skipped?: string[]; overflow?: OverflowWarning[] }[] = [];
+  for (const input of inputs) {
+    const i = indexOf(slides, input.slide_id);
+    const current = slides[i];
+    if (isRef(current)) {
+      throw new EditError(`Slide "${input.slide_id}" follows the master slide ${current.ref}; translate that deck (${current.ref.split("/")[0]}) and every deck using it is translated too.`);
+    }
+    const slide = current as SlideData;
+    const known = new Set(textEntries(slide.props).map((e) => e.path));
+    const skipped = Object.keys(input.text).filter((k) => !known.has(k));
+    const overlay = overlayFromEntries(slide.props, input.text);
+    const translated = textEntries(overlay).length;
+    if (!translated) throw new EditError(`No translatable text for slide "${input.slide_id}". Paths must match get_deck_text, e.g. "cards[0].title".`);
+    const next = withTranslation(slide, lang, overlay);
+    slides[i] = next;
+    const overflow = checkOverflow(next, lang);
+    results.push({ slide_id: input.slide_id, translated, ...(skipped.length ? { skipped } : {}), ...(overflow.length ? { overflow } : {}) });
+  }
+  await save(deckId, slides, user, `Translated to ${LANGUAGES[lang].english} with Claude`);
+  return results;
+}
+
 /** Rename a deck. Applies straight away (titles aren't versioned); share links keep the title they were made with. */
 export async function renameDeck(user: SignedInUser | null, deckId: string, title: string) {
   await editable(deckId, user);
@@ -357,8 +491,22 @@ export async function renameDeck(user: SignedInUser | null, deckId: string, titl
   return name;
 }
 
-/** URL-safe id from a title, with a short random suffix so copies never collide. */
-export function deckSlug(title: string) {
-  const base = title.toLowerCase().normalize("NFKD").replace(/[^\w\s-]/g, "").trim().replace(/[\s_]+/g, "-").replace(/-+/g, "-").slice(0, 40) || "deck";
-  return `${base}-${randomBytes(2).toString("hex")}`;
+/**
+ * Archive (or bring back) one of your own decks. Archived decks drop out of My Decks, the Claude connector's
+ * list and the "Add to" pickers, but nothing is lost: the deck still opens by its link, share links keep
+ * working, and history and analytics stay. Company masters can't be archived.
+ */
+export async function setArchived(user: SignedInUser | null, deckId: string, archived: boolean) {
+  const row = await editable(deckId, user);
+  if (row.kind === "master") throw new EditError("Company decks can't be archived.");
+  await db().update(decks).set({ archivedAt: archived ? new Date() : null }).where(eq(decks.id, deckId));
+}
+
+/** A new deck id: "dk-" + 8 hex characters. The same shape for every deck, and never changed (promoting a deck keeps it). */
+export async function newDeckId() {
+  for (let i = 0; i < 5; i++) {
+    const id = `dk-${randomBytes(4).toString("hex")}`;
+    if (!(await deckRow(id))) return id;
+  }
+  throw new EditError("Couldn't pick a deck id. Try again.");
 }

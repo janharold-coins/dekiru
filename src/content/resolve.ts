@@ -4,7 +4,8 @@ import type { SlideData } from "@/deck/types";
  * A stored slide is either full slide data or a reference to another deck's slide
  * ({id, ref: "sales/s01"}). References resolve at read time, so a fix to a shared slide
  * shows up in every deck that uses it. Hidden is per deck: a referenced slide is
- * presented unless this deck hides it.
+ * presented unless this deck hides it. Translations (slide.i18n) come with the referenced
+ * slide too, so translating a master translates every deck that uses its slides.
  */
 export type SlideRef = { id: string; ref: string; hidden?: boolean };
 export type SeedSlide = SlideData | SlideRef;

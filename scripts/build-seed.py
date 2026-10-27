@@ -2,7 +2,7 @@
 
 Output:
   src/content/decks/sales.json — a Deck: {id, title, slides:[{id, pattern, props, chrome?, hidden?, source}]}.
-  src/content/decks/ramp.json  — a Deck whose slides are references ({id, ref:"sales/sNN"}) to Sales master
+  src/content/decks/ramp.json  — a Deck whose slides are references ({id, ref:"<SALES_ID>/sNN"}) to Sales master
                                  slides, so a fix to a shared slide lands in both decks.
 Each slide's `props` matches the pattern's TypeScript props in src/deck/patterns/*.
 `figma` keys inside props carry pixel-exact overrides that reproduce the Figma file;
@@ -152,12 +152,13 @@ for n in SALES_ORDER:
     slides.append(s)
 
 OUT = ROOT / "src" / "content" / "decks"
-deck = {"id": "sales", "title": "Coins.ph — Sales deck", "version": "figma-511:28902", "slides": slides}
+SALES_ID, RAMP_ID = "dk-645bd167", "dk-5e098a0e"  # permanent deck ids (see deckId in src/lib/editing.ts)
+deck = {"id": SALES_ID, "title": "Coins.ph — Sales deck", "version": "figma-511:28902", "slides": slides}
 (OUT / "sales.json").write_text(json.dumps(deck, ensure_ascii=False, indent=1))
 print("wrote sales.json", len(slides), "slides,", sum(1 for s in slides if not s.get("hidden")), "presented")
 
 assert not HIDDEN & set(RAMP_ORDER), "Ramp references a slide hidden in Sales"
-ramp = {"id": "ramp", "title": "Coins.ph — Ramp deck", "version": "figma-511:28902",
-        "slides": [{"id": f"s{n:02d}", "ref": f"sales/s{n:02d}"} for n in RAMP_ORDER]}
+ramp = {"id": RAMP_ID, "title": "Coins.ph — Ramp deck", "version": "figma-511:28902",
+        "slides": [{"id": f"s{n:02d}", "ref": f"{SALES_ID}/s{n:02d}"} for n in RAMP_ORDER]}
 (OUT / "ramp.json").write_text(json.dumps(ramp, ensure_ascii=False, indent=1))
 print("wrote ramp.json", len(ramp["slides"]), "slides")

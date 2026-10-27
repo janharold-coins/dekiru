@@ -25,11 +25,16 @@ export const backgrounds = {
 } as const;
 export type BackgroundVariant = keyof typeof backgrounds;
 
-/** Font stacks. "Cns Manrope" / "TWK Everett" are used when installed locally; otherwise the loaded web fallbacks. */
+/**
+ * Font stacks. "Cns Manrope" / "TWK Everett" are used when installed locally; otherwise the loaded web fallbacks.
+ * `--dk-script` is the script font for translated slides (Noto Sans SC / Thai, set per `lang` in globals.css):
+ * it comes after the design font, so Latin letters and numbers keep the design font and only the glyphs
+ * Manrope lacks fall through to it.
+ */
 export const font = {
-  manrope: "'Cns Manrope', var(--font-manrope), Manrope, system-ui, sans-serif",
-  everett: "'TWK Everett', var(--font-numeral), 'Inter', system-ui, sans-serif",
-  encode: "'Encode Sans Semi Expanded', var(--font-manrope), sans-serif",
+  manrope: "'Cns Manrope', var(--font-manrope), Manrope, var(--dk-script, system-ui), system-ui, sans-serif",
+  everett: "'TWK Everett', var(--font-numeral), 'Inter', var(--dk-script, system-ui), system-ui, sans-serif",
+  encode: "'Encode Sans Semi Expanded', var(--font-manrope), var(--dk-script, system-ui), sans-serif",
 } as const;
 
 type Family = keyof typeof font;
@@ -46,7 +51,8 @@ export function t(
   return {
     fontFamily: font[family],
     fontSize: size,
-    lineHeight: lineHeight === "normal" ? "normal" : lineHeight,
+    // Translated slides may need taller lines (Thai stacks marks above and below): --dk-lh, 1 in English.
+    lineHeight: lineHeight === "normal" ? "normal" : `calc(${lineHeight} * var(--dk-lh, 1))`,
     letterSpacing: tracking,
     fontWeight: weight,
     color: onBg(col), // follows the theme's text tone when the slide's background role is switched

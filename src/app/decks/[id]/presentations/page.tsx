@@ -26,12 +26,8 @@ export default async function PresentationsPage({ params, searchParams }: {
   return (
     <main className="shell" style={themeStyle(deck.theme.tokens)}>
       <Nav on="decks" user={user} />
-      <p className="mono" style={{ margin: "0 0 4px" }}><Link href={`/decks/${deck.id}`}>← {deck.title}</Link></p>
+      <p className="crumb"><Link href={`/decks/${deck.id}`}>← {deck.title}</Link></p>
       <h1 className="page">Presentations</h1>
-      <p className="lede">
-        Every time someone on the team presented this deck with the <b>Present</b> button. Time counts only while the deck is
-        on screen. Presenters can note who they&apos;re presenting to in the bar at the bottom of the presenter.
-      </p>
 
       {!r ? (
         <p className="hint warn">Tracking needs the database. Add DATABASE_URL to .env.local.</p>
@@ -52,7 +48,6 @@ export default async function PresentationsPage({ params, searchParams }: {
           </p>
 
           <h2 className="section-h">Time per slide</h2>
-          <p className="lede" style={{ marginBottom: 12 }}>Total across these presentations, and how many reached each slide.</p>
           {r.shown === 0
             ? <p className="mono">No presentations yet. They appear here after someone presents this deck for {secs} seconds or more.</p>
             : <SlideBars slides={shown} stats={r.slides} sessions={r.shown} sessionWord="Reached" />}

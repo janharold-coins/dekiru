@@ -22,9 +22,8 @@ export default async function AddSlidesPage({ params }: { params: Promise<{ id: 
   return (
     <main className="shell">
       <Nav on="decks" user={user} />
-      <p className="mono" style={{ margin: "0 0 4px" }}><Link href={`/decks/${id}`}>← Back to {found.deck.title}</Link></p>
+      <p className="crumb"><Link href={`/decks/${id}`}>← Back to {found.deck.title}</Link></p>
       <h1 className="page">Add approved slides</h1>
-      <p className="lede">They&apos;re added at the end of the deck; drag them into place after. Approved slides keep following the company master, so updates to numbers and pricing reach your deck.</p>
       <BlockPicker groups={groups} submitLabel="Add to deck" onSubmit={add} />
     </main>
   );

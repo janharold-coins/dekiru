@@ -10,7 +10,7 @@ import { APIError, createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { mcp } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { db, hasDb } from "@/db/client";
 import { accounts, oauthAccessTokens, oauthApplications, oauthConsents, sessions, users, verifications } from "@/db/schema";
@@ -18,7 +18,16 @@ import { accounts, oauthAccessTokens, oauthApplications, oauthConsents, sessions
 export const ALLOWED_DOMAIN = process.env.ALLOWED_EMAIL_DOMAIN || "coins.ph";
 
 export type Role = "admin" | "manager" | "member";
-export interface SignedInUser { id: string; email: string; name: string; image?: string | null; role: Role; canEditThemes?: boolean }
+export interface SignedInUser {
+  id: string; email: string; name: string; image?: string | null; role: Role; canEditThemes?: boolean;
+  /** Set only while an admin is using "View as": their real role. `role` then holds the role being previewed. */
+  realRole?: Role;
+}
+
+/** "View as" (admins only): a cookie that makes the app treat the admin as a manager or member. */
+export const VIEW_AS_COOKIE = "dekiru-view-as";
+export const VIEW_AS_ROLES = ["manager", "member"] as const satisfies readonly Role[];
+const isViewAsRole = (v: unknown): v is (typeof VIEW_AS_ROLES)[number] => VIEW_AS_ROLES.includes(v as never);
 
 export const appBaseURL = () => baseURL();
 
@@ -121,13 +130,25 @@ export function auth(): Auth {
   return g.dekiruAuth;
 }
 
-/** The signed-in user, or null. */
-export async function currentUser(): Promise<SignedInUser | null> {
+/** The signed-in user exactly as stored, ignoring "View as". Use for anything that must check real permissions. */
+export async function sessionUser(): Promise<SignedInUser | null> {
   if (!authConfigured()) return null;
   const s = await auth().api.getSession({ headers: await headers() });
   if (!s) return null;
   const u = s.user as typeof s.user & { role?: Role; canEditThemes?: boolean };
   return { id: u.id, email: u.email, name: u.name, image: u.image, role: u.role ?? "member", canEditThemes: Boolean(u.canEditThemes) };
+}
+
+/**
+ * The signed-in user as the app should treat them. For an admin with "View as" on, the role is swapped
+ * (and per-person theme access dropped), so every page and action behaves as it would for that role.
+ */
+export async function currentUser(): Promise<SignedInUser | null> {
+  const user = await sessionUser();
+  if (!user || user.role !== "admin") return user;
+  const viewAs = (await cookies()).get(VIEW_AS_COOKIE)?.value;
+  if (!isViewAsRole(viewAs)) return user;
+  return { ...user, role: viewAs, canEditThemes: false, realRole: user.role };
 }
 
 /**

@@ -22,12 +22,8 @@ export default async function ThemeEditorPage({ params, searchParams }: { params
   return (
     <main className="shell">
       <Nav on="library" user={user} />
-      <p className="mono" style={{ margin: "0 0 4px" }}><Link href="/library/themes">← Themes</Link></p>
+      <p className="crumb"><Link href="/library/themes">← Themes</Link></p>
       <h1 className="page">{theme.name}</h1>
-      <p className="lede">
-        Used by {usage[id] ?? 0} deck{usage[id] === 1 ? "" : "s"}. Changes save as a draft; decks keep the live version until you publish.
-        Text stays white on dark backgrounds and dark on light ones, so Dekiru warns when a colour would make it hard to read.
-      </p>
       {error && <p className="signin-error" role="alert">{error}</p>}
       <ThemeEditor
         id={id} name={theme.name} tokens={theme.tokens} live={theme.publishedTokens} hasDraft={theme.hasDraft}

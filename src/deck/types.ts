@@ -24,6 +24,8 @@ export interface SlideData<P = Record<string, unknown>> {
   source?: { figmaNode?: string; visualNode?: string; slide?: number; copiedFrom?: string };
   /** Set when the slide is shared from another master deck ("sales/s01"); edit it there. */
   ref?: string;
+  /** Translations of the slide's text, by language (see src/deck/i18n.ts). Travel with the slide. */
+  i18n?: Partial<Record<"zh" | "th", { props: Record<string, unknown>; source: string }>>;
 }
 
 export interface Deck {

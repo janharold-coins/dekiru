@@ -6,7 +6,7 @@ import { ThemeScope } from "@/deck/ThemeScope";
 import { patterns } from "@/deck/registry";
 import { deckFor } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
-import { canEditThemes, publishedThemes } from "@/lib/themes";
+import { publishedThemes } from "@/lib/themes";
 import { Nav } from "../../../Nav";
 import { themeAction } from "../actions";
 
@@ -32,13 +32,8 @@ export default async function DeckThemePage({ params, searchParams }: { params: 
   return (
     <main className="shell">
       <Nav on="decks" user={user} />
-      <p className="mono" style={{ margin: "0 0 4px" }}><Link href={`/decks/${id}`}>← {deck.title}</Link></p>
+      <p className="crumb"><Link href={`/decks/${id}`}>← {deck.title}</Link></p>
       <h1 className="page">Theme</h1>
-      <p className="lede">
-        The theme sets the look of every slide in this deck, including approved slides from other decks.
-        Switching saves to the draft: review it, then publish. Links you already sent keep their look.
-        {canEditThemes(user) && <> To change a theme itself, go to <Link href="/library/themes">Library → Themes</Link>.</>}
-      </p>
       {error && <p className="signin-error" role="alert">{error}</p>}
       <div className="theme-list">
         {themes.map((t) => {

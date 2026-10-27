@@ -125,7 +125,7 @@ export const oauthConsents = pgTable("oauth_consents", {
   updatedAt: updated(),
 }, (t) => [index("oauth_consents_client").on(t.clientId), index("oauth_consents_user").on(t.userId)]);
 
-/** Master decks (company-wide) and personal copies. Slug ids keep URLs readable: /decks/sales. */
+/** Master decks (company-wide) and personal copies. Ids are "dk-" + 8 hex characters, the same for every deck and never changed. */
 export const decks = pgTable("decks", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
@@ -176,7 +176,7 @@ export const deckVersions = pgTable(
   "deck_versions",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    deckId: text("deck_id").notNull().references(() => decks.id, { onDelete: "cascade" }),
+    deckId: text("deck_id").notNull().references(() => decks.id, { onDelete: "cascade", onUpdate: "cascade" }),
     /** 1, 2, 3… per deck, in order of creation. */
     number: integer("number").notNull(),
     status: versionStatus("status").notNull().default("draft"),
@@ -206,7 +206,7 @@ export const deckVersions = pgTable(
 export const shareLinks = pgTable("share_links", {
   id: uuid("id").primaryKey().defaultRandom(),
   slug: text("slug").notNull().unique(),
-  deckId: text("deck_id").notNull().references(() => decks.id, { onDelete: "cascade" }),
+  deckId: text("deck_id").notNull().references(() => decks.id, { onDelete: "cascade", onUpdate: "cascade" }),
   versionId: uuid("version_id").notNull().references(() => deckVersions.id),
   deckTitle: text("deck_title").notNull(),
   slides: jsonb("slides").$type<SlideData[]>().notNull(),
@@ -234,7 +234,7 @@ export const viewSessions = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     kind: viewKind("kind").notNull().default("link"),
-    deckId: text("deck_id").references(() => decks.id, { onDelete: "cascade" }),
+    deckId: text("deck_id").references(() => decks.id, { onDelete: "cascade", onUpdate: "cascade" }),
     versionId: uuid("version_id").references(() => deckVersions.id, { onDelete: "set null" }),
     linkId: uuid("link_id").references(() => shareLinks.id, { onDelete: "cascade" }),
     internal: boolean("internal").notNull().default(false),
@@ -256,3 +256,9 @@ export const slideViews = pgTable(
   },
   (t) => [uniqueIndex("slide_views_session_slide").on(t.sessionId, t.slideId)],
 );
+
+/** Old deck ids (readable slugs, before the uniform "dk-…" ids) → new ids, so old links and prompts still resolve. */
+export const deckIdRenames = pgTable("deck_id_renames", {
+  oldId: text("old_id").primaryKey(),
+  newId: text("new_id").notNull().references(() => decks.id, { onDelete: "cascade", onUpdate: "cascade" }),
+});

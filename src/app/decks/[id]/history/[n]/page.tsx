@@ -27,15 +27,15 @@ export default async function VersionPage({ params }: { params: Promise<{ id: st
   return (
     <main className="shell">
       <Nav on="decks" user={user} />
-      <p className="mono" style={{ margin: "0 0 4px" }}><Link href={`/decks/${id}/history`}>← Version history</Link></p>
-      <div className="row" style={{ marginBottom: 8 }}>
-        <h1 className="page" style={{ margin: 0 }}>{found.deck.title} · v{version.number}</h1>
+      <p className="crumb"><Link href={`/decks/${id}/history`}>← Version history</Link></p>
+      <div className="page-head">
+        <h1 className="page">{found.deck.title} · v{version.number}</h1>
         <span className="spacer" style={{ flex: 1 }} />
         {found.canEdit && version.status === "published" && <RestoreButton deckId={id} number={version.number} />}
       </div>
-      <p className="lede">
+      <p className="page-meta">
         {version.status === "draft" ? "Current draft" : `Published ${when(version.publishedAt ?? version.createdAt)}`}
-        {version.note ? ` · ${version.note}` : ""} · Theme: {theme.name}. Approved slides that follow a master, and the theme, are shown as they look today.
+        {version.note ? ` · ${version.note}` : ""} · Theme: {theme.name}
       </p>
       <ThemeScope tokens={theme.tokens}><div className="grid">
         {slides.map((s) => (

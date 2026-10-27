@@ -9,8 +9,8 @@ const BEAT_MS = 15_000;
  * on every slide change, every 15 s, and when the tab is hidden or closed.
  * Used by share links (/s/<slug>) and by the in-app Present button, which also offers "Presenting to…".
  */
-export function TrackedPresenter({ trackUrl, slides, slideIds, askAudience = false }: {
-  trackUrl: string; slides: ReactNode[]; slideIds: string[]; askAudience?: boolean;
+export function TrackedPresenter({ trackUrl, slides, slideIds, askAudience = false, hudExtra }: {
+  trackUrl: string; slides: ReactNode[]; slideIds: string[]; askAudience?: boolean; hudExtra?: ReactNode;
 }) {
   const sid = useRef<string | null>(null);
   const current = useRef(0);
@@ -55,7 +55,8 @@ export function TrackedPresenter({ trackUrl, slides, slideIds, askAudience = fal
     current.current = i;
   }, [flush]);
 
-  return <Presenter slides={slides} onSlide={onSlide} hudExtra={askAudience ? <Audience trackUrl={trackUrl} sid={sid} /> : undefined} />;
+  const extra = askAudience || hudExtra ? <>{hudExtra}{askAudience && <Audience trackUrl={trackUrl} sid={sid} />}</> : undefined;
+  return <Presenter slides={slides} onSlide={onSlide} hudExtra={extra} />;
 }
 
 /** "Presenting to…" in the presenter's bottom bar. Optional; saved when you press Enter or click away. */

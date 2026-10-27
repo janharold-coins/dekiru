@@ -30,6 +30,8 @@ export interface DeckInfo extends Deck {
   updatedAt?: Date;
   updatedById?: string | null;
   updatedBy?: string | null;
+  /** When the owner archived it (hidden from lists unless asked for); null/absent = active. */
+  archivedAt?: Date | null;
 }
 
 /** The database, or a transaction on it. */
@@ -64,7 +66,8 @@ const dbLookup = (q: Q): DeckLookup => async (id) => (await latestPublished(q, i
  * Live decks, newest published version, references resolved.
  * With `viewerId`: company masters plus that person's own copies.
  */
-export async function listDecks(opts: { viewerId?: string | null } = {}): Promise<DeckInfo[]> {
+/** Decks for lists. Archived decks are left out unless `includeArchived` (the home page's "Show archived decks"). */
+export async function listDecks(opts: { viewerId?: string | null; includeArchived?: boolean } = {}): Promise<DeckInfo[]> {
   if (!hasDb()) {
     return Promise.all(
       seedDecks.map(async (d) => ({
@@ -75,7 +78,7 @@ export async function listDecks(opts: { viewerId?: string | null } = {}): Promis
   }
   await connection(); // database reads happen per request, never at build time
   const q = db();
-  const all = await q.select().from(decks).where(isNull(decks.archivedAt)).orderBy(decks.kind, decks.createdAt);
+  const all = await q.select().from(decks).where(opts.includeArchived ? undefined : isNull(decks.archivedAt)).orderBy(decks.kind, decks.createdAt);
   const rows = opts.viewerId ? all.filter((r) => r.kind === "master" || r.ownerId === opts.viewerId) : all;
   const themes = await publishedThemes();
   const out = (await Promise.all(rows.map((r) => load(q, r, false, themes)))).filter((d): d is DeckInfo => Boolean(d));
@@ -96,7 +99,8 @@ export async function getDeck(id: string, opts: { draft?: boolean } = {}): Promi
 
 async function load(q: Db, row: typeof decks.$inferSelect, wantDraft: boolean, themes: ThemeInfo[]): Promise<DeckInfo | undefined> {
   const [pub, draft] = await Promise.all([latestPublished(q, row.id), draftOf(q, row.id)]);
-  const v = (wantDraft && draft) || pub;
+  // A deck that was never published (saved as a draft from the New deck screen) shows its draft everywhere.
+  const v = (wantDraft && draft) || pub || draft;
   if (!v) return undefined;
   return {
     id: row.id, title: row.title, kind: row.kind, ownerId: row.ownerId,
@@ -104,6 +108,7 @@ async function load(q: Db, row: typeof decks.$inferSelect, wantDraft: boolean, t
     themeId: v.themeId ?? null, theme: pickTheme(themes, v.themeId),
     slides: await resolveSlides(v.slides, dbLookup(q)),
     updatedAt: row.updatedAt, updatedById: draft?.createdBy ?? pub?.publishedBy ?? pub?.createdBy ?? null,
+    archivedAt: row.archivedAt,
   };
 }
 
@@ -159,6 +164,8 @@ export async function createDeck(
   input: {
     id: string; title: string; kind: "master" | "copy"; slides: SeedSlide[]; note?: string; themeId?: string | null;
     copiedFromDeckId?: string; copiedFromVersionId?: string;
+    /** "draft": the deck starts unpublished (version 1 is its draft) until someone publishes it. */
+    status?: "published" | "draft";
   },
   who: Actor = {},
 ) {
@@ -167,9 +174,10 @@ export async function createDeck(
       id: input.id, title: input.title, kind: input.kind, ownerId: input.kind === "copy" ? who.userId ?? null : null,
       copiedFromDeckId: input.copiedFromDeckId, copiedFromVersionId: input.copiedFromVersionId,
     });
+    const published = input.status !== "draft";
     const [v] = await tx.insert(deckVersions).values({
-      deckId: input.id, number: 1, status: "published", slides: input.slides, note: input.note, themeId: input.themeId ?? null,
-      createdBy: who.userId ?? null, publishedAt: new Date(), publishedBy: who.userId ?? null,
+      deckId: input.id, number: 1, status: published ? "published" : "draft", slides: input.slides, note: input.note, themeId: input.themeId ?? null,
+      createdBy: who.userId ?? null, publishedAt: published ? new Date() : null, publishedBy: published ? who.userId ?? null : null,
     }).returning();
     return v;
   });

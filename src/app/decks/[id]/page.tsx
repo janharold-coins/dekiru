@@ -1,8 +1,9 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { patterns } from "@/deck/registry";
-import { deckFor, deckRow } from "@/lib/access";
+import { deckFor, deckRow, renamedDeckId } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { publishedThemes } from "@/lib/themes";
+import { ViewAsBanner } from "../../view-as/ViewAs";
 import { slideName } from "./Report";
 import { DeckEditor, type EditorSlide } from "./edit/DeckEditor";
 
@@ -15,7 +16,12 @@ export default async function DeckPage({ params, searchParams }: { params: Promi
   const [{ id }, { slide }] = await Promise.all([params, searchParams]);
   const user = await requireUser(`/decks/${id}`);
   const found = await deckFor(id, user);
-  if (!found) notFound();
+  if (!found) {
+    // Old readable ids ("sales", "my-deck-37f6") still open: send them to the deck's "dk-…" id.
+    const renamed = await renamedDeckId(id);
+    if (renamed) redirect(`/decks/${renamed}${slide ? `?slide=${encodeURIComponent(slide)}` : ""}`);
+    notFound();
+  }
   const { deck } = found;
   const themes = await publishedThemes();
 
@@ -36,6 +42,8 @@ export default async function DeckPage({ params, searchParams }: { params: Promi
   }
 
   return (
+    <>
+    {user?.realRole && <ViewAsBanner role={user.role} />}
     <DeckEditor
       key={`${deck.versionId}-${deck.status}`}
       deck={{ id: deck.id, title: deck.title, kind: deck.kind, hasDraft: deck.status === "draft", versionNumber: deck.versionNumber ?? null }}
@@ -45,5 +53,6 @@ export default async function DeckPage({ params, searchParams }: { params: Promi
       themes={themes.map((t) => ({ id: t.id, name: t.name, tokens: t.tokens }))}
       readOnly={!found.canEdit}
     />
+    </>
   );
 }

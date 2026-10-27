@@ -1,7 +1,8 @@
 "use client";
 import { useState, useTransition, type ReactNode } from "react";
 
-export interface PickerItem { block: string; name: string; kind: string; thumb: ReactNode }
+/** One card. A product is one card for all its slides (blocks), drawn as a stack. */
+export interface PickerItem { block: string; blocks: string[]; name: string; kind: string; thumb: ReactNode; stack?: ReactNode[] }
 export interface PickerGroup { deckId: string; deckTitle: string; sections: { title: string; items: PickerItem[] }[] }
 
 /**
@@ -29,6 +30,8 @@ export function BlockPicker({ groups, submitLabel, onSubmit, askTitle = false, d
     const all = items.every((i) => picked.includes(i.block));
     setPicked((p) => (all ? p.filter((x) => !items.some((i) => i.block === x)) : [...p, ...items.map((i) => i.block).filter((b) => !p.includes(b))]));
   };
+  const items = new Map(groups.flatMap((g) => g.sections.flatMap((s) => s.items)).map((i) => [i.block, i]));
+  const blocks = picked.flatMap((k) => items.get(k)?.blocks ?? [k]);
   const canSubmit = picked.length > 0 && (!needTitle || title.trim().length > 0);
 
   return (
@@ -49,12 +52,12 @@ export function BlockPicker({ groups, submitLabel, onSubmit, askTitle = false, d
             <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Ramp for Acme Exchange" maxLength={80} />
           </label>
         )}
-        <span className="mono">{picked.length ? `${picked.length} slide${picked.length === 1 ? "" : "s"} picked, in this order` : "Pick slides in the order you want them"}</span>
+        <span className="mono">{picked.length ? `${blocks.length} slide${blocks.length === 1 ? "" : "s"} picked, in this order` : "Pick slides in the order you want them"}</span>
         <span className="spacer" />
         {picked.length > 0 && <button className="linkish" onClick={() => setPicked([])}>Clear</button>}
         {error && <span className="hint warn">{error}</span>}
         <button className="btn primary" disabled={!canSubmit || pending}
-          onClick={() => start(async () => { setError(null); const r = await onSubmit(picked, title.trim(), target); if (r && r.error) setError(r.error); })}>
+          onClick={() => start(async () => { setError(null); const r = await onSubmit(blocks, title.trim(), target); if (r && r.error) setError(r.error); })}>
           {pending ? "Working…" : submitLabel}
         </button>
       </div>
@@ -74,7 +77,13 @@ export function BlockPicker({ groups, submitLabel, onSubmit, askTitle = false, d
                   const order = picked.indexOf(it.block);
                   return (
                     <button key={it.block} className={`card pick${order >= 0 ? " on" : ""}`} onClick={() => toggle(it.block)} aria-pressed={order >= 0}>
-                      <span className="thumbwrap">{it.thumb}{order >= 0 && <span className="badge">{order + 1}</span>}</span>
+                      {it.stack?.length
+                        ? <span className="thumbwrap stack">
+                            {[...it.stack].reverse().map((t, i) => <span key={i} className={`layer back${it.stack!.length - i}`}>{t}</span>)}
+                            <span className="layer front">{it.thumb}</span>
+                            {order >= 0 && <span className="badge">{order + 1}</span>}
+                          </span>
+                        : <span className="thumbwrap">{it.thumb}{order >= 0 && <span className="badge">{order + 1}</span>}</span>}
                       <span className="meta"><b>{it.name}</b><span className="spacer" /><span className="mono">{it.kind}</span></span>
                     </button>
                   );

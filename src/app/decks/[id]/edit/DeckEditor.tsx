@@ -6,6 +6,7 @@ import { RenderSlide } from "@/deck/RenderSlide";
 import { PreviewChecks } from "@/deck/frame/PreviewChecks";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
 import { checkOverflow } from "@/deck/overflow";
+import { deckTranslationStatus, LANGUAGES, translationState, type Lang } from "@/deck/i18n";
 import { fieldLabel } from "@/deck/fields";
 import { themeStyle, type ThemeTokens } from "@/deck/theme";
 import type { SlideData } from "@/deck/types";
@@ -17,6 +18,7 @@ import {
   saveDeckStateAction, saveSlideAction, setThemeAction,
 } from "./actions";
 import type { SeedSlide } from "@/content/resolve";
+import { DeckId } from "../../../DeckId";
 
 export interface EditorSlide {
   slide: SlideData;
@@ -81,6 +83,8 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
   const [hasDraft, setHasDraft] = useState(deck.hasDraft);
   const [save, setSave] = useState<SaveState>({ kind: "saved" });
   const [navOpen, setNavOpen] = useState(true);
+  // Preview language: translations are made with Claude (connector); the editor shows them and their status.
+  const [lang, setLang] = useState<Lang>("en");
   const [panelWidth, setPanelWidth] = useState(360);
   const [unlocked, setUnlocked] = useState<Set<string>>(new Set());
   const [publishing, setPublishing] = useState(false);
@@ -300,6 +304,7 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
         deck={deck} readOnly={readOnly} title={title} onRename={rename} themes={themes} theme={theme} onTheme={chooseTheme}
         save={save} hasDraft={hasDraft} publishing={publishing} onPublish={publishNow} onDiscard={discard}
         canUndo={historySize.undo > 0} canRedo={historySize.redo > 0} onUndo={undo} onRedo={redo}
+        lang={lang} onLang={setLang} translations={deckTranslationStatus(slides.map((s) => s.slide))}
         presentHref={`/decks/${deck.id}/present${selected && !selected.slide.hidden ? `#${presentNumber(selectedIndex)}` : ""}`}
       />
       <div className="ed-work" style={themeVars}>
@@ -307,9 +312,9 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
           open={navOpen} onToggle={() => setNavOpen((o) => !o)} deckId={deck.id} slides={listed} selectedId={selectedId} readOnly={readOnly}
           presented={slides.length - slides.filter((s) => s.slide.hidden).length} hiddenCount={slides.filter((s) => s.slide.hidden).length}
           showHidden={showHidden} onShowHidden={toggleShowHidden} numberOf={(s) => (s.slide.hidden ? null : presentNumber(slides.indexOf(s)))}
-          onSelect={setSelectedId} onMove={moveListed} onRemove={remove} onKey={onNavKey}
+          onSelect={setSelectedId} onMove={moveListed} onRemove={remove} onKey={onNavKey} lang={lang}
         />
-        <Canvas selected={selected} number={selected ? (selected.slide.hidden ? "Hidden" : pad2(presentNumber(selectedIndex))) : ""} />
+        <Canvas selected={selected} number={selected ? (selected.slide.hidden ? "Hidden" : pad2(presentNumber(selectedIndex))) : ""} lang={lang} />
         <ContentPanel
           key={selected?.slide.id}
           deckId={deck.id}
@@ -323,6 +328,7 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
           canRemove={slides.length > 1}
           onResize={setPanelWidth}
           width={panelWidth}
+          lang={lang}
         />
       </div>
     </div>
@@ -331,12 +337,13 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
 
 /* ================= Top bar ================= */
 
-function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save, hasDraft, publishing, onPublish, onDiscard, presentHref, canUndo, canRedo, onUndo, onRedo }: {
+function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save, hasDraft, publishing, onPublish, onDiscard, presentHref, canUndo, canRedo, onUndo, onRedo, lang, onLang, translations }: {
   deck: { id: string; kind: "master" | "copy"; versionNumber: number | null }; readOnly: boolean;
   title: string; onRename: (t: string) => void;
   themes: ThemeOption[]; theme: ThemeOption; onTheme: (id: string) => void;
   save: SaveState; hasDraft: boolean; publishing: boolean; onPublish: () => void; onDiscard: () => void; presentHref: string;
   canUndo: boolean; canRedo: boolean; onUndo: () => void; onRedo: () => void;
+  lang: Lang; onLang: (l: Lang) => void; translations: ReturnType<typeof deckTranslationStatus>;
 }) {
   const mac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
   const [editing, setEditing] = useState(false);
@@ -348,7 +355,7 @@ function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save,
         <Link href="/" className="ed-icon-btn" aria-label="Back to decks">{ICON("arrow-left")}</Link>
         <span className="ed-divider" aria-hidden />
         <div className="ed-title-block">
-          <span className="ed-crumb"><Link href="/">Decks</Link> / {deck.kind === "master" ? "Company decks" : "My decks"}</span>
+          <span className="ed-crumb"><span><Link href="/">Decks</Link> / {deck.kind === "master" ? "Company decks" : "My decks"}</span><DeckId id={deck.id} className="deck-id-sm" /></span>
           {readOnly ? (
             <h1 className="ed-title ed-title-static"><span>{title}</span></h1>
           ) : editing ? (
@@ -368,6 +375,7 @@ function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save,
       ) : <ThemePicker themes={themes} theme={theme} onTheme={onTheme} />}
 
       <div className="ed-actions">
+        <LanguagePicker lang={lang} onLang={onLang} translations={translations} />
         {readOnly ? <span className="ed-save">View only</span> : <span className={`ed-save ${save.kind}`} role="status" aria-live="polite">
           {save.kind === "error" ? <span className="ed-save-error" title={save.message}>Couldn&apos;t save: {save.message}</span>
             : <>{ICON("cloud-check", 15)}<span>{save.kind === "saving" ? "Saving…" : save.kind === "published" ? `Published v${save.version}` : hasDraft ? "Saved as draft" : "All changes saved"}</span></>}
@@ -391,7 +399,7 @@ function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save,
           { label: "Version history", href: `/decks/${deck.id}/history` },
           { label: "Presentations", href: `/decks/${deck.id}/presentations` },
           { label: "Compare with Figma", href: `/decks/${deck.id}/compare`, hidden: deck.kind !== "master" },
-          { label: "Discard unpublished changes", confirm: "Discard all unpublished changes?", danger: true, onSelect: onDiscard, hidden: readOnly || !hasDraft },
+          { label: "Discard unpublished changes", confirm: { title: "Discard unpublished changes?", body: "Every edit since the last publish will be lost and the deck goes back to its published version. This can't be undone.", action: "Discard all changes" }, danger: true, onSelect: onDiscard, hidden: readOnly || !hasDraft },
         ]} />
       </div>
     </header>
@@ -432,10 +440,57 @@ function ThemePicker({ themes, theme, onTheme }: { themes: ThemeOption[]; theme:
   );
 }
 
+/**
+ * "Language: EN 🇬🇧" — which language the slides are previewed in. Translations are made with Claude
+ * (Dekiru connector); the list says how complete each one is.
+ */
+function LanguagePicker({ lang, onLang, translations }: { lang: Lang; onLang: (l: Lang) => void; translations: ReturnType<typeof deckTranslationStatus> }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent | KeyboardEvent) => {
+      if (e instanceof KeyboardEvent ? e.key === "Escape" : !ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", close);
+    return () => { document.removeEventListener("mousedown", close); document.removeEventListener("keydown", close); };
+  }, [open]);
+  const options: { lang: Lang; note: string; state: "ok" | "part" | "none" }[] = [
+    { lang: "en", note: "Original", state: "ok" },
+    ...translations.map((t) => {
+      const n = t.fresh + t.stale + t.missing;
+      const note = t.fresh === n ? `${n} of ${n} slides` : `${t.fresh} of ${n} slides${t.stale ? ` · ${t.stale} out of date` : ""}`;
+      return { lang: t.lang, note, state: t.fresh === n ? "ok" as const : t.fresh + t.stale === 0 ? "none" as const : "part" as const };
+    }),
+  ];
+  const current = LANGUAGES[lang];
+  return (
+    <div className="ed-theme ed-lang" ref={ref}>
+      <button type="button" className="ed-theme-btn" aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen((o) => !o)} title="Preview language">
+        <span>Language</span><span className="ed-lang-flag" aria-hidden>{current.flag}</span><span>{current.short}</span>
+      </button>
+      {open && (
+        <div className="ed-menu-list end" role="listbox" aria-label="Preview language">
+          {options.map((o) => (
+            <button key={o.lang} type="button" role="option" aria-selected={o.lang === lang} className={`ed-menu-item ed-lang-opt${o.lang === lang ? " on" : ""}`}
+              onClick={() => { setOpen(false); onLang(o.lang); }}>
+              <span className="ed-lang-flag" aria-hidden>{LANGUAGES[o.lang].flag}</span>
+              <span className="ed-lang-name"><span lang={o.lang}>{LANGUAGES[o.lang].name}</span>{o.lang !== "en" && <small>{LANGUAGES[o.lang].english}</small>}</span>
+              <span className={`ed-lang-note ${o.state}`}>{o.note}</span>
+            </button>
+          ))}
+          <p className="ed-menu-note">Translations are made with Claude (Dekiru connector). Share links offer every language the deck has.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ================= Slide navigator ================= */
 
-function Navigator({ open, onToggle, deckId, slides, selectedId, readOnly, presented, hiddenCount, showHidden, onShowHidden, numberOf, onSelect, onMove, onRemove, onKey }: {
-  open: boolean; onToggle: () => void; deckId: string; slides: EditorSlide[]; selectedId: string | null; readOnly: boolean;
+function Navigator({ open, onToggle, deckId, slides, selectedId, readOnly, presented, hiddenCount, showHidden, onShowHidden, numberOf, onSelect, onMove, onRemove, onKey, lang }: {
+  open: boolean; onToggle: () => void; deckId: string; slides: EditorSlide[]; selectedId: string | null; readOnly: boolean; lang: Lang;
   presented: number; hiddenCount: number; showHidden: boolean; onShowHidden: (on: boolean) => void;
   numberOf: (s: EditorSlide) => number | null;
   onSelect: (id: string) => void; onMove: (id: string, to: number) => void; onRemove: (id: string) => void;
@@ -480,7 +535,7 @@ function Navigator({ open, onToggle, deckId, slides, selectedId, readOnly, prese
             >
               <button type="button" id={`thumb-${s.slide.id}`} className="ed-thumb-btn" aria-current={on ? "true" : undefined}
                 aria-label={`${number ? `Slide ${number}` : "Hidden slide"}: ${s.name}`} onClick={() => onSelect(s.slide.id)}>
-                <ScaledSlide><RenderSlide slide={s.slide} /></ScaledSlide>
+                <ScaledSlide><RenderSlide slide={s.slide} lang={lang} /></ScaledSlide>
               </button>
               <span className="ed-thumb-n" aria-hidden>{number ? pad2(number) : "—"}</span>
               {(s.slide.hidden || s.from) && <span className="ed-thumb-tag">{s.slide.hidden ? "Hidden" : "Approved"}</span>}
@@ -510,7 +565,7 @@ function Navigator({ open, onToggle, deckId, slides, selectedId, readOnly, prese
 
 const ZOOMS = [0.25, 0.33, 0.42, 0.5, 0.67, 0.75, 1];
 
-function Canvas({ selected, number }: { selected: EditorSlide | null; number: string }) {
+function Canvas({ selected, number, lang }: { selected: EditorSlide | null; number: string; lang: Lang }) {
   const box = useRef<HTMLDivElement>(null);
   const [fit, setFit] = useState(0.42);
   const [zoom, setZoom] = useState<number | "fit">("fit");
@@ -541,7 +596,7 @@ function Canvas({ selected, number }: { selected: EditorSlide | null; number: st
             <div className="ed-slide" style={{ width: SLIDE_W * scale, height: SLIDE_H * scale }}>
               <div style={{ transform: `scale(${scale})`, transformOrigin: "0 0", width: SLIDE_W, height: SLIDE_H }}>
                 {/* Preview-only: flags images that don't fit their slot. Never shown when presenting. */}
-                <PreviewChecks key={selected.slide.id}><RenderSlide slide={selected.slide} /></PreviewChecks>
+                <PreviewChecks key={`${selected.slide.id}/${lang}`}><RenderSlide slide={selected.slide} lang={lang} /></PreviewChecks>
               </div>
             </div>
           </div>
@@ -563,12 +618,13 @@ function Canvas({ selected, number }: { selected: EditorSlide | null; number: st
 
 /* ================= Content panel ================= */
 
-function ContentPanel({ deckId, item, readOnly, locked, onUnlock, onChange, onToggleHidden, onRemove, canRemove, onResize, width }: {
-  deckId: string; item: EditorSlide | null; readOnly: boolean; locked: boolean; onUnlock: () => void;
+function ContentPanel({ deckId, item, readOnly, locked, onUnlock, onChange, onToggleHidden, onRemove, canRemove, onResize, width, lang }: {
+  deckId: string; item: EditorSlide | null; readOnly: boolean; locked: boolean; onUnlock: () => void; lang: Lang;
   onChange: (props: Record<string, unknown>) => void; onToggleHidden: () => void; onRemove: () => void; canRemove: boolean;
   onResize: (w: number) => void; width: number;
 }) {
-  const warnings = item ? checkOverflow(item.slide) : [];
+  const warnings = item ? checkOverflow(item.slide, lang) : [];
+  const trState = item && lang !== "en" ? translationState(item.slide, lang) : "fresh";
   const startResize = (e: React.PointerEvent) => {
     e.preventDefault();
     const x0 = e.clientX;
@@ -590,7 +646,7 @@ function ContentPanel({ deckId, item, readOnly, locked, onUnlock, onChange, onTo
         {item && !readOnly && (
           <Menu label="Slide actions" trigger={ICON("ellipsis")} items={[
             { label: item.slide.hidden ? "Show in presentation" : "Hide from presentation", onSelect: onToggleHidden },
-            { label: "Delete slide", confirm: "Delete this slide?", danger: true, onSelect: onRemove, hidden: !canRemove },
+            { label: "Delete slide", confirm: { title: "Delete this slide?", body: "The slide will be removed from this deck.", action: "Delete slide" }, danger: true, onSelect: onRemove, hidden: !canRemove },
           ]} />
         )}
       </div>
@@ -604,6 +660,15 @@ function ContentPanel({ deckId, item, readOnly, locked, onUnlock, onChange, onTo
               </div>
             )}
             {item.slide.hidden && <p className="ed-note">Hidden: kept in the deck but not presented or shared.</p>}
+            {lang !== "en" && (
+              <div className={`ed-note${trState === "fresh" ? "" : " ed-note-warn"}`}>
+                <p>
+                  {trState === "fresh" ? <><b>{LANGUAGES[lang].english}</b> translation is up to date. The fields below are the English; the preview shows the translation.</>
+                    : trState === "stale" ? <><b>{LANGUAGES[lang].english}</b>: the English changed after this slide was translated. Ask Claude to translate the deck again; it updates only the slides that changed.</>
+                    : <><b>{LANGUAGES[lang].english}</b>: not translated yet, so it shows in English. Ask Claude (Dekiru connector) to translate the deck.</>}
+                </p>
+              </div>
+            )}
             {locked && item.from && (
               <div className="ed-note">
                 <p>Approved slide from <b>{item.from.deck}</b>. It updates when that deck changes.</p>
