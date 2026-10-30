@@ -10,7 +10,7 @@ import { blockGroups, slideCount } from "../decks/blocks";
 import { addBlocksAction } from "../decks/[id]/actions";
 import { LibraryTabs } from "./Tabs";
 
-/** Approved slides: the company masters' real slides. Added slides keep following the master. */
+/** Master slides: the company masters' real slides (components, spec §7b). Added slides keep following the master. */
 export default async function ApprovedSlidesPage({ searchParams }: { searchParams: Promise<{ deck?: string }> }) {
   const { deck } = await searchParams;
   const user = await requireUser("/library");

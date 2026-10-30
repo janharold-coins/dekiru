@@ -8,9 +8,12 @@ type Props = Record<string, any>;
  * A slide's editable words as a form (layout, images and colours are not editable here).
  * Lists of short two-part items (value + label) show as compact rows, like "Key metrics" in the design.
  */
-export function ContentFields({ pattern, path = pattern, value, onChange, disabled }: {
+export function ContentFields({ pattern, path = pattern, value, onChange, disabled, changed, at = "" }: {
   pattern: string; path?: string; value: Props; onChange: (v: Props) => void; disabled?: boolean;
+  /** Reviewing a revision: text paths ("cards[1].body") whose words changed, to highlight. `at` is this object's path. */
+  changed?: Set<string>; at?: string;
 }) {
+  const sub = (k: string) => (at ? `${at}.${k}` : k);
   const set = (key: string, v: unknown) => {
     const next: Props = { ...value, [key]: v };
     if (key === "value" && "valueRuns" in next) delete next.valueRuns; // styled runs would hide the new value
@@ -19,12 +22,12 @@ export function ContentFields({ pattern, path = pattern, value, onChange, disabl
   return (
     <>
       {editableEntries(path, value).map(([k, v]: [string, any]) => {
-        if (typeof v === "string") return <TextField key={k} label={fieldLabel(k)} value={v} placeholder={fieldPlaceholder(path, k)} disabled={disabled} onChange={(x) => set(k, x)} />;
-        if (Array.isArray(v)) return <ListField key={k} pattern={pattern} path={`${path}.${k}[]`} name={k} items={v} disabled={disabled} onChange={(x) => set(k, x)} />;
+        if (typeof v === "string") return <TextField key={k} label={fieldLabel(k)} value={v} placeholder={fieldPlaceholder(path, k)} disabled={disabled} changed={changed?.has(sub(k))} onChange={(x) => set(k, x)} />;
+        if (Array.isArray(v)) return <ListField key={k} pattern={pattern} path={`${path}.${k}[]`} name={k} items={v} disabled={disabled} changed={changed} at={sub(k)} onChange={(x) => set(k, x)} />;
         return (
           <section key={k} className="ed-group">
             <h3 className="ed-group-h"><span>{fieldLabel(k)}</span></h3>
-            <ContentFields pattern={pattern} path={`${path}.${k}`} value={v} disabled={disabled} onChange={(x) => set(k, x)} />
+            <ContentFields pattern={pattern} path={`${path}.${k}`} value={v} disabled={disabled} changed={changed} at={sub(k)} onChange={(x) => set(k, x)} />
           </section>
         );
       })}
@@ -42,9 +45,10 @@ function compactKeys(path: string, items: any[]): [string, string] | null {
   return short ? [keys[0], keys[1]] : null;
 }
 
-function ListField({ pattern, path, name, items, onChange, disabled }: {
-  pattern: string; path: string; name: string; items: any[]; onChange: (v: any[]) => void; disabled?: boolean;
+function ListField({ pattern, path, name, items, onChange, disabled, changed, at }: {
+  pattern: string; path: string; name: string; items: any[]; onChange: (v: any[]) => void; disabled?: boolean; changed?: Set<string>; at: string;
 }) {
+  const hit = (i: number, k?: string) => Boolean(changed?.has(k ? `${at}[${i}].${k}` : `${at}[${i}]`));
   const { fixed, max } = listLimits(pattern, name, items);
   const setAt = (i: number, v: unknown) => onChange(items.map((x, j) => (j === i ? v : x)));
   const remove = (i: number) => onChange(items.filter((_, j) => j !== i));
@@ -63,9 +67,9 @@ function ListField({ pattern, path, name, items, onChange, disabled }: {
           <div className="ed-row ed-row-h" aria-hidden><span>{fieldLabel(compact[0])}</span><span>{fieldLabel(compact[1])}</span></div>
           {items.map((it, i) => (
             <div key={i} className="ed-row">
-              <input className="ed-input" value={it[compact[0]]} disabled={disabled} aria-label={`${itemLabel(name, i)} ${fieldLabel(compact[0])}`}
+              <input className={`ed-input${hit(i, compact[0]) ? " changed" : ""}`} value={it[compact[0]]} disabled={disabled} aria-label={`${itemLabel(name, i)} ${fieldLabel(compact[0])}`}
                 onChange={(e) => setAt(i, { ...it, [compact[0]]: e.target.value })} />
-              <input className="ed-input" value={it[compact[1]]} disabled={disabled} aria-label={`${itemLabel(name, i)} ${fieldLabel(compact[1])}`}
+              <input className={`ed-input${hit(i, compact[1]) ? " changed" : ""}`} value={it[compact[1]]} disabled={disabled} aria-label={`${itemLabel(name, i)} ${fieldLabel(compact[1])}`}
                 onChange={(e) => setAt(i, { ...it, [compact[1]]: e.target.value })} />
               {canRemove && <button type="button" className="ed-x" aria-label={`Remove ${itemLabel(name, i)}`} onClick={() => remove(i)}>×</button>}
             </div>
@@ -79,8 +83,8 @@ function ListField({ pattern, path, name, items, onChange, disabled }: {
               {canRemove && <button type="button" className="ed-link" onClick={() => remove(i)}>Remove</button>}
             </div>
             {typeof it === "string"
-              ? <TextField label="" value={it} disabled={disabled} onChange={(x) => setAt(i, x)} />
-              : <ContentFields pattern={pattern} path={path} value={it} disabled={disabled} onChange={(x) => setAt(i, x)} />}
+              ? <TextField label="" value={it} disabled={disabled} changed={hit(i)} onChange={(x) => setAt(i, x)} />
+              : <ContentFields pattern={pattern} path={path} value={it} disabled={disabled} changed={changed} at={`${at}[${i}]`} onChange={(x) => setAt(i, x)} />}
           </div>
         ))
       )}
@@ -91,15 +95,15 @@ function ListField({ pattern, path, name, items, onChange, disabled }: {
   );
 }
 
-function TextField({ label, value, placeholder, onChange, disabled }: { label: string; value: string; placeholder?: string; onChange: (v: string) => void; disabled?: boolean }) {
+function TextField({ label, value, placeholder, onChange, disabled, changed }: { label: string; value: string; placeholder?: string; onChange: (v: string) => void; disabled?: boolean; changed?: boolean }) {
   // Explicit line breaks show on the slide; the box grows with the text where the browser supports it.
   // Short single-line values (years, numbers, labels) get a compact box.
   const short = !value.includes("\n") && value.length <= 24;
   const rows = value.split("\n").reduce((n, line) => n + Math.max(1, Math.ceil(line.length / 40)), 0);
   return (
-    <label className="ed-field">
-      {label && <span className="ed-label">{label}</span>}
-      <textarea className={`ed-input ed-textarea${short ? " short" : ""}`} rows={short ? 1 : rows} value={value} placeholder={placeholder} disabled={disabled} spellCheck
+    <label className={`ed-field${changed ? " changed" : ""}`}>
+      {label && <span className="ed-label">{label}{changed && <em className="ed-changed-tag">changed</em>}</span>}
+      <textarea className={`ed-input ed-textarea${short ? " short" : ""}${changed ? " changed" : ""}`} rows={short ? 1 : rows} value={value} placeholder={placeholder} disabled={disabled} spellCheck
         onChange={(e) => onChange(e.target.value)} />
     </label>
   );

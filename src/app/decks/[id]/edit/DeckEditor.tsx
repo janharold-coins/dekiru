@@ -17,19 +17,20 @@ import { ConfirmDialog, Menu } from "./Menu";
 import { PublishDialog, PublishSplit } from "./Publish";
 import {
   saveTranslationAction,
-  discardDraftAction, draftChangesAction, hideSlideAction, moveSlideAction, publishDeckAction, removeSlideAction, renameDeckAction, resetSlideAction,
+  discardDraftAction, draftChangesAction, hideSlideAction, moveSlideAction, removeSlideAction, renameDeckAction, resetSlideAction, sendForReviewAction,
   saveDeckStateAction, saveSlideAction, setThemeAction,
 } from "./actions";
 import type { SeedSlide } from "@/content/resolve";
 import { DeckId } from "../../../DeckId";
-import { ApproveSlide, ReviewButtons, ReviewChip, ReviewDialog, reviewMenuItems, type Dialog, type ReviewProps } from "./Review";
+import { CommentOverlay, CommentsPanel, openCount, type Comment, type CommentsState } from "./Comments";
+import { ApproveSlide, CHANGE_LABEL, ReviewButtons, ReviewDialog, reviewLabel, reviewMenuItems, reviewTitle, slideChange, summaryFor, type Dialog, type ReviewProps, type StatusCtx } from "./Review";
 
 export interface EditorSlide {
   slide: SlideData;
   name: string;
   section: string;
   layout: string;
-  /** Approved slide that follows a company deck. */
+  /** Master slide: follows a company deck. */
   from: { block: string; deck: string } | null;
 }
 interface ThemeOption { id: string; name: string; tokens: ThemeTokens }
@@ -65,16 +66,21 @@ const toSeed = (list: EditorSlide[]): SeedSlide[] => list.map(({ slide, from }) 
 
 type SaveState = { kind: "saved" } | { kind: "saving" } | { kind: "error"; message: string } | { kind: "published"; version: number };
 
+/** Opening and closing slides are always presented: they can't be hidden. */
+const ALWAYS_SHOWN = new Set(["cover", "closing"]);
+
 const ICON = (name: string, size = 16) => <img src={`/editor/${name}.svg`} alt="" width={size} height={size} />;
 const pad2 = (n: number) => String(n).padStart(2, "0");
 const SAVE_DELAY = 700;
 const SLIDE_W = 1920;
 const SLIDE_H = 1080;
 
-export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: initialTheme, themes, readOnly = false, review, initialLang = "en" }: {
-  deck: { id: string; title: string; kind: "master" | "copy"; hasDraft: boolean; versionNumber: number | null };
+export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: initialTheme, themes, readOnly = false, review, initialComments = [], initialLang = "en" }: {
+  deck: { id: string; title: string; kind: "master" | "copy"; hasDraft: boolean; versionNumber: number | null; sentVersion: number | null; approvedVersion: number | null };
   /** Review state and what the signed-in person may do about it (spec §7a). */
   review: ReviewProps;
+  /** Comments on every slide of the deck (Comments tab). */
+  initialComments?: Comment[];
   initialLang?: Lang;
   /** People who can see but not change the deck (members on company decks): view, present, share, copy. */
   readOnly?: boolean;
@@ -84,7 +90,7 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
   themes: ThemeOption[];
 }) {
   const [slides, setSlides] = useState(initialSlides);
-  const [selectedId, setSelectedId] = useState(initialSlide);
+  const [selectedId, setSelectedRaw] = useState(initialSlide);
   const [title, setTitle] = useState(deck.title);
   const [themeId, setThemeId] = useState(initialTheme.id);
   const [hasDraft, setHasDraft] = useState(deck.hasDraft);
@@ -96,6 +102,13 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
   const [panelWidth, setPanelWidth] = useState(360);
   const [unlocked, setUnlocked] = useState<Set<string>>(new Set());
   const [publishing, setPublishing] = useState(false);
+  /* Right panel: Editor or Comments. Comments keep their own list and pin/selection state, shared with the canvas. */
+  const [tab, setTab] = useState<"editor" | "comments">("editor");
+  const [cm, setCm] = useState<CommentsState>({ comments: initialComments, userId: review.userId, admin: review.admin, activeId: null, pinMode: false, draftAnchor: null });
+  const patchCm = useCallback((p: Partial<CommentsState>) => setCm((c) => ({ ...c, ...p })), []);
+  const setComments = useCallback((fn: (all: Comment[]) => Comment[]) => setCm((c) => ({ ...c, comments: fn(c.comments) })), []);
+  const composerRef = useRef<HTMLTextAreaElement>(null);
+  const focusComposer = useCallback(() => { requestAnimationFrame(() => composerRef.current?.focus()); }, []);
   const showHidden = useShowHidden();
   const past = useRef<Snapshot[]>([]);
   const future = useRef<Snapshot[]>([]);
@@ -117,6 +130,9 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
   const selectedIndex = slides.findIndex((s) => s.slide.id === selectedId);
   const selected = selectedIndex >= 0 ? slides[selectedIndex] : null;
   const presentNumber = (i: number) => slides.slice(0, i).filter((s) => !s.slide.hidden).length + 1;
+
+  // Changing slide drops the comment selection and any pin being placed.
+  const setSelectedId = useCallback((id: string | null) => { setSelectedRaw(id); setCm((c) => ({ ...c, activeId: null, pinMode: false, draftAnchor: null })); }, []);
 
   // Keep ?slide= in the address so a reload (or a shared link) opens the same slide.
   useEffect(() => {
@@ -321,14 +337,30 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   });
+  // C opens Comments and arms a pin: the next click/drag on the slide places it; typing meanwhile goes to the composer.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (el && (el.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName))) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === "Escape" && (cm.pinMode || cm.activeId)) { patchCm({ pinMode: false, activeId: null }); return; }
+      if (!selected) return;
+      if (e.key.toLowerCase() === "c") { e.preventDefault(); setTab("comments"); patchCm({ pinMode: true, activeId: null }); focusComposer(); return; }
+      // Already pinning and started typing: the text belongs in the comment box.
+      if (cm.pinMode && tab === "comments" && e.key.length === 1) { composerRef.current?.focus(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [cm.pinMode, cm.activeId, tab, selected, patchCm, focusComposer]);
+
+  /** "Send for review": freezes the draft as the version reviewers see (review v2) and opens the review for the preview language. */
   const publishNow = async () => {
     setPublishing(true);
     await flushAll();
-    const r = await publishDeckAction(deck.id);
+    const r = await sendForReviewAction(deck.id, lang);
     setPublishing(false);
     if (r.error) { setSave({ kind: "error", message: r.error }); return; }
-    setHasDraft(false);
-    setSave({ kind: "published", version: r.version ?? 0 });
+    window.location.reload(); // the editor shows the new status and version
   };
   /** The confirmation lists what will go live: save pending edits first so the list is complete. */
   const [publishAsk, setPublishAsk] = useState(false);
@@ -375,13 +407,14 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
         presentHref={`/decks/${deck.id}/present${lang !== "en" ? `?lang=${lang}` : ""}${selected && !selected.slide.hidden ? `#${presentNumber(selectedIndex)}` : ""}`}
       />
       <div className="ed-work" style={themeVars}>
-        <Navigator
+        <Navigator deckKind={deck.kind} review={review}
           open={navOpen} onToggle={() => setNavOpen((o) => !o)} deckId={deck.id} slides={listed} selectedId={selectedId} readOnly={readOnly}
           presented={slides.length - slides.filter((s) => s.slide.hidden).length} hiddenCount={slides.filter((s) => s.slide.hidden).length}
           showHidden={showHidden} onShowHidden={toggleShowHidden} numberOf={(s) => (s.slide.hidden ? null : presentNumber(slides.indexOf(s)))}
           onSelect={setSelectedId} onMove={moveListed} onRemove={remove} onKey={onNavKey} lang={lang}
         />
-        <Canvas selected={selected} number={selected ? (selected.slide.hidden ? "Hidden" : pad2(presentNumber(selectedIndex))) : ""} lang={lang} />
+        <Canvas selected={selected} number={selected ? (selected.slide.hidden ? "Hidden" : pad2(presentNumber(selectedIndex))) : ""} lang={lang}
+          overlay={tab === "comments" && selected ? <CommentOverlay slideId={selected.slide.id} state={cm} onState={patchCm} onPlaced={focusComposer} /> : null} />
         <ContentPanel
           key={selected?.slide.id}
           deckId={deck.id}
@@ -393,13 +426,15 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
           onToggleHidden={() => selected && toggleHidden(selected.slide.id)}
           canReset={Boolean(selected && !readOnly && (selected.from ? unlocked.has(selected.slide.id) : selected.slide.source?.copiedFrom))}
           onReset={() => selected && void reset(selected.slide.id)}
-          onRemove={() => selected && remove(selected.slide.id)}
-          canRemove={slides.length > 1}
           onResize={setPanelWidth}
           width={panelWidth}
           lang={lang}
           review={review}
           onReviewError={(m) => setSave({ kind: "error", message: m })}
+          tab={tab} onTab={(t) => { setTab(t); if (t === "editor") patchCm({ pinMode: false, activeId: null }); }}
+          commentCount={selected ? openCount(cm.comments, selected.slide.id) : 0}
+          comments={<CommentsPanel deckId={deck.id} slideId={selected?.slide.id ?? null} state={cm} onState={patchCm} onComments={setComments} composerRef={composerRef}
+            onError={(m) => setSave({ kind: "error", message: m })} />}
         />
       </div>
       {publishAsk && <PublishDialog load={loadChanges} onCancel={() => setPublishAsk(false)} onConfirm={() => { setPublishAsk(false); publishNow(); }} />}
@@ -411,7 +446,7 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
 /* ================= Top bar ================= */
 
 function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save, hasDraft, publishing, onPublish, onDiscard, presentHref, canUndo, canRedo, onUndo, onRedo, lang, onLang, translations, review, onReviewDialog, onReviewError }: {
-  deck: { id: string; kind: "master" | "copy"; versionNumber: number | null }; readOnly: boolean;
+  deck: { id: string; kind: "master" | "copy"; versionNumber: number | null; sentVersion: number | null; approvedVersion: number | null }; readOnly: boolean;
   title: string; onRename: (t: string) => void;
   themes: ThemeOption[]; theme: ThemeOption; onTheme: (id: string) => void;
   save: SaveState; hasDraft: boolean; publishing: boolean; onPublish: () => void; onDiscard: () => void; presentHref: string;
@@ -448,14 +483,14 @@ function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save,
       {readOnly ? (
         <span className="ed-theme"><span className="ed-theme-btn static"><span>Theme</span><i className="ed-theme-dot" style={{ background: theme.tokens.accent[0] }} aria-hidden /><span>{theme.name}</span></span></span>
       ) : <ThemePicker themes={themes} theme={theme} onTheme={onTheme} />}
-        <LanguagePicker lang={lang} onLang={onLang} translations={translations} />
+        <LanguagePicker lang={lang} onLang={onLang} translations={translations} review={review}
+          ctx={{ kind: deck.kind, hasDraft: !readOnly && hasDraft, sentVersion: deck.sentVersion, approvedVersion: deck.approvedVersion }} />
       </div>
 
       <div className="ed-actions">
-        <ReviewChip review={review} lang={lang} />
         {readOnly ? <span className="ed-save">{review.canReview[lang] ? "Reviewing" : "View only"}</span> : <span className={`ed-save ${save.kind}`} role="status" aria-live="polite">
           {save.kind === "error" ? <span className="ed-save-error" title={save.message}>Couldn&apos;t save: {save.message}</span>
-            : <>{ICON("cloud-check", 15)}<span>{save.kind === "saving" ? "Saving…" : save.kind === "published" ? `Published v${save.version}` : hasDraft ? "Saved as draft" : "All changes saved"}</span></>}
+            : <>{ICON("cloud-check", 15)}<span>{save.kind === "saving" ? "Saving…" : save.kind === "published" ? `Sent v${save.version} for review` : hasDraft ? "Draft saved" : "All changes saved"}</span></>}
         </span>}
         {!readOnly && (
           <span className="ed-history">
@@ -463,7 +498,7 @@ function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save,
             <button type="button" className="ed-icon-btn" aria-label="Redo" title={`Redo (${mac ? "⇧⌘Z" : "Ctrl+Y"})`} disabled={!canRedo} onClick={onRedo}>{ICON("redo")}</button>
           </span>
         )}
-        {/* One slot: "Publish all changes" while there's a draft; once published, the review action (if any) takes its place. */}
+        {/* One slot: "Send for review" (with Discard) while there are unsent changes; otherwise the review action, if any. */}
         {!readOnly && hasDraft ? (
           <PublishSplit publishing={publishing} onPublish={onPublish} onDiscard={onDiscard} />
         ) : <ReviewButtons deckId={deck.id} review={review} lang={lang} hasDraft={hasDraft} onError={onReviewError} />}
@@ -508,7 +543,7 @@ function ThemePicker({ themes, theme, onTheme }: { themes: ThemeOption[]; theme:
               {dot(t)}<span>{t.name}</span>
             </button>
           ))}
-          <p className="ed-menu-note">Switching saves to the draft. Publish to make it live.</p>
+          <p className="ed-menu-note">Switching saves to the draft. Send for review to make it live.</p>
         </div>
       )}
     </div>
@@ -519,7 +554,7 @@ function ThemePicker({ themes, theme, onTheme }: { themes: ThemeOption[]; theme:
  * "Language: EN 🇬🇧" — which language the slides are previewed in. Translations are made with Claude
  * (Dekiru connector); the list says how complete each one is.
  */
-function LanguagePicker({ lang, onLang, translations }: { lang: Lang; onLang: (l: Lang) => void; translations: ReturnType<typeof deckTranslationStatus> }) {
+function LanguagePicker({ lang, onLang, translations, review, ctx }: { lang: Lang; onLang: (l: Lang) => void; translations: ReturnType<typeof deckTranslationStatus>; review: ReviewProps; ctx: StatusCtx }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -540,10 +575,14 @@ function LanguagePicker({ lang, onLang, translations }: { lang: Lang; onLang: (l
     }),
   ];
   const current = LANGUAGES[lang];
+  // Reviews are per language, so the button carries this language's review state and the list shows every language's.
+  const status = reviewLabel(summaryFor(review, lang), ctx, lang);
   return (
     <div className="ed-theme ed-lang" ref={ref}>
-      <button type="button" className="ed-theme-btn" aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen((o) => !o)} title="Preview language">
+      <button type="button" className="ed-theme-btn" aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen((o) => !o)}
+        title={`Preview language · ${reviewTitle(summaryFor(review, lang), lang, ctx)}`}>
         <span>Language</span><span className="ed-lang-flag" aria-hidden>{current.flag}</span><span>{current.short}</span>
+        <span className={`ed-lang-status ${status.tone}`}><i aria-hidden />{status.text}</span>
       </button>
       {open && (
         <div className="ed-menu-list end" role="listbox" aria-label="Preview language">
@@ -553,6 +592,7 @@ function LanguagePicker({ lang, onLang, translations }: { lang: Lang; onLang: (l
               <span className="ed-lang-flag" aria-hidden>{LANGUAGES[o.lang].flag}</span>
               <span className="ed-lang-name"><span lang={o.lang}>{LANGUAGES[o.lang].name}</span>{o.lang !== "en" && <small>{LANGUAGES[o.lang].english}</small>}</span>
               <span className={`ed-lang-note ${o.state}`}>{o.note}</span>
+              {(() => { const r = reviewLabel(summaryFor(review, o.lang), ctx, o.lang); return <span className={`ed-lang-status ${r.tone}`} title={reviewTitle(summaryFor(review, o.lang), o.lang, ctx)}><i aria-hidden />{r.text}</span>; })()}
             </button>
           ))}
           <p className="ed-menu-note">Translations are made with Claude (Dekiru connector). Share links offer every language the deck has.</p>
@@ -593,8 +633,8 @@ function PresentButton({ href }: { href: string }) {
 
 /* ================= Slide navigator ================= */
 
-function Navigator({ open, onToggle, deckId, slides, selectedId, readOnly, presented, hiddenCount, showHidden, onShowHidden, numberOf, onSelect, onMove, onRemove, onKey, lang }: {
-  open: boolean; onToggle: () => void; deckId: string; slides: EditorSlide[]; selectedId: string | null; readOnly: boolean; lang: Lang;
+function Navigator({ open, onToggle, deckId, deckKind, slides, selectedId, readOnly, presented, hiddenCount, showHidden, onShowHidden, numberOf, onSelect, onMove, onRemove, onKey, lang, review }: {
+  open: boolean; onToggle: () => void; deckId: string; deckKind: "master" | "copy"; slides: EditorSlide[]; selectedId: string | null; readOnly: boolean; lang: Lang; review: ReviewProps;
   presented: number; hiddenCount: number; showHidden: boolean; onShowHidden: (on: boolean) => void;
   numberOf: (s: EditorSlide) => number | null;
   onSelect: (id: string) => void; onMove: (id: string, to: number) => void; onRemove: (id: string) => void;
@@ -603,6 +643,9 @@ function Navigator({ open, onToggle, deckId, slides, selectedId, readOnly, prese
   const [dragId, setDragId] = useState<string | null>(null);
   const [over, setOver] = useState<number | null>(null);
   const [confirm, setConfirm] = useState<string | null>(null);
+  // Reviewing a revision (spec §7b): untouched slides are dimmed, the rest say what changed.
+  const reviewing = summaryFor(review, lang)?.status === "for_review" && Boolean(review.diff[lang]);
+  const diff = reviewing ? review.diff[lang] : null;
   if (!open) {
     return (
       <nav className="ed-nav closed" aria-label="Slides">
@@ -617,6 +660,13 @@ function Navigator({ open, onToggle, deckId, slides, selectedId, readOnly, prese
           <span><b>Slides</b><span className="ed-count">{presented}</span></span>
           <button type="button" className="ed-icon-btn" aria-label="Hide slides" onClick={onToggle}>{ICON("panel-left-close")}</button>
         </div>
+        {diff && (
+          <p className="ed-nav-diff">
+            Changes since v{diff.against}: {Object.values(diff.slides).filter((c) => c.kind !== "unchanged").length} slide{Object.values(diff.slides).filter((c) => c.kind !== "unchanged").length === 1 ? "" : "s"}
+            {diff.removed.length > 0 && <> · {diff.removed.length} removed ({diff.removed.join(", ")})</>}
+            {diff.theme && <> · theme</>}
+          </p>
+        )}
         {hiddenCount > 0 && (
           <label className="ed-nav-row ed-show-hidden">
             <span>Show hidden slides<span className="ed-count">{hiddenCount}</span></span>
@@ -628,9 +678,10 @@ function Navigator({ open, onToggle, deckId, slides, selectedId, readOnly, prese
         {slides.map((s, i) => {
           const number = numberOf(s);
           const on = s.slide.id === selectedId;
+          const change = reviewing ? slideChange(review, lang, s.slide.id) : null;
           return (
             <li key={s.slide.id}
-              className={["ed-thumb", on ? "on" : "", s.slide.hidden ? "is-hidden" : "", dragId === s.slide.id ? "dragging" : "", over === i && dragId !== s.slide.id ? "drop" : ""].join(" ")}
+              className={["ed-thumb", on ? "on" : "", s.slide.hidden ? "is-hidden" : "", dragId === s.slide.id ? "dragging" : "", over === i && dragId !== s.slide.id ? "drop" : "", change?.kind === "unchanged" ? "unchanged" : ""].join(" ")}
               draggable={!readOnly}
               onDragStart={(e) => { setDragId(s.slide.id); e.dataTransfer.effectAllowed = "move"; }}
               onDragEnd={() => { setDragId(null); setOver(null); }}
@@ -642,7 +693,13 @@ function Navigator({ open, onToggle, deckId, slides, selectedId, readOnly, prese
                 <ScaledSlide><RenderSlide slide={s.slide} lang={lang} /></ScaledSlide>
               </button>
               <span className="ed-thumb-n" aria-hidden>{number ? pad2(number) : "—"}</span>
-              {(s.slide.hidden || s.from) && <span className="ed-thumb-tag">{s.slide.hidden ? "Hidden" : "Approved"}</span>}
+              {change && change.kind !== "unchanged" && (
+                <span className={`ed-thumb-change ${change.kind}`} title={[change.detail, change.moved && change.kind !== "moved" ? "moved" : null, change.visibility && change.kind !== change.visibility ? change.visibility : null].filter(Boolean).join(" · ") || undefined}>
+                  {CHANGE_LABEL[change.kind]}{change.kind === "edited" && (change.moved || change.visibility) ? " +" : ""}
+                </span>
+              )}
+              {/* "Master slide": follows a company deck (spec §7b — masters are component libraries). Not shown inside masters, where every slide is one. "Approved" is reserved for review status. */}
+              {(s.slide.hidden || (s.from && deckKind === "copy")) && <span className="ed-thumb-tag" title={s.slide.hidden ? "Hidden from the presentation" : `Master slide from ${s.from?.deck}. It updates when that deck's changes are approved.`}>{s.slide.hidden ? "Hidden" : "Master slide"}</span>}
               {!readOnly && slides.length > 1 && (confirm === s.slide.id ? (
                 <button type="button" className="ed-thumb-del armed" onClick={() => { setConfirm(null); onRemove(s.slide.id); }} onBlur={() => setConfirm(null)} autoFocus>Delete?</button>
               ) : (
@@ -656,7 +713,7 @@ function Navigator({ open, onToggle, deckId, slides, selectedId, readOnly, prese
         <Menu className="ed-add" label="Add slide" align="start"
           trigger={<span className="ed-btn ed-btn-block">{ICON("plus")}<span>Add slide</span></span>}
           items={[
-            { label: "Approved slide", href: `/library?deck=${encodeURIComponent(deckId)}` },
+            { label: "Master slide", href: `/library?deck=${encodeURIComponent(deckId)}` },
             { label: "From a template", href: `/library/templates?deck=${encodeURIComponent(deckId)}` },
           ]} />
         <p className="ed-hint">Drag slides to reorder</p>
@@ -669,7 +726,7 @@ function Navigator({ open, onToggle, deckId, slides, selectedId, readOnly, prese
 
 const ZOOMS = [0.25, 0.33, 0.42, 0.5, 0.67, 0.75, 1];
 
-function Canvas({ selected, number, lang }: { selected: EditorSlide | null; number: string; lang: Lang }) {
+function Canvas({ selected, number, lang, overlay }: { selected: EditorSlide | null; number: string; lang: Lang; overlay: React.ReactNode }) {
   const box = useRef<HTMLDivElement>(null);
   const [fit, setFit] = useState(0.42);
   const [zoom, setZoom] = useState<number | "fit">("fit");
@@ -702,6 +759,7 @@ function Canvas({ selected, number, lang }: { selected: EditorSlide | null; numb
                 {/* Preview-only: flags images that don't fit their slot. Never shown when presenting. */}
                 <PreviewChecks key={`${selected.slide.id}/${lang}`}><RenderSlide slide={selected.slide} lang={lang} /></PreviewChecks>
               </div>
+              {overlay}
             </div>
           </div>
         ) : <p className="ed-hint">This deck has no slides.</p>}
@@ -722,10 +780,11 @@ function Canvas({ selected, number, lang }: { selected: EditorSlide | null; numb
 
 /* ================= Content panel ================= */
 
-function ContentPanel({ deckId, item, readOnly, locked, onUnlock, onChange, onToggleHidden, onRemove, canRemove, canReset, onReset, onResize, width, lang, review, onReviewError }: {
+function ContentPanel({ deckId, item, readOnly, locked, onUnlock, onChange, onToggleHidden, canReset, onReset, onResize, width, lang, review, onReviewError, tab, onTab, commentCount, comments }: {
   deckId: string; item: EditorSlide | null; readOnly: boolean; locked: boolean; onUnlock: () => void; lang: Lang;
+  tab: "editor" | "comments"; onTab: (t: "editor" | "comments") => void; commentCount: number; comments: React.ReactNode;
   review: ReviewProps; onReviewError: (m: string) => void;
-  onChange: (props: Record<string, unknown>) => void; onToggleHidden: () => void; onRemove: () => void; canRemove: boolean;
+  onChange: (props: Record<string, unknown>) => void; onToggleHidden: () => void;
   /** The slide is an approved one edited for this deck: it can go back to the approved content. */
   canReset: boolean; onReset: () => void;
   onResize: (w: number) => void; width: number;
@@ -750,7 +809,7 @@ function ContentPanel({ deckId, item, readOnly, locked, onUnlock, onChange, onTo
         <i /><i />
       </div>
       <div className="ed-panel-h">
-        <h2>Slide Content Editor</h2>
+        <h2>Slide content</h2>
         {item && <ApproveSlide deckId={deckId} slideId={item.slide.id} review={review} lang={lang} onError={onReviewError} />}
         {item && !readOnly && canReset && (
           <button type="button" className="ed-btn ed-btn-sm ed-reset" onClick={() => setConfirmReset(true)}>Reset</button>
@@ -759,14 +818,13 @@ function ContentPanel({ deckId, item, readOnly, locked, onUnlock, onChange, onTo
           <ConfirmDialog title="Reset to the approved slide?" body="Your edits to this slide are dropped and it follows the approved slide again, so updates from the master reach it." action="Reset slide"
             onCancel={() => setConfirmReset(false)} onConfirm={() => { setConfirmReset(false); onReset(); }} />
         )}
-        {item && !readOnly && (
-          <Menu label="Slide actions" trigger={ICON("ellipsis")} items={[
-            { label: item.slide.hidden ? "Show in presentation" : "Hide from presentation", onSelect: onToggleHidden },
-            { label: "Delete slide", confirm: { title: "Delete this slide?", body: "The slide will be removed from this deck.", action: "Delete slide" }, danger: true, onSelect: onRemove, hidden: !canRemove },
-          ]} />
-        )}
       </div>
-      <div className="ed-form">
+      <div className="tabs ed-tabs" role="tablist" aria-label="Panel">
+        <button type="button" role="tab" aria-selected={tab === "editor"} className={tab === "editor" ? "on" : ""} onClick={() => onTab("editor")}>Editor</button>
+        <button type="button" role="tab" aria-selected={tab === "comments"} className={tab === "comments" ? "on" : ""} onClick={() => onTab("comments")}>Comments <span>{commentCount}</span></button>
+      </div>
+      {tab === "comments" ? comments : (
+      <div className="ed-form" role="tabpanel">
         {!item ? <p className="ed-hint">Choose a slide on the left.</p> : (
           <>
             {readOnly && !review.canReview[lang] && (
@@ -780,7 +838,13 @@ function ContentPanel({ deckId, item, readOnly, locked, onUnlock, onChange, onTo
                 <p>You&apos;re reviewing this {lang === "en" ? "deck" : `${LANGUAGES[lang].english} translation`}. Check each slide and approve it, or approve the whole deck from the top bar. Use Request changes (⋯ menu) to send it back.</p>
               </div>
             )}
-            {item.slide.hidden && <p className="ed-note">Hidden: kept in the deck but not presented or shared.</p>}
+            {readOnly ? (item.slide.hidden && <p className="ed-note">Hidden: kept in the deck but not presented or shared.</p>) : ALWAYS_SHOWN.has(item.slide.pattern) ? null : (
+              <label className="ed-check">
+                <input type="checkbox" checked={!!item.slide.hidden} onChange={onToggleHidden} />
+                <span>Hide from presentation</span>
+                <small>Kept in the deck but not presented or shared.</small>
+              </label>
+            )}
             {lang !== "en" && (
               <div className={`ed-note${trState === "fresh" ? "" : " ed-note-warn"}`}>
                 <p>
@@ -792,21 +856,30 @@ function ContentPanel({ deckId, item, readOnly, locked, onUnlock, onChange, onTo
             )}
             {locked && item.from && (
               <div className="ed-note">
-                <p>Approved slide from <b>{item.from.deck}</b>. It updates when that deck changes.</p>
+                <p>Master slide from <b>{item.from.deck}</b>. It updates when that deck&apos;s changes are approved.</p>
                 <button type="button" className="ed-btn ed-btn-sm" onClick={onUnlock}>Edit for this deck only</button>
                 <p className="ed-note-sub">Editing makes it this deck&apos;s own slide; updates from {item.from.deck} won&apos;t reach it.</p>
               </div>
             )}
+            {(() => {
+              const c = summaryFor(review, lang)?.status === "for_review" ? slideChange(review, lang, item.slide.id) : null;
+              if (!c) return null;
+              return c.kind === "unchanged"
+                ? <p className="ed-note ed-note-ok">Unchanged since the last approved version{review.diff[lang] ? ` (v${review.diff[lang]!.against})` : ""}.</p>
+                : <p className="ed-note ed-note-change"><b>{CHANGE_LABEL[c.kind]}</b>{c.detail ? <>: {c.detail}</> : null}{c.moved && c.kind !== "moved" ? " · moved" : ""}{c.visibility && c.kind !== c.visibility ? ` · ${c.visibility}` : ""}</p>;
+            })()}
             {warnings.length > 0 && (
               <ul className="ed-warn">
                 {warnings.map((w, i) => <li key={i}><b>{fieldLabel(w.slot.split(".").pop()!.split(" ")[0])}</b>: {w.message}</li>)}
               </ul>
             )}
-            <ContentFields key={lang} pattern={item.slide.pattern} value={localize(item.slide, lang).props as Record<string, unknown>} onChange={onChange} disabled={locked || readOnly} />
+            <ContentFields key={lang} pattern={item.slide.pattern} value={localize(item.slide, lang).props as Record<string, unknown>} onChange={onChange} disabled={locked || readOnly}
+              changed={summaryFor(review, lang)?.status === "for_review" ? new Set(slideChange(review, lang, item.slide.id)?.fields ?? []) : undefined} />
           </>
         )}
       </div>
-      <div className="ed-panel-f">{ICON("info", 12)}<span>{readOnly ? "View only" : "Changes appear on your slide automatically"}</span></div>
+      )}
+      <div className="ed-panel-f">{ICON("info", 12)}<span>{tab === "comments" ? "Press C, then click or drag on the slide to pin a comment" : readOnly ? "View only" : "Changes appear on your slide automatically"}</span></div>
     </aside>
   );
 }

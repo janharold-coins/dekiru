@@ -1,5 +1,7 @@
 /**
- * Share links: a public URL for one published deck version, password-protected by default.
+ * Share links: a public URL for a snapshot of a deck, password-protected by default. A link can be made
+ * from any state (spec §7b): it freezes what the author sees now — the draft when there is one, else the
+ * newest sent version — and remembers which layers were approved that day, so the viewer gets the notice.
  *
  * - The link stores a snapshot of the slides (references resolved) at creation, so it never changes.
  * - Passwords are stored as scrypt hashes; a generated one is shown to the creator once.
@@ -8,7 +10,7 @@
  */
 import { createHmac, randomBytes, randomInt, scrypt as scryptCb, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { deckVersions, decks, shareLinks, users } from "@/db/schema";
 import { opensByLink } from "./analytics";
@@ -16,6 +18,7 @@ import { pickTheme, publishedThemes } from "./themes";
 import { resolveSlides } from "@/content/resolve";
 import type { SignedInUser } from "./auth";
 import { reviewState } from "./reviews";
+import { getDeckVersions, liveSlidesOf } from "./decks";
 
 const scrypt = promisify(scryptCb) as (pw: string, salt: Buffer, len: number) => Promise<Buffer>;
 
@@ -75,22 +78,17 @@ export interface CreateLinkInput {
   expiresInDays?: number | null;
 }
 
-/** Creates a link to the deck's newest published version. Returns the plain password once. */
+/** Creates a link to what the author sees now (draft, else newest sent version). Returns the plain password once. */
 export async function createShareLink(deckId: string, input: CreateLinkInput, user: SignedInUser | null) {
   const q = db();
   const [deck] = await q.select().from(decks).where(eq(decks.id, deckId)).limit(1);
   if (!deck) throw new Error("Deck not found");
-  const [version] = await q.select().from(deckVersions)
-    .where(and(eq(deckVersions.deckId, deckId), eq(deckVersions.status, "published")))
-    .orderBy(desc(deckVersions.number)).limit(1);
-  if (!version) throw new Error("This deck has no published version to share");
+  const { draft, published } = await getDeckVersions(deckId);
+  const version = draft ?? published;
+  if (!version) throw new Error("This deck has nothing to share yet");
 
-  const slides = (await resolveSlides(version.slides, async (id) => {
-    const [v] = await q.select({ slides: deckVersions.slides }).from(deckVersions)
-      .where(and(eq(deckVersions.deckId, id), eq(deckVersions.status, "published")))
-      .orderBy(desc(deckVersions.number)).limit(1);
-    return v?.slides;
-  })).filter((s) => !s.hidden);
+  const slides = (await resolveSlides(version.slides, liveSlidesOf)).filter((s) => !s.hidden);
+  const state = await reviewState(deckId);
 
   const password = input.password === "generate" ? generatePassword()
     : input.password === "none" ? null
@@ -101,7 +99,7 @@ export async function createShareLink(deckId: string, input: CreateLinkInput, us
   const [link] = await q.insert(shareLinks).values({
     slug: newSlug(), deckId, versionId: version.id, deckTitle: deck.title, slides,
     theme: pickTheme(await publishedThemes(), version.themeId).tokens, // frozen with the link
-    approved: (await reviewState(deckId)).approved, // which layers were reviewed on the day, also frozen
+    approved: state.versionId === version.id ? state.approved : [], // which layers were reviewed on the day, also frozen (a draft: none)
     label: input.label?.trim() || null,
     passwordHash: password ? await hashPassword(password) : null,
     createdBy: user?.id ?? null, expiresAt,

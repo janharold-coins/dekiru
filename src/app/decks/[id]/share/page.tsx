@@ -9,6 +9,13 @@ import { listShareLinks } from "@/lib/share";
 import { Nav } from "../../../Nav";
 import { revokeLinkAction } from "./actions";
 import { CopyButton, NewLinkForm } from "./NewLinkForm";
+import { People } from "./People";
+import { canChangeOwner, canManageMembers, listMembers } from "@/lib/members";
+import { deckRow } from "@/lib/access";
+import { listPeople } from "@/lib/people";
+import { db } from "@/db/client";
+import { users } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 const fmt = (d: Date) => d.toLocaleDateString("en-PH", { day: "numeric", month: "short", year: "numeric" });
 
@@ -30,6 +37,8 @@ export default async function SharePage({ params }: { params: Promise<{ id: stri
         <p className="hint warn">Sharing needs the database. Add DATABASE_URL to .env.local.</p>
       ) : (
         <>
+          {deck.kind === "copy" && <PeopleSection deckId={deck.id} user={user} />}
+          <h2 className="share-h2">Links</h2>
           <NewLinkForm deckId={deck.id} origin={origin} />
           <LinkList deckId={deck.id} origin={origin} userId={user?.id ?? null} canRevokeAll={!user || user.role !== "member"} />
         </>
@@ -77,5 +86,23 @@ async function LinkList({ deckId, origin, userId, canRevokeAll }: { deckId: stri
         ))}
       </tbody>
     </table>
+  );
+}
+
+/** People the deck is shared with — copies only (masters are shared with everyone). */
+async function PeopleSection({ deckId, user }: { deckId: string; user: Awaited<ReturnType<typeof requireUser>> }) {
+  const row = await deckRow(deckId);
+  if (!row) return null;
+  const members = await listMembers(deckId);
+  const owner = row.ownerId ? (await db().select({ id: users.id, name: users.name, email: users.email }).from(users).where(eq(users.id, row.ownerId)).limit(1))[0] : null;
+  const changeOwner = canChangeOwner(user);
+  const people = changeOwner ? (await listPeople()).map((p) => ({ id: p.id, name: p.name || p.email })) : [];
+  return (
+    <>
+      <h2 className="share-h2">People</h2>
+      <p className="hint">Shared people open the deck from their Decks home. View only by default; editors can change it and send it for review.</p>
+      <People deckId={deckId} owner={owner ? { id: owner.id, name: owner.name || owner.email } : null} members={members}
+        canManage={canManageMembers(row, user)} canChangeOwner={changeOwner} people={people} me={user?.id ?? null} />
+    </>
   );
 }

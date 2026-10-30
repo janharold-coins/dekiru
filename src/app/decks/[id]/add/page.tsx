@@ -7,7 +7,7 @@ import { BlockPicker } from "../../BlockPicker";
 import { blockGroups } from "../../blocks";
 import { addBlocksAction } from "../actions";
 
-/** Add approved slides from the company masters to a deck you can edit. */
+/** Add master slides from the company masters to a deck you can edit. */
 export default async function AddSlidesPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requireUser(`/decks/${id}/add`);
@@ -23,7 +23,7 @@ export default async function AddSlidesPage({ params }: { params: Promise<{ id: 
     <main className="shell">
       <Nav on="decks" user={user} />
       <p className="crumb"><Link href={`/decks/${id}`}>← Back to {found.deck.title}</Link></p>
-      <h1 className="page">Add approved slides</h1>
+      <h1 className="page">Add master slides</h1>
       <BlockPicker groups={groups} submitLabel="Add to deck" onSubmit={add} />
     </main>
   );

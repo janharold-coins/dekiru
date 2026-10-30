@@ -8,8 +8,10 @@ const manrope = Manrope({ variable: "--font-manrope", subsets: ["latin"], weight
 const numeral = Inter({ variable: "--font-numeral", subsets: ["latin"], weight: ["200", "300", "400", "500", "600", "700"] });
 const encode = Encode_Sans_Semi_Expanded({ variable: "--font-encode", subsets: ["latin"], weight: ["400"] });
 // App interface (header, decks home): Zalando Sans; the DEKIRU wordmark: Zalando Sans Expanded Black.
-const zalando = Zalando_Sans({ variable: "--font-app", subsets: ["latin"], weight: ["400", "500", "600"] });
-const wordmark = Zalando_Sans_Expanded({ variable: "--font-wordmark", subsets: ["latin"], weight: ["900"] });
+// Next has no fallback metrics for the Zalando families yet, so it can't build a size-matched fallback font
+// (it warned on every request). Use a plain system fallback instead.
+const zalando = Zalando_Sans({ variable: "--font-app", subsets: ["latin"], weight: ["400", "500", "600"], adjustFontFallback: false, fallback: ["system-ui", "sans-serif"] });
+const wordmark = Zalando_Sans_Expanded({ variable: "--font-wordmark", subsets: ["latin"], weight: ["900"], adjustFontFallback: false, fallback: ["system-ui", "sans-serif"] });
 
 // Script fonts for translated slides (the design fonts have no Chinese or Thai glyphs). Loaded by unicode
 // range, so an English deck downloads none of them. Used after the design font: see src/deck/tokens.ts.

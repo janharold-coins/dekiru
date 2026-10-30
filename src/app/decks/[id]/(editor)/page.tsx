@@ -1,17 +1,19 @@
 import { notFound, redirect } from "next/navigation";
 import { patterns } from "@/deck/registry";
 import { canEdit, deckFor, deckRow, renamedDeckId } from "@/lib/access";
-import { canReview, reviewState, type ReviewSummary } from "@/lib/reviews";
+import { canReview, previousApprovedVersion, reviewState, type ReviewSummary } from "@/lib/reviews";
+import { revisionDiff } from "@/lib/editing";
 import { asLang, TARGET_LANGS, type Lang } from "@/deck/i18n";
 import { db, hasDb } from "@/db/client";
 import { users } from "@/db/schema";
 import { inArray } from "drizzle-orm";
-import type { ReviewProps } from "./edit/Review";
+import type { ReviewProps } from "../edit/Review";
 import { requireUser } from "@/lib/auth";
 import { publishedThemes } from "@/lib/themes";
-import { ViewAsBanner } from "../../view-as/ViewAs";
-import { slideName } from "./Report";
-import { DeckEditor, type EditorSlide } from "./edit/DeckEditor";
+import { listComments } from "@/lib/comments";
+import { ViewAsBanner } from "../../../view-as/ViewAs";
+import { slideName } from "../Report";
+import { DeckEditor, type EditorSlide } from "../edit/DeckEditor";
 
 /**
  * A deck opens in the editor: slides on the left, the selected slide in the middle, its content on the right.
@@ -31,8 +33,9 @@ export default async function DeckPage({ params, searchParams }: { params: Promi
   const { deck } = found;
   const themes = await publishedThemes();
   const review = await reviewProps(id, user);
+  const comments = hasDb() ? await listComments(id, user) : [];
 
-  // Section each slide sits in (the latest section divider before it), and where approved slides come from.
+  // Section each slide sits in (the latest section divider before it), and which master each master slide comes from.
   const masters = new Map<string, string>();
   for (const s of deck.slides) {
     const m = s.ref?.split("/")[0];
@@ -53,13 +56,15 @@ export default async function DeckPage({ params, searchParams }: { params: Promi
     {user?.realRole && <ViewAsBanner role={user.role} />}
     <DeckEditor
       key={`${deck.versionId}-${deck.status}`}
-      deck={{ id: deck.id, title: deck.title, kind: deck.kind, hasDraft: deck.status === "draft", versionNumber: deck.versionNumber ?? null }}
+      deck={{ id: deck.id, title: deck.title, kind: deck.kind, hasDraft: deck.status === "draft", versionNumber: deck.versionNumber ?? null,
+        sentVersion: deck.sentVersionNumber ?? null, approvedVersion: deck.approvedVersionNumber ?? null }}
       slides={slides}
       initialSlide={slides.some((s) => s.slide.id === slide) ? slide! : slides[0]?.slide.id ?? null}
       theme={deck.theme}
       themes={themes.map((t) => ({ id: t.id, name: t.name, tokens: t.tokens }))}
       readOnly={!found.canEdit}
       review={review}
+      initialComments={comments}
       initialLang={asLang(lang)}
     />
     </>
@@ -68,7 +73,7 @@ export default async function DeckPage({ params, searchParams }: { params: Promi
 
 /** Review state of the deck plus what this person may do about it, for the editor. */
 async function reviewProps(id: string, user: Awaited<ReturnType<typeof requireUser>>): Promise<ReviewProps> {
-  const empty: ReviewProps = { content: null, translations: {}, canReview: {}, canSend: false, admin: !user || user.role === "admin", userId: user?.id ?? null, names: {} };
+  const empty: ReviewProps = { content: null, translations: {}, canReview: {}, canSend: false, admin: !user || user.role === "admin", userId: user?.id ?? null, names: {}, diff: {} };
   if (!hasDb()) return empty;
   const row = await deckRow(id);
   if (!row) return empty;
@@ -80,11 +85,22 @@ async function reviewProps(id: string, user: Awaited<ReturnType<typeof requireUs
     const t = state.translations[l];
     if (t) { all.push(t); can[l] = t.status === "for_review" && canReview(user, { kind: "translation", lang: l, requestedBy: t.requestedBy }); }
   }
+  // Revision under review: what changed since the last approved version, so reviewers can skip untouched slides (spec §7b).
+  const diff: ReviewProps["diff"] = {};
+  if (state.versionId) {
+    for (const r of all) {
+      if (r.status !== "for_review") continue;
+      const lang = r.lang;
+      const against = await previousApprovedVersion(id, r.kind, r.kind === "translation" ? lang : null, state.versionId);
+      diff[lang] = await revisionDiff(state.versionId, against, lang);
+    }
+  }
   const ids = [...new Set(all.flatMap((r) => Object.values(r.slides).flatMap((x) => x.approvers)))];
   const people = ids.length ? await db().select({ id: users.id, name: users.name, email: users.email }).from(users).where(inArray(users.id, ids)) : [];
   return {
     content: state.content, translations: state.translations, canReview: can,
     canSend: canEdit(row, user), admin: empty.admin, userId: empty.userId,
     names: Object.fromEntries(people.map((p) => [p.id, p.name || p.email])),
+    diff,
   };
 }

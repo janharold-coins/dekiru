@@ -71,6 +71,27 @@
       "when": 1793086253186,
       "tag": "0009_reviews",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793179620031,
+      "tag": "0010_members",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793179952862,
+      "tag": "0011_notifications",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793343223100,
+      "tag": "0012_comments",
+      "breakpoints": true
     }
   ]
 }

@@ -12,6 +12,7 @@ import {
 import type { SeedSlide } from "@/content/resolve";
 import type { Lang, TargetLang } from "@/deck/i18n";
 import { setTranslation } from "@/lib/editing";
+import { addComment, deleteComment, editComment, listComments, setResolved, type CommentAnchor } from "@/lib/comments";
 import { approveDeck, approveForEveryone, approveSlide, promoteDeck, requestChanges, sendForReview, withdrawReview } from "@/lib/reviews";
 
 export type EditorResult = { error?: string };
@@ -100,4 +101,21 @@ export async function withdrawReviewAction(deckId: string, lang: Lang): Promise<
 }
 export async function promoteDeckAction(deckId: string): Promise<EditorResult> {
   const r = await run(deckId, (u) => promoteDeck(u, deckId)); after(deckId); return r;
+}
+
+/* Comments (src/lib/comments.ts). The editor keeps the list in its own state and applies each result. */
+export async function listCommentsAction(deckId: string) {
+  const r = await run(deckId, (u) => listComments(deckId, u)); return { error: r.error, comments: r.value ?? [] };
+}
+export async function addCommentAction(deckId: string, input: { slideId: string; body: string; anchor?: CommentAnchor | null; parentId?: string | null }) {
+  const r = await run(deckId, (u) => addComment(u, deckId, input)); return { error: r.error, comment: r.value };
+}
+export async function editCommentAction(deckId: string, id: string, body: string) {
+  const r = await run(deckId, (u) => editComment(u, deckId, id, body)); return { error: r.error, comment: r.value };
+}
+export async function deleteCommentAction(deckId: string, id: string): Promise<EditorResult> {
+  return run(deckId, (u) => deleteComment(u, deckId, id));
+}
+export async function resolveCommentAction(deckId: string, id: string, resolved: boolean): Promise<EditorResult> {
+  return run(deckId, (u) => setResolved(u, deckId, id, resolved));
 }

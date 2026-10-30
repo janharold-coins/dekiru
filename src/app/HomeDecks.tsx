@@ -9,6 +9,7 @@ import type { SlideData } from "@/deck/types";
 import { Menu } from "./decks/[id]/edit/Menu";
 import { archiveAction, copyAction } from "./decks/[id]/actions";
 import { DeckId } from "./DeckId";
+import type { StatusLabel } from "@/lib/status";
 
 export interface HomeDeck {
   id: string;
@@ -21,6 +22,12 @@ export interface HomeDeck {
   updated: number;
   updatedLabel: string;
   hasDraft: boolean;
+  /** Draft / Under review / Approved / Master (spec §7b). */
+  status: StatusLabel;
+  /** Someone else's deck shared with you: "Shared by … · view only". */
+  shared?: string;
+  /** Translations the live version has (spec §7b): shown as "2 translations available" on the cover. */
+  translations: { lang: string; name: string; english: string; flag: string; note: string; review: string }[];
   /** One of your own decks that you archived (My Decks only). */
   archived?: boolean;
   /** For review tab: what kind of review is waiting and how far it is. */
@@ -137,7 +144,7 @@ export function HomeDecks({ company, mine, review = [], reviewer = false, initia
           <p className="home-empty">Nothing is waiting for your review.</p>
         ) : tab === "mine" ? (
           <p className="home-empty">
-            You don&apos;t have any decks yet. <Link href="/new">Create a deck</Link> from approved slides, open a company deck and
+            You don&apos;t have any decks yet. <Link href="/new">Create a deck</Link> from master slides, open a company deck and
             choose Make a copy, or ask Claude (Dekiru connector) to build one.
           </p>
         ) : (
@@ -157,6 +164,27 @@ function TabButton({ on, count, onClick, children }: { on: boolean; count: numbe
   );
 }
 
+/** "2 translations available" over the cover's bottom-right corner; hover or focus lists them, each opens the deck in that language. */
+function Translations({ deckId, items }: { deckId: string; items: HomeDeck["translations"] }) {
+  return (
+    <div className="home-tr">
+      <button type="button" className="home-tr-chip" aria-label={`${items.length} translation${items.length === 1 ? "" : "s"} available: ${items.map((t) => t.english).join(", ")}`}>
+        <span aria-hidden>{items.map((t) => t.flag).join(" ")}</span>
+        {items.length} translation{items.length === 1 ? "" : "s"} available
+      </button>
+      <div className="home-tr-pop" role="list">
+        {items.map((t) => (
+          <Link key={t.lang} role="listitem" href={`/decks/${deckId}?lang=${t.lang}`} className="home-tr-row">
+            <span className="home-tr-flag" aria-hidden>{t.flag}</span>
+            <span className="home-tr-name"><span lang={t.lang}>{t.name}</span><small>{t.english}</small></span>
+            <span className="home-tr-meta">{t.note}<small>{t.review}</small></span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function DeckCard({ d, onArchive }: { d: HomeDeck; onArchive?: (archived: boolean) => void }) {
   return (
     <article className={`home-card${d.archived ? " archived" : ""}`}>
@@ -169,14 +197,16 @@ function DeckCard({ d, onArchive }: { d: HomeDeck; onArchive?: (archived: boolea
         </Link>
         {/* Outside the link (a button can't sit inside one); positioned over the cover's top-left corner. */}
         <DeckId id={d.id} className="deck-id-cover" />
+        {d.translations.length > 0 && <Translations deckId={d.id} items={d.translations} />}
       </div>
       <div className="home-details">
         <div className="home-title">
           <Link href={`/decks/${d.id}`}><h2>{d.title}</h2></Link>
           <p>
             {d.archived && <span className="home-archived-tag">Archived</span>}
-            {d.review ? <><span className="home-review-what">{d.review.what}</span> · {d.review.progress}</> : d.updatedLabel}
-            {d.hasDraft && !d.review && <span className="home-draft">{d.updatedLabel ? " · " : ""}Unpublished changes</span>}
+            {!d.review && <span className={`home-status ${d.status.tone}`}><i aria-hidden />{d.status.text}</span>}
+            {d.review ? <><span className="home-review-what">{d.review.what}</span> · {d.review.progress}</> : d.updatedLabel ? <> · {d.updatedLabel}</> : null}
+            {d.shared && <span className="home-shared"> · {d.shared}</span>}
           </p>
         </div>
         <Menu
@@ -189,7 +219,7 @@ function DeckCard({ d, onArchive }: { d: HomeDeck; onArchive?: (archived: boolea
             { label: "Share", href: `/decks/${d.id}/share` },
             { label: "Make a copy", onSelect: () => { void copyAction(d.id); } },
             { label: "Version history", href: `/decks/${d.id}/history` },
-            { label: "Archive", onSelect: () => onArchive?.(true), hidden: !onArchive || d.archived },
+            { label: "Archive", onSelect: () => onArchive?.(true), hidden: !onArchive || d.archived || Boolean(d.shared) },
             { label: "Unarchive", onSelect: () => onArchive?.(false), hidden: !onArchive || !d.archived },
           ]}
         />

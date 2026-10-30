@@ -6,12 +6,15 @@
  *   still came from the Figma build. Once someone edits a master in the app, the seed leaves it alone
  *   (pass `force` to overwrite anyway). Translations made in the app (slide.i18n) are carried over
  *   by slide id, so a rebuild from Figma never loses them.
+ * - Versions built from Figma are approved as the master straight away: the design was approved in Figma
+ *   (review v2, spec §7b). Edits made in the app go through review as usual.
  */
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { decks } from "@/db/schema";
 import { seedDecks } from "@/content/decks";
 import { createDeck, getDeckVersions, publishDraft, saveDraft } from "@/lib/decks";
+import { approveAsMaster } from "@/lib/reviews";
 import type { SeedSlide } from "@/content/resolve";
 import type { SlideData } from "@/deck/types";
 
@@ -27,7 +30,8 @@ export async function seedMasters({ force = false, log = console.log }: { force?
   for (const d of seedDecks) {
     const [row] = await db().select().from(decks).where(eq(decks.id, d.id)).limit(1);
     if (!row) {
-      await createDeck({ id: d.id, title: d.title, kind: "master", slides: d.slides, note: `Seeded from Figma build (${d.version ?? "json"})` });
+      const v1 = await createDeck({ id: d.id, title: d.title, kind: "master", slides: d.slides, note: `Seeded from Figma build (${d.version ?? "json"})` });
+      await approveAsMaster(d.id, v1.id, "Built from the approved Figma design");
       log(`${d.id}: created v1 (${d.slides.length} slides)`);
       continue;
     }
@@ -43,6 +47,7 @@ export async function seedMasters({ force = false, log = console.log }: { force?
     const slides = d.slides.map((s) => (prev.get(s.id) ? { ...s, i18n: prev.get(s.id) } : s));
     await saveDraft(d.id, slides, { note: "Re-seeded from Figma build" });
     const v = await publishDraft(d.id);
-    log(`${d.id}: published v${v.number} from the Figma build`);
+    await approveAsMaster(d.id, v.id, "Built from the approved Figma design");
+    log(`${d.id}: published v${v.number} from the Figma build (approved as the master)`);
   }
 }

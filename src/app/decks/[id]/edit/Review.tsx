@@ -1,12 +1,15 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
 /**
- * Review controls in the deck editor (spec §7a). Everything here follows the preview language:
- * in English it's about the deck's content review, in Chinese or Thai about that translation's review.
+ * Review controls in the deck editor (spec §7a, status pipeline §7b). Everything here follows the preview
+ * language: in English it's about the deck's content review, in Chinese or Thai about that translation's review.
+ * Status: Draft → Under review → Approved → Master. "Send for review" freezes the draft as the version reviewers see.
  */
 import { useEffect, useRef, useState, useTransition } from "react";
 import { LANGUAGES, type Lang } from "@/deck/i18n";
 import type { ReviewSummary } from "@/lib/reviews";
+import type { RevisionDiff, SlideChange } from "@/lib/editing";
+import { statusHint, statusLabel, type StatusLabel } from "@/lib/status";
 import {
   approveDeckAction, approveForEveryoneAction, approveSlideAction, promoteDeckAction, requestChangesAction, sendForReviewAction, withdrawReviewAction,
 } from "./actions";
@@ -22,29 +25,47 @@ export interface ReviewProps {
   userId: string | null;
   /** Names of people, for "Approved by …". */
   names: Record<string, string>;
+  /** Per layer under review: what changed since the last approved version (null = first review, nothing to dim). */
+  diff: Partial<Record<Lang, RevisionDiff | null>>;
 }
+
+/** What a reviewer should know about one slide in the reviewed language, or null when there's no earlier approved version. */
+export function slideChange(review: ReviewProps, lang: Lang, slideId: string): SlideChange | null {
+  const d = review.diff[lang];
+  if (!d) return null;
+  return d.slides[slideId] ?? { kind: "unchanged", fields: [] };
+}
+
+export const CHANGE_LABEL: Record<SlideChange["kind"], string> = { added: "New", edited: "Edited", moved: "Moved", hidden: "Hidden", shown: "Shown", unchanged: "" };
 
 export const summaryFor = (r: ReviewProps, lang: Lang) => (lang === "en" ? r.content : r.translations[lang] ?? null);
 
 const ICON = (name: string, size = 16) => <img src={`/editor/${name}.svg`} alt="" width={size} height={size} />;
 
-function label(s: ReviewSummary | null, lang: Lang) {
-  const what = lang === "en" ? "" : `${LANGUAGES[lang].english} `;
-  if (!s) return { text: `${what}Not reviewed`, tone: "none" as const };
-  if (s.status === "approved") return { text: `${what}Approved`, tone: "ok" as const };
-  if (s.status === "changes_requested") return { text: `${what}Changes requested`, tone: "warn" as const };
-  return { text: `${what}For review · ${s.level} of ${s.required}`, tone: "wait" as const };
+/** Context the status needs beyond the review itself: the deck's kind and whether there are unsent changes. */
+export interface StatusCtx { kind: "master" | "copy"; hasDraft: boolean; sentVersion?: number | null; approvedVersion?: number | null }
+
+/** Status of one language layer, for the Language button and its list (no counts — the tooltip has them). */
+export function reviewLabel(s: ReviewSummary | null, ctx: StatusCtx, lang: Lang = "en"): StatusLabel {
+  // The live approved version (ctx.approvedVersion) is about the English content; translations stand on their own review.
+  return statusLabel({ kind: ctx.kind, hasDraft: ctx.hasDraft, review: s?.status ?? null, approvedBefore: lang === "en" && Boolean(ctx.approvedVersion) });
 }
 
-/** Status chip in the top bar. */
-export function ReviewChip({ review, lang }: { review: ReviewProps; lang: Lang }) {
+/** Tooltip for one language's status. */
+export function reviewTitle(s: ReviewSummary | null, lang: Lang, ctx: StatusCtx) {
+  const hint = statusHint({ kind: ctx.kind, hasDraft: ctx.hasDraft, review: s?.status ?? null, sentVersion: ctx.sentVersion, approvedVersion: ctx.approvedVersion });
+  const layer = lang === "en" ? "" : `${LANGUAGES[lang].english} translation: `;
+  if (!s || ctx.hasDraft) return `${layer}${hint}`;
+  if (s.status === "approved") return `${layer}Approved${s.approverNames.length ? ` by ${s.approverNames.join(", ")}` : ""}. ${hint}`;
+  if (s.status === "changes_requested") return `${layer}Changes requested${s.note ? `: ${s.note}` : ""}`;
+  return `${layer}Under review · ${s.level} of ${s.required} approvals · ${s.approvedSlides} of ${s.totalSlides} slides done${s.approverNames.length ? ` · approved so far by ${s.approverNames.join(", ")}` : ""}.`;
+}
+
+/** Status chip (used where the Language button isn't shown). */
+export function ReviewChip({ review, lang, ctx }: { review: ReviewProps; lang: Lang; ctx: StatusCtx }) {
   const s = summaryFor(review, lang);
-  const l = label(s, lang);
-  const title = !s ? (lang === "en" ? "This version hasn't been sent for review." : `The ${LANGUAGES[lang].english} translation hasn't been sent for review.`)
-    : s.status === "approved" ? `Approved${s.approverNames.length ? ` by ${s.approverNames.join(", ")}` : ""}.`
-    : s.status === "changes_requested" ? `Changes requested${s.note ? `: ${s.note}` : ""}`
-    : `${s.approvedSlides} of ${s.totalSlides} slides have ${s.required} approval${s.required > 1 ? "s" : ""}${s.approverNames.length ? ` · approved so far by ${s.approverNames.join(", ")}` : ""}.`;
-  return <span className={`ed-review-chip ${l.tone}`} title={title}><i aria-hidden />{l.text}</span>;
+  const l = reviewLabel(s, ctx, lang);
+  return <span className={`ed-review-chip ${l.tone}`} title={reviewTitle(s, lang, ctx)}><i aria-hidden />{l.text}</span>;
 }
 
 /** Runs a review action, then reloads so the editor shows the new state. */
@@ -71,10 +92,11 @@ export function ReviewButtons({ deckId, review, lang, hasDraft, onError }: { dec
       </button>
     );
   }
-  if (review.canSend && (!s || s.status === "changes_requested")) {
+  // Editors can send whenever there is something new: unsent changes, or a version nobody is reviewing yet.
+  if (review.canSend && (hasDraft || !s || s.status === "changes_requested" || s.status === "withdrawn")) {
     return (
-      <button type="button" className="ed-btn ed-btn-publish" disabled={busy || hasDraft} onClick={() => run(() => sendForReviewAction(deckId, lang))}
-        title={hasDraft ? "Publish your changes first, so reviewers see what will go out." : `Ask reviewers to approve the ${what}.`}>
+      <button type="button" className="ed-btn ed-btn-publish" disabled={busy} onClick={() => run(() => sendForReviewAction(deckId, lang))}
+        title={hasDraft ? `Freeze the current changes as a new version and ask reviewers to approve the ${what}. You can keep editing afterwards; reviewers only see what you sent.` : `Ask reviewers to approve the ${what}.`}>
         {busy ? "Sending…" : "Send for review"}
       </button>
     );

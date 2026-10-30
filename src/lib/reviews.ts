@@ -11,7 +11,7 @@
  * promotion of an employee deck to a company deck. A new published version starts a new review; approvals of
  * slides whose content didn't change carry over (slide fingerprints).
  */
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, ne } from "drizzle-orm";
 import { db } from "@/db/client";
 import { decks, deckVersions, reviewEvents, reviews, slideApprovals, users } from "@/db/schema";
 import { resolveSlides } from "@/content/resolve";
@@ -19,8 +19,10 @@ import { fingerprint, isTargetLang, LANGUAGES, TARGET_LANGS, type Lang, type Tar
 import type { SlideData } from "@/deck/types";
 import type { SignedInUser } from "./auth";
 import { canEdit, deckRow, type DeckRow } from "./access";
-import { getDeckVersions } from "./decks";
+import { getDeckVersions, liveSlidesOf } from "./decks";
 import { EditError } from "./errors";
+import { publish } from "./editing";
+import { dependentsOf, layerName, notify, reviewersFor } from "./notifications";
 
 export type ReviewKind = "employee" | "company" | "translation";
 export type ReviewStatus = "for_review" | "changes_requested" | "approved" | "withdrawn";
@@ -85,7 +87,7 @@ export interface DeckReviewState {
   approved: Lang[];
 }
 
-const lookup = async (deckId: string) => (await getDeckVersions(deckId)).published?.slides;
+const lookup = liveSlidesOf;
 
 /** Presented slides of a version, references resolved. */
 async function presentedSlides(versionId: string) {
@@ -146,12 +148,45 @@ export async function reviewState(deckId: string): Promise<DeckReviewState> {
   return state;
 }
 
-/** Layers approved on the newest published version ("en", "zh", …) — two queries, for pages that only need the notice. */
+/** The version approved before this one for the same kind and language — what a reviewer compares against (spec §7b). */
+export async function previousApprovedVersion(deckId: string, kind: ReviewKind, lang: string | null, notVersionId: string) {
+  const rows = await db().select({ versionId: reviews.versionId, lang: reviews.lang, resolvedAt: reviews.resolvedAt }).from(reviews)
+    .where(and(eq(reviews.deckId, deckId), eq(reviews.kind, kind), eq(reviews.status, "approved"))).orderBy(desc(reviews.resolvedAt));
+  return rows.find((r) => r.lang === lang && r.versionId !== notVersionId)?.versionId ?? null;
+}
+
+/** Newest translation review (not withdrawn) per deck and language, for lists: "deckId:lang" → status. */
+export async function translationReviewStatuses(deckIds: string[]): Promise<Map<string, ReviewStatus>> {
+  const out = new Map<string, ReviewStatus>();
+  if (!deckIds.length) return out;
+  const rows = await db().select({ deckId: reviews.deckId, lang: reviews.lang, status: reviews.status }).from(reviews)
+    .where(and(inArray(reviews.deckId, deckIds), eq(reviews.kind, "translation"), ne(reviews.status, "withdrawn")))
+    .orderBy(desc(reviews.requestedAt));
+  for (const r of rows) { const k = `${r.deckId}:${r.lang}`; if (!out.has(k)) out.set(k, r.status); }
+  return out;
+}
+
+/** Newest content review (not withdrawn) per deck, for lists — one query for any number of decks. */
+export async function contentReviewStatuses(deckIds: string[]): Promise<Map<string, { latest: ReviewStatus; approvedBefore: boolean }>> {
+  const out = new Map<string, { latest: ReviewStatus; approvedBefore: boolean }>();
+  if (!deckIds.length) return out;
+  const rows = await db().select({ deckId: reviews.deckId, status: reviews.status }).from(reviews)
+    .where(and(inArray(reviews.deckId, deckIds), inArray(reviews.kind, ["employee", "company"]), ne(reviews.status, "withdrawn")))
+    .orderBy(desc(reviews.requestedAt));
+  for (const r of rows) {
+    const cur = out.get(r.deckId);
+    if (!cur) out.set(r.deckId, { latest: r.status, approvedBefore: r.status === "approved" });
+    else if (r.status === "approved") cur.approvedBefore = true;
+  }
+  return out;
+}
+
+/** Layers approved on the live version ("en", "zh", …) — two queries, for pages that only need the notice. */
 export async function approvedLayers(deckId: string): Promise<Lang[]> {
-  const { published } = await getDeckVersions(deckId);
-  if (!published) return [];
+  const { live } = await getDeckVersions(deckId);
+  if (!live) return [];
   const rows = await db().select({ kind: reviews.kind, lang: reviews.lang }).from(reviews)
-    .where(and(eq(reviews.versionId, published.id), eq(reviews.status, "approved")));
+    .where(and(eq(reviews.versionId, live.id), eq(reviews.status, "approved")));
   return rows.map((r) => (r.kind === "translation" ? (r.lang as Lang) : "en"));
 }
 
@@ -207,6 +242,38 @@ async function event(deckId: string, reviewId: string | null, ev: typeof reviewE
   await db().insert(reviewEvents).values({ deckId, reviewId, event: ev, userId: user?.id ?? null, slideId: extra.slideId, lang: extra.lang ?? null, note: extra.note ?? null });
 }
 
+/**
+ * Approve a master's version as the master (English content), without reviewers: used for versions that come
+ * from the approved Figma design, and once for company decks that existed before reviews (spec §7b).
+ * An open review of that version is closed as approved; otherwise an approved review is recorded. History shows it.
+ */
+export async function approveAsMaster(deckId: string, versionId: string, note: string) {
+  const q = db();
+  const rows = await q.select().from(reviews).where(and(eq(reviews.versionId, versionId), eq(reviews.kind, "company")));
+  if (rows.some((r) => r.lang === null && r.status === "approved")) return false;
+  const open = rows.find((r) => r.lang === null && r.status === "for_review");
+  const id = open
+    ? (await q.update(reviews).set({ status: "approved", resolvedAt: new Date(), note }).where(eq(reviews.id, open.id)).returning())[0].id
+    : (await q.insert(reviews).values({ deckId, versionId, kind: "company", lang: null, required: REQUIRED.company, status: "approved", resolvedAt: new Date(), note }).returning())[0].id;
+  await event(deckId, id, "override", null, { note });
+  return true;
+}
+
+/** Company decks with no approved version yet (made before reviews existed) become masters as they are now. */
+export async function approveLegacyMasters(log: (m: string) => void = console.log) {
+  const q = db();
+  const masters = await q.select({ id: decks.id }).from(decks).where(eq(decks.kind, "master"));
+  for (const m of masters) {
+    const approved = await q.select({ id: reviews.id }).from(reviews)
+      .where(and(eq(reviews.deckId, m.id), eq(reviews.kind, "company"), eq(reviews.status, "approved"))).limit(1);
+    if (approved.length) continue;
+    const { published } = await getDeckVersions(m.id);
+    if (!published) continue;
+    await approveAsMaster(m.id, published.id, "Company deck from before reviews: approved as the master");
+    log(`${m.id}: v${published.number} approved as the master`);
+  }
+}
+
 /** Kind and language of the review a `lang` refers to on a deck: "en" → the content review. */
 function target(row: DeckRow, lang: Lang): { kind: ReviewKind; lang: string | null } {
   return lang === "en" ? { kind: contentKind(row), lang: null } : { kind: "translation", lang };
@@ -220,10 +287,12 @@ export async function sendForReview(user: SignedInUser | null, deckId: string, l
   const row = await deckRow(deckId);
   if (!row) throw new EditError("No such deck.");
   if (!canEdit(row, user)) throw new EditError("Only people who can edit this deck can send it for review.");
-  const { published, draft } = await getDeckVersions(deckId);
-  if (!published) throw new EditError("Publish the deck first, then send it for review.");
-  if (draft) throw new EditError("There are unpublished changes. Publish them first so reviewers see what will go out.");
   if (lang !== "en" && !isTargetLang(lang)) throw new EditError("Unknown language.");
+  // Review v2: sending freezes what is there now. Unsent changes become the version reviewers see;
+  // the author can keep editing afterwards, and reviewers only ever see what was sent.
+  const versions = await getDeckVersions(deckId);
+  const published = versions.draft ? await publish(user, deckId) : versions.published;
+  if (!published) throw new EditError("There is nothing to send yet.");
   const t = target(row, lang);
   const slides = (await resolveSlides(published.slides, lookup)).filter((s) => !s.hidden);
   if (lang !== "en" && !slides.some((s) => s.i18n?.[lang])) throw new EditError(`This deck has no ${LANGUAGES[lang].english} translation yet.`);
@@ -232,10 +301,22 @@ export async function sendForReview(user: SignedInUser | null, deckId: string, l
   if (existing?.status === "approved") throw new EditError("This version is already approved.");
 
   const q = db();
+  // A newer version supersedes any review still open on an older one.
+  const open = (await q.select().from(reviews).where(and(eq(reviews.deckId, deckId), eq(reviews.kind, t.kind), eq(reviews.status, "for_review"))))
+    .filter((r) => r.lang === t.lang && r.versionId !== published.id);
+  for (const r of open) {
+    await q.update(reviews).set({ status: "withdrawn", resolvedAt: new Date(), note: "Superseded by a newer version" }).where(eq(reviews.id, r.id));
+    await event(deckId, r.id, "withdrawn", user, { lang: t.lang, note: "Superseded by a newer version" });
+  }
   const [review] = await q.insert(reviews).values({
     deckId, versionId: published.id, kind: t.kind, lang: t.lang, required: REQUIRED[t.kind], requestedBy: user?.id ?? null,
   }).returning();
   await event(deckId, review.id, "sent", user, { lang: t.lang });
+  await notify(await reviewersFor(scopeFor(t.kind, t.lang)), {
+    kind: "review_sent", deckId, lang, actor: user,
+    text: `${user?.name || "Someone"} sent “${row.title}”${layerName(lang)} for review (v${published.number})`,
+    href: `/decks/${deckId}${lang === "en" ? "" : `?lang=${lang}`}`,
+  });
 
   // Carry over approvals from the deck's previous review of this kind for slides whose content didn't change.
   const previous = await q.select().from(reviews).where(and(eq(reviews.deckId, deckId), eq(reviews.kind, t.kind))).orderBy(desc(reviews.requestedAt));
@@ -257,9 +338,29 @@ async function settle(reviewId: string, deckId: string, slides: SlideData[], lan
   if (summary.totalSlides && summary.approvedSlides === summary.totalSlides) {
     await db().update(reviews).set({ status: "approved", resolvedAt: new Date() }).where(eq(reviews.id, reviewId));
     await event(deckId, reviewId, "approved", user, { lang: review.lang });
+    await approvedNotices(deckId, review, user);
     return { ...review, status: "approved" as const };
   }
   return review;
+}
+
+/** After a review is approved: tell the requester, and — for a master's content — everyone whose deck follows its slides. */
+async function approvedNotices(deckId: string, review: { requestedBy: string | null; kind: ReviewKind; lang: string | null }, user: SignedInUser | null) {
+  const row = await deckRow(deckId);
+  const lang = (review.lang ?? "en") as Lang;
+  const title = row?.title ?? deckId;
+  await notify([review.requestedBy], {
+    kind: "approved", deckId, lang, actor: user,
+    text: `“${title}”${layerName(lang)} was approved${row?.kind === "master" && lang === "en" ? " and is now the master" : " and is live"}`,
+    href: `/decks/${deckId}${lang === "en" ? "" : `?lang=${lang}`}`,
+  });
+  if (row?.kind === "master" && review.kind === "company") {
+    await notify(await dependentsOf(deckId), {
+      kind: "master_changed", deckId, lang: "en", actor: null,
+      text: `Master slides changed: “${title}” has an approved revision, and decks that follow its slides now show it`,
+      href: `/decks/${deckId}/history`,
+    });
+  }
 }
 
 /** The open review a person is acting on, with the version's presented slides. */
@@ -307,6 +408,12 @@ export async function requestChanges(user: SignedInUser | null, deckId: string, 
   if (!text) throw new EditError("Say what should change.");
   await db().update(reviews).set({ status: "changes_requested", resolvedAt: new Date(), note: text }).where(eq(reviews.id, review.id));
   await event(deckId, review.id, "changes_requested", user, { lang: review.lang, note: text });
+  const row = await deckRow(deckId);
+  await notify([review.requestedBy], {
+    kind: "changes_requested", deckId, lang, actor: user,
+    text: `${user?.name || "A reviewer"} asked for changes to “${row?.title ?? deckId}”${layerName(lang)}: ${text}`,
+    href: `/decks/${deckId}${lang === "en" ? "" : `?lang=${lang}`}`,
+  });
 }
 
 /** Admins: approve regardless of the number of approvals (recorded as an override). */
@@ -329,6 +436,7 @@ export async function approveForEveryone(user: SignedInUser | null, deckId: stri
   }
   await db().update(reviews).set({ status: "approved", resolvedAt: new Date(), note: note?.trim() || null }).where(eq(reviews.id, review.id));
   await event(deckId, review.id, "override", user, { lang: t.lang, note: note?.trim() || null });
+  await approvedNotices(deckId, review, user);
 }
 
 export async function withdrawReview(user: SignedInUser | null, deckId: string, lang: Lang) {

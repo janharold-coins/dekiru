@@ -2,6 +2,9 @@ import Link from "next/link";
 import type { SignedInUser } from "@/lib/auth";
 import { SignOutButton } from "./sign-in/SignInButton";
 import { ViewAsBanner, ViewAsSelect } from "./view-as/ViewAs";
+import { Bell } from "./notifications/Bell";
+import { hasDb } from "@/db/client";
+import { listNotifications, unreadCount } from "@/lib/notifications";
 
 /** "Jan Harold Diaz" → "JD": first and last initials. */
 function initials(name: string) {
@@ -11,11 +14,12 @@ function initials(name: string) {
 }
 
 /** The workspace header (Figma "Dekiru" 23:497): brand, main navigation, account and sign out. */
-export function Nav({ on, user }: { on?: "decks" | "library" | "people"; user: SignedInUser | null }) {
+export async function Nav({ on, user }: { on?: "decks" | "library" | "people"; user: SignedInUser | null }) {
   const item = (href: string, label: string, key: typeof on) => (
     <Link href={href} className={`app-nav-item${on === key ? " on" : ""}`} aria-current={on === key ? "page" : undefined}>{label}</Link>
   );
   const isAdmin = user?.realRole === "admin" || user?.role === "admin";
+  const [items, unread] = user && hasDb() ? await Promise.all([listNotifications(user.id), unreadCount(user.id)]) : [[], 0];
   return (
     <header className="app-header">
       {user?.realRole && <ViewAsBanner role={user.role} />}
@@ -33,6 +37,7 @@ export function Nav({ on, user }: { on?: "decks" | "library" | "people"; user: S
       {user ? (
         <div className="app-account">
           {isAdmin && <ViewAsSelect role={user.role} />}
+          <Bell items={items} unread={unread} />
           <div className="app-who">
             <span className="app-avatar" aria-hidden>{initials(user.name || user.email)}</span>
             <span className="app-who-text">

@@ -20,11 +20,11 @@ import { createElement } from "react";
 import { isRef, resolveSlides, type SeedSlide } from "@/content/resolve";
 import { RenderSlide } from "@/deck/RenderSlide";
 import { checkOverflow, type OverflowWarning } from "@/deck/overflow";
-import { LANGUAGES, overlayFromEntries, textEntries, translationState, withTranslation, type TargetLang } from "@/deck/i18n";
+import { LANGUAGES, localize, overlayFromEntries, textEntries, translationState, withTranslation, type Lang, type TargetLang } from "@/deck/i18n";
 import { patterns } from "@/deck/registry";
 import { fieldLabel } from "@/deck/fields";
 import type { SlideData } from "@/deck/types";
-import { copyDeck, createDeck, getDeckVersions, publishDraft, saveDraft } from "./decks";
+import { copyDeck, createDeck, getDeckVersions, liveSlidesOf, publishDraft, saveDraft } from "./decks";
 import type { SignedInUser } from "./auth";
 import { canEdit, canView, deckRow } from "./access";
 import { pickTheme, publishedThemes } from "./themes";
@@ -57,7 +57,7 @@ async function working(id: string) {
   return { slides: structuredClone(v.slides) as SeedSlide[], isDraft: Boolean(draft) };
 }
 
-const lookup = async (deckId: string) => (await getDeckVersions(deckId)).published?.slides;
+const lookup = liveSlidesOf;
 
 /** Resolve, render and budget-check slides. Rendering errors are returned, never thrown. */
 export async function checkSlides(slides: SeedSlide[]) {
@@ -332,7 +332,11 @@ export async function setHidden(user: SignedInUser | null, deckId: string, slide
   const { slides } = await working(deckId);
   const i = indexOf(slides, slideId);
   const s = { ...slides[i] } as SeedSlide & { hidden?: boolean };
-  if (hidden) s.hidden = true; else delete s.hidden;
+  if (hidden) {
+    const [{ pattern }] = await resolveSlides([s], lookup);
+    if (pattern === "cover" || pattern === "closing") throw new EditError("Opening and closing slides are always presented and can't be hidden.");
+    s.hidden = true;
+  } else delete s.hidden;
   slides[i] = s;
   await save(deckId, slides, user, editNote(via));
 }
@@ -602,7 +606,7 @@ export async function draftChanges(user: SignedInUser | null, deckId: string): P
   await editable(deckId, user);
   const { draft, published } = await getDeckVersions(deckId);
   if (!draft) return [];
-  const lookup = async (id: string) => (await getDeckVersions(id)).published?.slides as SeedSlide[] | undefined;
+  const lookup = liveSlidesOf;
   const after = draft.slides as SeedSlide[];
   const afterNamed = await resolveSlides(after, lookup);
   if (!published) return [{ kind: "first", detail: `${after.length} slide${after.length === 1 ? "" : "s"}` }];
@@ -628,5 +632,68 @@ export async function draftChanges(user: SignedInUser | null, deckId: string): P
   });
   const kept = new Set(after.map((s) => s.id));
   before.forEach((s, i) => { if (!kept.has(s.id)) out.push({ kind: "removed", slide: slideName(beforeNamed[i]) }); });
+  return out;
+}
+
+/* ---------- revision diff for reviewers (spec §7b) ---------- */
+
+export type SlideChangeKind = "added" | "edited" | "moved" | "hidden" | "shown" | "unchanged";
+export interface SlideChange {
+  kind: SlideChangeKind;
+  /** Also true when the slide moved or changed visibility besides being edited. */
+  moved?: boolean; visibility?: "hidden" | "shown";
+  /** Text paths ("title", "cards[1].body") whose words changed in the reviewed language. */
+  fields: string[];
+  detail?: string;
+}
+export interface RevisionDiff {
+  /** The approved version this one is compared with. */
+  against: number;
+  slides: Record<string, SlideChange>;
+  /** Names of slides that were in the approved version and are gone now. */
+  removed: string[];
+  theme?: string;
+}
+
+/** Text by path of a slide as shown in a language (English words, or the translation's overlay merged in). */
+function textByPath(s: SlideData, lang: Lang): Map<string, string> {
+  const shown = lang === "en" ? s : localize(s, lang);
+  return new Map(textEntries((shown.props ?? {}) as Record<string, unknown>).map((e) => [e.path, e.text]));
+}
+
+/**
+ * What a reviewer should look at: this version against the previous approved one, per slide, in the
+ * reviewed language. Untouched slides are "unchanged" (the editor dims them); the rest say what changed.
+ * Null when there is no earlier approved version (everything is new — nothing to dim).
+ */
+export async function revisionDiff(versionId: string, againstVersionId: string | null, lang: Lang): Promise<RevisionDiff | null> {
+  if (!againstVersionId) return null;
+  const q = db();
+  const [[after], [before]] = await Promise.all([
+    q.select().from(deckVersions).where(eq(deckVersions.id, versionId)).limit(1),
+    q.select().from(deckVersions).where(eq(deckVersions.id, againstVersionId)).limit(1),
+  ]);
+  if (!after || !before) return null;
+  const lookup = liveSlidesOf;
+  const [afterNamed, beforeNamed] = await Promise.all([resolveSlides(after.slides, lookup), resolveSlides(before.slides, lookup)]);
+  const wasAt = new Map(before.slides.map((s, i) => [s.id, i]));
+  const moved = movedIds(before.slides.map((s) => s.id), after.slides.map((s) => s.id));
+  const out: RevisionDiff = { against: before.number, slides: {}, removed: [] };
+  if (lang === "en" && (after.themeId ?? DEFAULT_THEME_ID) !== (before.themeId ?? DEFAULT_THEME_ID)) out.theme = "Theme changed";
+  after.slides.forEach((raw, i) => {
+    const now = afterNamed[i];
+    const j = wasAt.get(raw.id);
+    if (j === undefined) { out.slides[raw.id] = { kind: "added", fields: [] }; return; }
+    const was = beforeNamed[j];
+    const a = textByPath(was, lang), b = textByPath(now, lang);
+    const fields = [...new Set([...a.keys(), ...b.keys()])].filter((p) => a.get(p) !== b.get(p));
+    const rawEdits = lang === "en" ? slideEdits(before.slides[j], raw) : null;
+    const visibility = Boolean(before.slides[j].hidden) !== Boolean(raw.hidden) ? (raw.hidden ? "hidden" : "shown") : undefined;
+    const edited = fields.length > 0 || (lang === "en" && rawEdits !== null && !/^(Chinese|Thai)/.test(rawEdits));
+    const kind: SlideChangeKind = edited ? "edited" : visibility ? visibility : moved.has(raw.id) ? "moved" : "unchanged";
+    out.slides[raw.id] = { kind, moved: moved.has(raw.id) || undefined, visibility, fields, detail: edited ? (lang === "en" ? rawEdits ?? undefined : fields.map(fieldLabel).join(", ")) : undefined };
+  });
+  const kept = new Set(after.slides.map((s) => s.id));
+  before.slides.forEach((s, i) => { if (!kept.has(s.id)) out.removed.push(slideName(beforeNamed[i])); });
   return out;
 }

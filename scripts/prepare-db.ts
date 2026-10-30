@@ -11,6 +11,7 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { db, hasDb } from "@/db/client";
 import { seedMasters } from "@/db/seed";
 import { seedDefaultTheme } from "@/lib/themes";
+import { approveLegacyMasters } from "@/lib/reviews";
 
 async function main() {
   try { process.loadEnvFile(".env.local"); } catch { /* env may come from the shell (Vercel) */ }
@@ -19,6 +20,7 @@ async function main() {
   await migrate(db(), { migrationsFolder: "drizzle" });
   await seedDefaultTheme((m) => console.log(`[db] ${m}`));
   await seedMasters({ log: (m) => console.log(`[db] ${m}`) });
+  await approveLegacyMasters((m) => console.log(`[db] ${m}`));
   console.log(`[db] ready (${Date.now() - t} ms)`);
 }
 

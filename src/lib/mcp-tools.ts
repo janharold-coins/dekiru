@@ -1,7 +1,7 @@
 /**
  * Dekiru's tools for Claude (the "Dekiru" custom connector). Every call acts as the signed-in person:
  * they see company masters plus their own decks, edit only what they're allowed to, and every edit
- * lands in a draft until published.
+ * lands in a draft until sent for review (review v2: sending freezes the version reviewers see).
  */
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/server";
@@ -9,21 +9,21 @@ import { templates } from "@/content/templates";
 import { patterns } from "@/deck/registry";
 import type { SlideData } from "@/deck/types";
 import { appBaseURL, type SignedInUser } from "./auth";
-import { getDeck, listDecks } from "./decks";
+import { getDeck, getDeckVersions, listDecks } from "./decks";
 import { publishedThemes } from "./themes";
 import {
   addSlide, canEdit, canView, checkSlides, deckRow, deckText, duplicateDeck, EditError, moveSlide, newDeck, publish,
   removeSlide, setDeckTheme, setHidden, setTranslation, updateSlide, type SlideInput,
 } from "./editing";
 import { LANGUAGES, TARGET_LANGS } from "@/deck/i18n";
-import { reviewState } from "./reviews";
+import { reviewState, sendForReview } from "./reviews";
 
 export const INSTRUCTIONS = `Dekiru builds Coins.ph sales decks from an approved design system. Slides are data: each slide is a
 pattern (a fixed layout from the library) plus props (its content). You never write HTML or CSS.
 
 How to work
-1. Start from what exists. list_decks, then get_deck on a company master (kind "master") to see approved slides. Deck ids look like "dk-1a2b3c4d".
-   Reuse approved slides as blocks ("<master deck id>/<slide id>", e.g. "dk-1a2b3c4d/s04") instead of rewriting them: they stay correct when the master changes.
+1. Start from what exists. list_decks, then get_deck on a company master (kind "master") to see master slides. Deck ids look like "dk-1a2b3c4d".
+   Reuse master slides as blocks ("<master deck id>/<slide id>", e.g. "dk-1a2b3c4d/s04") instead of rewriting them: they stay correct when the master changes.
 2. Make changes in the person's own deck: copy_deck (start from a master) or create_deck (pick blocks + new slides).
    Company masters can only be changed by admins and managers.
 3. For a new slide, call get_pattern first and follow its example props exactly. Omit "figma" keys (pixel overrides).
@@ -31,14 +31,15 @@ How to work
    shorter phrasing that keeps the meaning; if it can't fit, propose a different pattern. Never shrink text.
 5. Never invent figures, rates, corridors or claims. Take them from the masters or from what the person gives you.
    If a number is missing, ask.
-6. Share the preview link so the person can review. Publish only when they say so.
+6. Share the preview link so the person can review. Send for review (publish_deck) only when they say so: it freezes
+   the draft as a version and asks reviewers to approve it; the deck goes live once approved.
 
 Translations (Chinese zh, Thai th). Decks keep their English; a translation is a layer of text per slide that
 viewers switch to on share links. Translate a company master and every deck reusing its slides is translated too.
    get_deck_text lists each slide's text by path and whether its translation is current; translate slide by slide
    with set_translation, sending the same paths back. Keep product names (Coins.ph, Coins Pro, QRPh, InstaPay),
    figures, rates, corridors, currency codes, URLs and brand names exactly as written; keep "\n" line breaks.
-   Read the overflow warnings and rephrase shorter where flagged. Publish when the person says so.`;
+   Read the overflow warnings and rephrase shorter where flagged. Send for review (publish_deck with lang) when the person says so.`;
 
 const ok = (data: unknown) => ({ content: [{ type: "text" as const, text: JSON.stringify(data, null, 1) }] });
 const fail = (message: string) => ({ content: [{ type: "text" as const, text: message }], isError: true });
@@ -75,7 +76,7 @@ export function registerTools(server: McpServer, user: SignedInUser) {
     const decks = await listDecks({ viewerId: user.id });
     return decks.map((d) => ({
       id: d.id, title: d.title, kind: d.kind === "master" ? "company master" : "own deck",
-      slides: d.slides.filter((s) => !s.hidden).length, version: d.version, unpublishedChanges: d.hasDraft,
+      slides: d.slides.filter((s) => !s.hidden).length, version: d.version, unsentChanges: d.hasDraft,
       canEdit: d.kind === "master" ? user.role !== "member" : d.ownerId === user.id,
       url: deckUrl(d.id),
     }));
@@ -84,7 +85,7 @@ export function registerTools(server: McpServer, user: SignedInUser) {
   server.registerTool("get_deck", {
     title: "Get a deck",
     description: "All slides of a deck in order, with slide ids, pattern, props (content) and overflow warnings. "
-      + "Shows the draft if the person can edit and there are unpublished changes. Slides of a company master can be reused as blocks: \"<deckId>/<slideId>\".",
+      + "Shows the draft if the person can edit and there are unsent changes. Slides of a company master can be reused as blocks: \"<deckId>/<slideId>\".",
     inputSchema: z.object({ deck_id: z.string() }),
     annotations: { readOnlyHint: true },
   }, async ({ deck_id }) => run(async () => {
@@ -100,7 +101,7 @@ export function registerTools(server: McpServer, user: SignedInUser) {
     let n = 0;
     return {
       id: deck.id, title: deck.title, kind: deck.kind, version: deck.version,
-      showing: deck.status === "draft" ? "unpublished draft" : "published", canEdit: editable, url: deckUrl(deck.id),
+      showing: deck.status === "draft" ? "draft (unsent changes)" : "sent version", canEdit: editable, url: deckUrl(deck.id),
       theme: { id: deck.theme.id, name: deck.theme.name },
       review: {
         content: status(rv.content),
@@ -157,7 +158,7 @@ export function registerTools(server: McpServer, user: SignedInUser) {
     inputSchema: z.object({ source_deck_id: z.string(), title: z.string().optional().describe("e.g. \"Sales deck — Acme Remit\"") }),
   }, async ({ source_deck_id, title }) => run(async () => {
     const id = await duplicateDeck(user, source_deck_id, title);
-    return { deckId: id, url: deckUrl(id), next: "Edit slides with update_slide / add_slide / remove_slide, then publish_deck when the person approves." };
+    return { deckId: id, url: deckUrl(id), next: "Edit slides with update_slide / add_slide / remove_slide, then publish_deck (send for review) when the person says so." };
   }));
 
   server.registerTool("create_deck", {
@@ -169,7 +170,7 @@ export function registerTools(server: McpServer, user: SignedInUser) {
     inputSchema: z.object({ title: z.string(), slides: z.array(slideInput).min(1) }),
   }, async ({ title, slides }) => run(async () => {
     const id = await newDeck(user, title, slides as SlideInput[]);
-    return { deckId: id, url: deckUrl(id), note: "Created and published as v1 of the person's own deck. Further edits are drafts." };
+    return { deckId: id, url: deckUrl(id), note: "Created as v1 of the person's own deck. Further edits are drafts until sent for review." };
   }));
 
   server.registerTool("add_slide", {
@@ -258,11 +259,15 @@ export function registerTools(server: McpServer, user: SignedInUser) {
   })));
 
   server.registerTool("publish_deck", {
-    title: "Publish a deck",
-    description: "Make the draft the deck's live version. Only when the person asks. Existing share links keep their old version.",
-    inputSchema: z.object({ deck_id: z.string(), note: z.string().optional().describe("What changed, one line.") }),
-  }, async ({ deck_id, note }) => run(async () => {
-    const v = await publish(user, deck_id, note);
-    return { published: `v${v.number}`, url: deckUrl(deck_id), present: `${deckUrl(deck_id)}/present`, share: `${deckUrl(deck_id)}/share` };
+    title: "Send a deck for review",
+    description: "Freeze the draft as a new version and send it for review (English content, or one translation with lang). Only when the person asks. "
+      + "The deck goes live once reviewers approve it; existing share links keep their old version.",
+    inputSchema: z.object({ deck_id: z.string(), note: z.string().optional().describe("What changed, one line."), lang: z.enum(["en", "zh", "th"]).optional().describe("Which layer to send: en (default) = the deck's content; zh/th = that translation.") }),
+  }, async ({ deck_id, note, lang }) => run(async () => {
+    const { draft } = await getDeckVersions(deck_id);
+    const v = draft ? await publish(user, deck_id, note) : null;
+    await sendForReview(user, deck_id, lang ?? "en");
+    const d = await getDeck(deck_id);
+    return { sent: v ? `v${v.number}` : d?.version ?? "current version", status: "under review", url: deckUrl(deck_id), present: `${deckUrl(deck_id)}/present`, share: `${deckUrl(deck_id)}/share` };
   }));
 }

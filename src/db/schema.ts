@@ -13,7 +13,7 @@
  */
 import { sql } from "drizzle-orm";
 import {
-  boolean, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid,
+  boolean, index, integer, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid, type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import type { SeedSlide } from "@/content/resolve";
 import type { ThemeTokens } from "@/deck/theme";
@@ -25,6 +25,7 @@ export const versionStatus = pgEnum("version_status", ["draft", "published"]);
 export const viewKind = pgEnum("view_kind", ["link", "present"]);
 export const reviewKind = pgEnum("review_kind", ["employee", "company", "translation"]);
 export const reviewStatus = pgEnum("review_status", ["for_review", "changes_requested", "approved", "withdrawn"]);
+export const memberRole = pgEnum("member_role", ["editor", "viewer"]);
 export const reviewEvent = pgEnum("review_event", ["sent", "slide_approved", "deck_approved", "approved", "changes_requested", "override", "withdrawn", "promoted"]);
 
 const created = () => timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
@@ -327,3 +328,64 @@ export const deckIdRenames = pgTable("deck_id_renames", {
   oldId: text("old_id").primaryKey(),
   newId: text("new_id").notNull().references(() => decks.id, { onDelete: "cascade", onUpdate: "cascade" }),
 });
+
+/**
+ * People a deck is shared with (spec §7b): viewers see it, editors can change it. The owner isn't listed here.
+ * Masters don't use this: everyone sees them, admins and managers edit them.
+ */
+export const deckMembers = pgTable(
+  "deck_members",
+  {
+    deckId: text("deck_id").notNull().references(() => decks.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    role: memberRole("role").notNull().default("viewer"),
+    addedBy: uuid("added_by").references(() => users.id),
+    createdAt: created(),
+  },
+  (t) => [primaryKey({ columns: [t.deckId, t.userId] })],
+);
+
+/**
+ * In-app notifications (spec §7b): sent for review → reviewers; approved / changes requested → the requester;
+ * a master slide you depend on changed → owners of dependent decks; shared with you → the invitee.
+ */
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(), // "review_sent" | "approved" | "changes_requested" | "master_changed" | "shared"
+    deckId: text("deck_id").references(() => decks.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    lang: text("lang"),
+    text: text("text").notNull(),
+    href: text("href").notNull(),
+    actorId: uuid("actor_id").references(() => users.id),
+    readAt: timestamp("read_at", { withTimezone: true }),
+    createdAt: created(),
+  },
+  (t) => [index("notifications_user").on(t.userId, t.readAt, t.createdAt)],
+);
+
+/**
+ * Comments on slides. A thread is a root comment (parent null) and its replies; a root may be pinned to a
+ * point ({x,y}) or an area ({x,y,w,h}) of the slide, in fractions of its width/height. Anyone who can open
+ * the deck can comment. Resolving hides the thread behind "Show resolved".
+ */
+export type CommentAnchor = { x: number; y: number; w?: number; h?: number };
+export const deckComments = pgTable(
+  "deck_comments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    deckId: text("deck_id").notNull().references(() => decks.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    slideId: text("slide_id").notNull(),
+    parentId: uuid("parent_id").references((): AnyPgColumn => deckComments.id, { onDelete: "cascade" }),
+    authorId: uuid("author_id").references(() => users.id, { onDelete: "set null" }), // null in local development without sign-in
+    body: text("body").notNull(),
+    anchor: jsonb("anchor").$type<CommentAnchor>(),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+    resolvedBy: uuid("resolved_by").references(() => users.id, { onDelete: "set null" }),
+    editedAt: timestamp("edited_at", { withTimezone: true }),
+    createdAt: created(),
+  },
+  (t) => [index("deck_comments_slide").on(t.deckId, t.slideId, t.createdAt)],
+);
