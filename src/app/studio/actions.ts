@@ -35,7 +35,9 @@ export async function decideAction(id: string, _prev: Result, form: FormData): P
       form.getAll("images").filter((f): f is File => f instanceof File && f.size > 0)
         .map(async (f) => ({ mime: f.type, bytes: Buffer.from(await f.arrayBuffer()) })),
     );
-    const { themeId } = await decide(user, id, decision, String(form.get("note") ?? ""), images);
+    const note = String(form.get("note") ?? "").trim();
+    const tuning = String(form.get("tuning") ?? "").trim();
+    const { themeId } = await decide(user, id, decision, tuning ? `${note}${note ? "\n\n" : ""}Tune: ${tuning}` : note, images);
     revalidatePath("/studio");
     revalidatePath(`/studio/${id}`);
     if (themeId) revalidatePath("/library/themes");

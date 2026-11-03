@@ -34,18 +34,32 @@ export const TYPE: Record<TypeStep, { size: number; line: number; track: number;
  * still apply. The wrap is set as `text-wrap-style` (not the `text-wrap` shorthand), so a `whiteSpace` spread
  * after it (keepBreaks, noWrap) keeps it.
  *
- * The box is trimmed to the letters (`text-box: trim-both cap alphabetic`): its top is the cap height of the
- * first line and its bottom the baseline of the last, so the line height's invisible half-leading no longer
- * adds to the gaps around it. A 32 gap then looks like 32. Lines inside a paragraph keep their full line height.
- * Browsers without text-box (Firefox, for now) show slightly larger gaps; nothing overlaps.
+ * The box is trimmed to the letters (`text-box: trim-both cap text`): its top is the cap height of the first
+ * line and its bottom the descender line of the last, so descenders (g, y, p) stay inside it and the line
+ * height's invisible half-leading no longer adds to the gaps around it. Lines inside a paragraph keep their
+ * full line height. Browsers without text-box (Firefox, for now) show slightly larger gaps; nothing overlaps.
+ *
+ * Size, line height and the bottom edge read CSS variables first (--st-<step>-size, --st-<step>-line, --st-under),
+ * so the Studio's Tune card can preview another scale live; without them the values above apply.
  */
 export function type(step: TypeStep, weight: 400 | 500 | 600 | 700, color?: string, family?: Parameters<typeof t>[5]): CSSProperties {
   const s = TYPE[step];
+  const size = `var(--st-${step}-size, ${s.size}px)`;
   return {
     ...t(s.size, s.line / s.size, +(s.size * s.track).toFixed(2), weight, color, family),
-    textWrapStyle: s.wrap, textBox: "trim-both cap alphabetic",
+    fontSize: size,
+    lineHeight: `calc(var(--st-${step}-line, ${s.line}px) * var(--dk-lh, 1))`,
+    letterSpacing: `calc(${size} * ${s.track})`,
+    textWrapStyle: s.wrap, textBox: "trim-both cap var(--st-under, text)",
   };
 }
+
+/**
+ * Spacing between a layout's elements, and inside a tight pair (name + role, number + label). Pass the layout's
+ * own default in px; the Tune card can override both live (--st-gap, --st-pair).
+ */
+export const gap = (px: number) => `var(--st-gap, ${px}px)`;
+export const pair = (px: number) => `var(--st-pair, ${px}px)`;
 
 /** The opening quote mark as a shape with an exact box, so space above and below it is what the grid says. */
 export function QuoteMark({ height = g(6), color }: { height?: number; color: string }) {
@@ -58,9 +72,10 @@ export function QuoteMark({ height = g(6), color }: { height?: number; color: st
  * column with `gap` (grid px), so longer text pushes the next item down instead of overlapping it.
  */
 export function Band({ gap = g(4), align = "center", style, children }: {
-  gap?: number; align?: "start" | "center" | "end"; style?: CSSProperties; children: ReactNode;
+  gap?: number | string; align?: "start" | "center" | "end"; style?: CSSProperties; children: ReactNode;
 }) {
   return createElement("div", {
+    "data-st-band": "", // the Tune card checks this block still fits the band
     style: {
       position: "absolute", left: SAFE.left, top: BAND.top, width: SAFE.width, height: BAND.height,
       display: "flex", flexDirection: "column", justifyContent: align === "center" ? "center" : `flex-${align}`, gap, ...style,

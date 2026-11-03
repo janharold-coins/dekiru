@@ -12,6 +12,10 @@ import { proposal } from "@/studio/proposals";
 import { Nav } from "../../Nav";
 import { layoutSamples } from "../../library/themes/samples";
 import { DecisionForm } from "../StudioForms";
+import { TuneCard, TunedPreview, TuneProvider } from "../Tuner";
+
+/** The element spacing layouts use by default (Studio rules), the Tune card's starting point. */
+const TUNE_GAP = 32;
 
 const DECIDED: Record<string, string> = { approved: "Approved", changes_requested: "Asked for changes", rejected: "Rejected" };
 
@@ -36,6 +40,7 @@ export default async function ProposalPage({ params, searchParams }: { params: P
         <span className={`tag${status === "waiting" || status === "changes_requested" ? " warn" : ""}`}>{STATUS_LABEL[status]}</span>
         <span className="mono">rev {p.revision} · {p.date}</span>
       </header>
+      <TuneProvider defaultGap={TUNE_GAP}>
       <div className="studio-detail">
         <div className="studio-previews">
           {p.kind === "layout" ? (
@@ -47,7 +52,9 @@ export default async function ProposalPage({ params, searchParams }: { params: P
                 ))}
               </nav>
               <ThemeScope tokens={look.tokens}>
-                {p.examples.map((s) => <div key={s.id} className="card studio-big"><ScaledSlide><RenderSlide slide={s} entry={p.entry} /></ScaledSlide></div>)}
+                <TunedPreview>
+                  {p.examples.map((s) => <div key={s.id} className="card studio-big"><ScaledSlide><RenderSlide slide={s} entry={p.entry} /></ScaledSlide></div>)}
+                </TunedPreview>
               </ThemeScope>
             </>
           ) : (
@@ -60,6 +67,7 @@ export default async function ProposalPage({ params, searchParams }: { params: P
         </div>
         <aside className="studio-side">
           <DecisionForm id={p.id} revision={p.revision} />
+          {p.kind === "layout" && <TuneCard defaultGap={TUNE_GAP} />}
           <section className="card studio-box">
             <b>Brief</b>
             <p>{p.brief}</p>
@@ -105,6 +113,7 @@ export default async function ProposalPage({ params, searchParams }: { params: P
           )}
         </aside>
       </div>
+      </TuneProvider>
     </main>
   );
 }

@@ -14,7 +14,7 @@ Whenever a rule gives way, say which one and why in the proposal's `exceptions`,
 ## 1. Spacing: 8-point grid
 
 - Every distance on the slide is a multiple of 8: positions, widths, heights, gaps, padding, radii, rule thicknesses above 4px. Slide px are 1920×1080 design px.
-- **Spacing is measured between visible edges,** the way it's measured in Figma: from the top of the capitals to the bottom of the baseline, not from the line box. `type()` trims every text box to its letters (`text-box: trim-both cap alphabetic`), so the invisible half-leading of the line height never adds to a gap. Non-text marks (quote marks, icons, arrows) are shapes with an exact box, like `<QuoteMark>`, never font glyphs that carry empty space.
+- **Spacing is measured between visible edges:** from the top of the capitals to the bottom of the descenders (g, y, p), not from the line box. `type()` trims every text box to its letters (`text-box: trim-both cap text`), so the invisible half-leading of the line height never adds to a gap, and descenders never reach into the gap below. Non-text marks (quote marks, icons, arrows) are shapes with an exact box, like `<QuoteMark>`, never font glyphs that carry empty space.
 - **Spacing is balanced.** An element sits with the same space above and below it: a 48 gap above a title means a 48 gap below it. Separators (rules, quote marks, dividers) are centred in their gap. A tight pair that reads as one unit, such as name and role or a number and its label, gets a smaller inner gap (8 or 16), but the pair's outer gaps are still equal.
 - 4 is allowed as a half step, but only inside a component (icon-to-label, chip padding). Never between blocks.
 - Use `g(n)` from `src/studio/grid.ts` (n × 8) instead of typing numbers. `g(3)` means 24, so a stray `27` stands out in review.
@@ -28,6 +28,8 @@ Whenever a rule gives way, say which one and why in the proposal's `exceptions`,
 - **Centre the block vertically** in the content band, y 200 to 912 (`BAND`), which sits between the logo and the footer. Use `<Band>` from `src/studio/grid.ts`. Because text is trimmed to its letters, the block's height isn't a multiple of 8, and its centred offset may land between grid lines. That's expected: the gaps are what stay on the grid.
 - Top-aligned or bottom-aligned content only when the request asks for it or a Figma layout shows it.
 - Set budgets (`maxChars`, `maxLines`, `maxItems`) so that the longest allowed text still fits the band without overlap. Check it with a long example in `examples`, not just a short one.
+
+- Write gaps with `gap(px)` and tight pairs with `pair(px)` from `grid.ts`, passing the layout's default, for example `gap(g(4))`. The Tune card can then preview other spacing live.
 
 ## 3. Typography: one type scale
 
@@ -46,6 +48,7 @@ Sizes come from this scale only (`TYPE` in `src/studio/grid.ts`). Every line hei
 
 - Use `type("h2", 600, "#204680")` from `src/studio/grid.ts`. It wraps the deck's `t()`, so theme text flipping and translated-font line heights keep working.
 - **Wrapping is automatic.** `type()` sets it per step. Headings (`display` to `h3`) use `balance`, so their lines come out about the same length instead of a long line over a short one. Running text (`lead` to `micro`) uses `pretty`, so a paragraph never ends on one stranded word. Don't set `text-wrap` by hand. An explicit `\n` in the content still breaks the line where it is, and the wrap applies within each part.
+- **Tune card.** On a layout proposal's review page, the reviewer can preview the Perfect Fifth (×1.5) or Golden Ratio (×1.618) scale, built from body text at 32. They can also preview other element spacing, and a baseline or descender bottom edge. Their picks come with the decision as a "Tune:" line. Build what the line says into the layout as its new default, and if it asks for a different scale, use those sizes for that layout.
 - Weights: 400, 500, 600 and 700 only. Families: Manrope for text; Everett for numerals and ghost numbers, as in the approved slides.
 - Never shrink text to make it fit (the deck rule). Over budget means shorter words or a different layout.
 - Steps are adjacent sizes. Don't pair two sizes more than four steps apart in one block unless it's a number and its label.
@@ -55,3 +58,4 @@ Sizes come from this scale only (`TYPE` in `src/studio/grid.ts`). Every line hei
 - 2026-11-03: First rules: 8-point grid, centred content with no overlap, one type scale.
 - 2026-11-03: Text wraps automatically: `balance` for headings (display to h3), `pretty` for running text (lead to micro). Applies to every proposal built with `type()`.
 - 2026-11-03: Spacing is balanced (equal space above and below an element) and measured between visible edges: `type()` trims text to cap height and baseline; marks and icons are exact shapes (`<QuoteMark>`).
+- 2026-11-03: Text is trimmed to its descender line, not the baseline, so descenders keep their room (reviewer found baseline trim too tight). Tune card added: type scale, element spacing and text edge, previewed live and sent with the decision.

@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useActionState, useRef, useState, useTransition } from "react";
 import { decideAction, dismissAction, requestAction, type Result } from "./actions";
+import { useTuning } from "./Tuner";
 
 /** "Ask for something new": a layout or a theme, in your own words. */
 export function RequestForm({ kind = "layout" }: { kind?: "layout" | "theme" | "rule" }) {
@@ -64,8 +65,10 @@ export function DecisionForm({ id, revision }: { id: string; revision: number })
   const [dragging, setDragging] = useState(false);
   const [problem, setProblem] = useState<string>();
   const formRef = useRef<HTMLFormElement>(null);
+  const tuning = useTuning()?.summary ?? null;
   const [state, action, pending] = useActionState(async (prev: Result, form: FormData) => {
     for (const img of images) form.append("images", img.blob, "image.webp");
+    if (tuning) form.set("tuning", tuning);
     const r = await decideAction(id, prev, form);
     if (r.ok) {
       images.forEach((img) => URL.revokeObjectURL(img.url));
@@ -119,6 +122,7 @@ export function DecisionForm({ id, revision }: { id: string; revision: number })
           ))}
         </ul>
       )}
+      {tuning && <p className="hint studio-tuning-note">Sent with it — Tune: {tuning}</p>}
       <label className="studio-add-image">
         <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden
           onChange={(e) => { add(e.currentTarget.files ?? []); e.currentTarget.value = ""; }} />
