@@ -15,7 +15,7 @@ import {
   addSlide, canEdit, canView, checkSlides, deckRow, deckText, duplicateDeck, EditError, moveSlide, newDeck, publish,
   removeSlide, setDeckTheme, setHidden, setTranslation, updateSlide, type SlideInput,
 } from "./editing";
-import { LANGUAGES, TARGET_LANGS } from "@/deck/i18n";
+import { availableLangs, LANGUAGES, TARGET_LANGS } from "@/deck/i18n";
 import { reviewState, sendForReview } from "./reviews";
 
 export const INSTRUCTIONS = `Dekiru builds Coins.ph sales decks from an approved design system. Slides are data: each slide is a
@@ -35,7 +35,9 @@ How to work
    the draft as a version and asks reviewers to approve it; the deck goes live once approved.
 
 Translations (Chinese zh, Thai th). Decks keep their English; a translation is a layer of text per slide that
-viewers switch to on share links. Translate a company master and every deck reusing its slides is translated too.
+viewers switch to on share links. Translate a company master and every deck reusing its slides can use it.
+   People's own decks start in English only: a language shows on a deck once its owner turns it on (set_translation
+   on that deck turns it on). When copying a deck that has translations, ask the person whether to keep them (copy_deck keep_translations).
    get_deck_text lists each slide's text by path and whether its translation is current; translate slide by slide
    with set_translation, sending the same paths back. Keep product names (Coins.ph, Coins Pro, QRPh, InstaPay),
    figures, rates, corridors, currency codes, URLs and brand names exactly as written; keep "\n" line breaks.
@@ -103,6 +105,9 @@ export function registerTools(server: McpServer, user: SignedInUser) {
       id: deck.id, title: deck.title, kind: deck.kind, version: deck.version,
       showing: deck.status === "draft" ? "draft (unsent changes)" : "sent version", canEdit: editable, url: deckUrl(deck.id),
       theme: { id: deck.theme.id, name: deck.theme.name },
+      languages: deck.languages === null
+        ? `company master: offers every language it's translated into (${availableLangs(deck.slides).map((l) => LANGUAGES[l].english).join(", ") || "none yet"})`
+        : ["English", ...deck.languages.map((l) => LANGUAGES[l].english)],
       review: {
         content: status(rv.content),
         ...Object.fromEntries(Object.entries(rv.translations).map(([l, r]) => [LANGUAGES[l as "zh" | "th"].english, status(r)])),
@@ -154,11 +159,16 @@ export function registerTools(server: McpServer, user: SignedInUser) {
 
   server.registerTool("copy_deck", {
     title: "Copy a deck",
-    description: "Make the person's own copy of a deck (usually a company master) to edit freely. Returns the new deck id.",
-    inputSchema: z.object({ source_deck_id: z.string(), title: z.string().optional().describe("e.g. \"Sales deck — Acme Remit\"") }),
-  }, async ({ source_deck_id, title }) => run(async () => {
-    const id = await duplicateDeck(user, source_deck_id, title);
-    return { deckId: id, url: deckUrl(id), next: "Edit slides with update_slide / add_slide / remove_slide, then publish_deck (send for review) when the person says so." };
+    description: "Make the person's own copy of a deck (usually a company master) to edit freely. Returns the new deck id. "
+      + "The copy starts in English only. If the source has translations (get_deck → languages), ask the person whether to keep them first.",
+    inputSchema: z.object({
+      source_deck_id: z.string(), title: z.string().optional().describe("e.g. \"Sales deck — Acme Remit\""),
+      keep_translations: z.boolean().optional().describe("true: the copy offers the source's languages too. Default false (English only). Ask the person."),
+    }),
+  }, async ({ source_deck_id, title, keep_translations }) => run(async () => {
+    const id = await duplicateDeck(user, source_deck_id, title, keep_translations ?? false);
+    const copy = await getDeck(id);
+    return { deckId: id, url: deckUrl(id), languages: ["English", ...(copy?.languages ?? []).map((l) => LANGUAGES[l].english)], next: "Edit slides with update_slide / add_slide / remove_slide, then publish_deck (send for review) when the person says so." };
   }));
 
   server.registerTool("create_deck", {

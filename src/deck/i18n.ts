@@ -214,6 +214,24 @@ export function availableLangs(slides: SlideData[]): TargetLang[] {
   return TARGET_LANGS.filter((lang) => slides.some((s) => !s.hidden && s.i18n?.[lang]));
 }
 
+/**
+ * Languages a deck turned on: null for company masters (they offer every language they hold), else the
+ * owner's list. Translations that arrive with master slides don't count until the owner turns the language on.
+ */
+export function enabledLangs(deck: { kind: "master" | "copy"; languages?: readonly string[] | null }): TargetLang[] | null {
+  return deck.kind === "master" ? null : (deck.languages ?? []).filter(isTargetLang);
+}
+
+/** The slides with only the translations a deck offers (`enabled` null = all of them). */
+export function onlyLangs<T extends SlideData>(slides: T[], enabled: readonly TargetLang[] | null): T[] {
+  if (!enabled) return slides;
+  return slides.map((s) => {
+    if (!s.i18n) return s;
+    const kept = Object.fromEntries(Object.entries(s.i18n).filter(([l]) => enabled.includes(l as TargetLang)));
+    return { ...s, i18n: Object.keys(kept).length ? kept : undefined };
+  });
+}
+
 /** Records a translation on a slide, fingerprinting the English it was made from. */
 export function withTranslation(slide: SlideData, lang: TargetLang, overlay: Record<string, unknown>): SlideData {
   return { ...slide, i18n: { ...slide.i18n, [lang]: { props: overlay, source: sourceHash(slide.props) } } };

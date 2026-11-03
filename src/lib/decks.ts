@@ -15,6 +15,7 @@ import { deckMembers, deckVersions, decks, reviews, users } from "@/db/schema";
 import { resolveSlides, snapshotSlides, type DeckLookup, type SeedSlide } from "@/content/resolve";
 import { seedDecks } from "@/content/decks";
 import type { Deck } from "@/deck/types";
+import { availableLangs, enabledLangs, type TargetLang } from "@/deck/i18n";
 import { DEFAULT_THEME, pickTheme, publishedThemes, type ThemeInfo } from "./themes";
 
 export interface DeckInfo extends Deck {
@@ -36,6 +37,8 @@ export interface DeckInfo extends Deck {
   updatedAt?: Date;
   updatedById?: string | null;
   updatedBy?: string | null;
+  /** Languages besides English the deck offers: null = company master (every language it holds); else what the owner turned on. */
+  languages: TargetLang[] | null;
   /** When the owner archived it (hidden from lists unless asked for); null/absent = active. */
   archivedAt?: Date | null;
   /** The owner's name (copies, from listDecks). */
@@ -104,7 +107,7 @@ export async function listDecks(opts: { viewerId?: string | null; includeArchive
   if (!hasDb()) {
     return Promise.all(
       seedDecks.map(async (d) => ({
-        ...d, kind: "master" as const, status: "published" as const, hasDraft: false, themeId: null, theme: DEFAULT_THEME,
+        ...d, kind: "master" as const, status: "published" as const, hasDraft: false, themeId: null, theme: DEFAULT_THEME, languages: null,
         slides: await resolveSlides(d.slides, seedLookup),
       })),
     );
@@ -152,6 +155,7 @@ async function load(q: Db, row: typeof decks.$inferSelect, wantDraft: boolean, t
     slides: await resolveSlides(v.slides, dbLookup(q)),
     updatedAt: row.updatedAt, updatedById: draft?.createdBy ?? pub?.publishedBy ?? pub?.createdBy ?? null,
     archivedAt: row.archivedAt,
+    languages: enabledLangs(row),
   };
 }
 
@@ -207,6 +211,8 @@ export async function createDeck(
   input: {
     id: string; title: string; kind: "master" | "copy"; slides: SeedSlide[]; note?: string; themeId?: string | null;
     copiedFromDeckId?: string; copiedFromVersionId?: string;
+    /** Languages the deck offers besides English (people's own decks; masters offer whatever they hold). Default: none. */
+    languages?: TargetLang[];
     /** "draft": the deck starts unpublished (version 1 is its draft) until someone publishes it. */
     status?: "published" | "draft";
   },
@@ -216,6 +222,7 @@ export async function createDeck(
     await tx.insert(decks).values({
       id: input.id, title: input.title, kind: input.kind, ownerId: input.kind === "copy" ? who.userId ?? null : null,
       copiedFromDeckId: input.copiedFromDeckId, copiedFromVersionId: input.copiedFromVersionId,
+      languages: input.languages ?? [],
     });
     const published = input.status !== "draft";
     const [v] = await tx.insert(deckVersions).values({
@@ -226,14 +233,25 @@ export async function createDeck(
   });
 }
 
-/** A personal copy: a snapshot of the source's newest published version. Master edits don't reach it. */
-export async function copyDeck(sourceId: string, input: { id: string; title: string }, who: Actor = {}) {
+/**
+ * A personal copy: a snapshot of the source's newest published version. Master edits don't reach it.
+ * The copy starts in English only unless `keepLanguages`: then it offers the languages the source offers.
+ */
+export async function copyDeck(sourceId: string, input: { id: string; title: string; keepLanguages?: boolean }, who: Actor = {}) {
   const q = db();
+  const [row] = await q.select().from(decks).where(eq(decks.id, sourceId)).limit(1);
   const src = await latestPublished(q, sourceId);
-  if (!src) throw new Error(`Deck ${sourceId} has no published version`);
+  if (!row || !src) throw new Error(`Deck ${sourceId} has no published version`);
   const slides = await snapshotSlides(src.slides, dbLookup(q));
+  const enabled = enabledLangs(row);
+  const languages = input.keepLanguages ? availableLangs(slides).filter((l) => !enabled || enabled.includes(l)) : [];
   return createDeck({
-    ...input, kind: "copy", slides, themeId: src.themeId, note: `Copied from ${sourceId} v${src.number}`,
-    copiedFromDeckId: sourceId, copiedFromVersionId: src.id,
+    id: input.id, title: input.title, kind: "copy", slides, themeId: src.themeId, note: `Copied from ${sourceId} v${src.number}`,
+    copiedFromDeckId: sourceId, copiedFromVersionId: src.id, languages,
   }, who);
+}
+
+/** Turn a language on or off for one of people's own decks (the translations themselves are kept either way). */
+export async function setDeckLanguages(deckId: string, languages: TargetLang[]) {
+  await db().update(decks).set({ languages: [...new Set(languages)] }).where(eq(decks.id, deckId));
 }

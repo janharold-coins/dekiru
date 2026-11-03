@@ -7,6 +7,8 @@ import { getShareLink, isUnlocked, linkStatus, unlockCookieName } from "@/lib/sh
 import { sessionUser } from "@/lib/auth";
 import { PasswordForm } from "./PasswordForm";
 import { DeckViewer } from "../../decks/[id]/present/DeckViewer";
+import { deckRow } from "@/lib/access";
+import { enabledLangs, onlyLangs } from "@/deck/i18n";
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ lang?: string }> };
 
@@ -43,9 +45,12 @@ export default async function SharedDeck({ params, searchParams }: Props) {
     );
   }
 
+  // The link froze its translations, but only languages the deck still offers are shown (own decks: the owner's choice).
+  const row = await deckRow(link.deckId);
+  const slides = row ? onlyLangs(link.slides, enabledLangs(row)) : link.slides;
   return (
     <ThemeScope tokens={link.theme}>
-    <DeckViewer slides={link.slides} trackUrl={`/s/${slug}/track`} initialLang={lang} approved={link.approved} team={Boolean(await sessionUser())} />
+    <DeckViewer slides={slides} trackUrl={`/s/${slug}/track`} initialLang={lang} approved={link.approved} team={Boolean(await sessionUser())} />
     </ThemeScope>
   );
 }

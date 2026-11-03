@@ -8,7 +8,8 @@ import {
   type BackgroundRole, type Gradient, type ThemeTokens,
 } from "@/deck/theme";
 import type { SlideData } from "@/deck/types";
-import { archiveThemeAction, discardThemeAction, publishThemeAction, saveThemeAction, type Result } from "../actions";
+import { DeleteTheme } from "../DeleteTheme";
+import { discardThemeAction, publishThemeAction, saveThemeAction, type Result } from "../actions";
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
@@ -16,15 +17,17 @@ const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
  * Controls on the left, every layout on the right in the theme being edited.
  * "Show live" swaps the preview to the published version for comparison.
  */
-export function ThemeEditor({ id, name: initialName, tokens: initial, live, hasDraft, samples, canArchive }: {
-  id: string; name: string; tokens: ThemeTokens; live: ThemeTokens | null; hasDraft: boolean; samples: SlideData[]; canArchive: boolean;
+export function ThemeEditor({ id, name: initialName, tokens: initial, live, hasDraft, samples, usedBy }: {
+  id: string; name: string; tokens: ThemeTokens; live: ThemeTokens | null; hasDraft: boolean; samples: SlideData[];
+  /** Decks using the theme; null for the default theme, which can't be deleted. */
+  usedBy: number | null;
 }) {
   const [tokens, setTokens] = useState(initial);
   const [saved, setSaved] = useState(initial);
   const [name, setName] = useState(initialName);
   const [showLive, setShowLive] = useState(false);
   const [result, setResult] = useState<Result>({});
-  const [confirm, setConfirm] = useState<"discard" | "archive" | null>(null);
+  const [confirm, setConfirm] = useState<"discard" | null>(null);
   const [pending, start] = useTransition();
   const issues = checkTheme(tokens);
   const dirty = !same(tokens, saved) || name !== initialName;
@@ -149,12 +152,14 @@ export function ThemeEditor({ id, name: initialName, tokens: initial, live, hasD
             </figure>
           ))}
         </div>
-        {canArchive && (
-          <p style={{ marginTop: 24 }}>
-            {confirm === "archive"
-              ? <button className="btn danger" onClick={() => run(() => archiveThemeAction(id))}>Remove this theme?</button>
-              : <button className="linkish" onClick={() => setConfirm("archive")}>Remove this theme</button>}
-          </p>
+        {usedBy != null && (
+          <div className="te-danger">
+            <div>
+              <b>Delete this theme</b>
+              <p className="hint">Removes it from every theme picker. Share links already sent keep their look.</p>
+            </div>
+            <DeleteTheme id={id} name={initialName} usedBy={usedBy} after="/library/themes" />
+          </div>
         )}
       </div>
     </div>

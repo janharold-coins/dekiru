@@ -5,13 +5,16 @@ import { RenderSlide } from "@/deck/RenderSlide";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
 import { ThemeScope } from "@/deck/ThemeScope";
 import { requireUser } from "@/lib/auth";
+import { DEFAULT_THEME_ID } from "@/deck/theme";
 import { canEditThemes, publishedThemes, themeUsage } from "@/lib/themes";
 import { db, hasDb } from "@/db/client";
 import { themeVersions } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { Nav } from "../../Nav";
+import { PageHero } from "../../PageHero";
 import { blockGroups, slideCount } from "../../decks/blocks";
 import { LibraryTabs } from "../Tabs";
+import { DeleteTheme } from "./DeleteTheme";
 import { NewTheme } from "./NewTheme";
 import { glanceSamples, layoutSamples } from "./samples";
 
@@ -29,8 +32,8 @@ export default async function ThemesPage() {
   return (
     <main className="shell">
       <Nav on="library" user={user} />
+      <PageHero title="Library">The looks decks can use. Publishing a theme updates every deck using it.</PageHero>
       <div className="page-head">
-        <h1 className="page">Library</h1>
         <LibraryTabs on="themes" counts={{ approved, templates: templates.length, themes: themes.length }} themes />
       </div>
       <NewTheme themes={themes.map((t) => ({ id: t.id, name: t.name }))} />
@@ -44,6 +47,7 @@ export default async function ThemesPage() {
               <span className="mono">· used by {usage[t.id] ?? 0} deck{usage[t.id] === 1 ? "" : "s"}</span>
               <span className="spacer" style={{ flex: 1 }} />
               <Link className="btn" href={`/library/themes/${t.id}`}>Edit</Link>
+              {t.id !== DEFAULT_THEME_ID && <DeleteTheme id={t.id} name={t.name} usedBy={usage[t.id] ?? 0} />}
             </header>
             <ThemeScope tokens={t.tokens}>
               <div className="theme-strip">

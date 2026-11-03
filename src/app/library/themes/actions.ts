@@ -56,9 +56,10 @@ export async function createThemeAction(_prev: Result, form: FormData): Promise<
   redirect(`/library/themes/${id}`);
 }
 
-export async function archiveThemeAction(id: string): Promise<Result> {
-  const user = await requireUser(`/library/themes/${id}`);
+/** Delete = archive: the theme leaves every picker, its versions stay for history and sent links. */
+export async function deleteThemeAction(id: string): Promise<Result> {
+  const user = await requireUser("/library/themes");
   try { await archiveTheme(user, id); } catch (e) { return { error: message(e) }; }
   refresh(id);
-  redirect("/library/themes");
+  return { ok: "Theme deleted." };
 }

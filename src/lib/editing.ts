@@ -20,11 +20,11 @@ import { createElement } from "react";
 import { isRef, resolveSlides, type SeedSlide } from "@/content/resolve";
 import { RenderSlide } from "@/deck/RenderSlide";
 import { checkOverflow, type OverflowWarning } from "@/deck/overflow";
-import { LANGUAGES, localize, overlayFromEntries, textEntries, translationState, withTranslation, type Lang, type TargetLang } from "@/deck/i18n";
+import { enabledLangs, LANGUAGES, localize, overlayFromEntries, textEntries, translationState, withTranslation, type Lang, type TargetLang } from "@/deck/i18n";
 import { patterns } from "@/deck/registry";
 import { fieldLabel } from "@/deck/fields";
 import type { SlideData } from "@/deck/types";
-import { copyDeck, createDeck, getDeckVersions, liveSlidesOf, publishDraft, saveDraft } from "./decks";
+import { copyDeck, createDeck, getDeckVersions, liveSlidesOf, publishDraft, saveDraft, setDeckLanguages } from "./decks";
 import type { SignedInUser } from "./auth";
 import { canEdit, canView, deckRow } from "./access";
 import { pickTheme, publishedThemes } from "./themes";
@@ -243,12 +243,13 @@ export async function newDeck(user: SignedInUser | null, title: string, inputs: 
   return id;
 }
 
-export async function duplicateDeck(user: SignedInUser | null, sourceId: string, title?: string) {
+/** Copies start in English only; `keepLanguages` carries over the languages the source offers (the person is asked). */
+export async function duplicateDeck(user: SignedInUser | null, sourceId: string, title?: string, keepLanguages = false) {
   const row = await deckRow(sourceId);
   if (!row || !canView(row, user)) throw new EditError(`No deck called "${sourceId}".`);
   const name = title?.trim() || `${row.title} (copy)`;
   const id = await newDeckId();
-  await copyDeck(sourceId, { id, title: name }, { userId: user?.id ?? null });
+  await copyDeck(sourceId, { id, title: name, keepLanguages }, { userId: user?.id ?? null });
   return id;
 }
 
@@ -512,8 +513,29 @@ export async function setTranslation(user: SignedInUser | null, deckId: string, 
     const overflow = checkOverflow(next, lang);
     results.push({ slide_id: input.slide_id, translated, ...(skipped.length ? { skipped } : {}), ...(overflow.length ? { overflow } : {}) });
   }
+  await enableLanguage(deckId, lang); // translating is asking for the language
   await save(deckId, slides, user, via === "claude" ? `Translated to ${LANGUAGES[lang].english} with Claude` : `${LANGUAGES[lang].english} translation edited in Dekiru`);
   return results;
+}
+
+/** A person's own deck starts offering `lang` (no-op on masters and when it's already on). */
+async function enableLanguage(deckId: string, lang: TargetLang) {
+  const row = await deckRow(deckId);
+  const on = row && enabledLangs(row);
+  if (on && !on.includes(lang)) await setDeckLanguages(deckId, [...on, lang]);
+}
+
+/**
+ * Turn a language on or off for one of people's own decks. New decks and copies offer English only;
+ * translations that come with master slides show once the language is on. Turning it off keeps the
+ * translations (turn it back on and they're there). Masters offer every language they hold.
+ */
+export async function setLanguage(user: SignedInUser | null, deckId: string, lang: TargetLang, on: boolean) {
+  const row = await editable(deckId, user);
+  const current = enabledLangs(row);
+  if (!current) throw new EditError("Company decks offer every language they're translated into.");
+  await setDeckLanguages(deckId, on ? [...current, lang] : current.filter((l) => l !== lang));
+  await db().update(decks).set({ updatedAt: new Date() }).where(eq(decks.id, deckId));
 }
 
 /** Rename a deck. Applies straight away (titles aren't versioned); share links keep the title they were made with. */

@@ -140,6 +140,12 @@ export const decks = pgTable("decks", {
   copiedFromDeckId: text("copied_from_deck_id"),
   copiedFromVersionId: uuid("copied_from_version_id"),
   archivedAt: timestamp("archived_at", { withTimezone: true }),
+  /**
+   * Languages people's own decks offer besides English ("zh", "th"), turned on by the owner. Translations that
+   * come with master slides stay hidden until the language is on. Masters ignore this: they offer every
+   * language they hold a translation for.
+   */
+  languages: text("languages").array().notNull().default(sql`'{}'::text[]`),
   createdAt: created(),
   updatedAt: updated(),
 });
@@ -389,3 +395,4 @@ export const deckComments = pgTable(
   },
   (t) => [index("deck_comments_slide").on(t.deckId, t.slideId, t.createdAt)],
 );
+

@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { hasDb } from "@/db/client";
 import { requireUser } from "@/lib/auth";
-import { listPeople, ROLES } from "@/lib/people";
+import { deckCounts, listPeople, ROLES } from "@/lib/people";
 import { Nav } from "../Nav";
+import { PageHero } from "../PageHero";
 import { RoleSelect } from "./RoleSelect";
 import { ThemeAccess } from "./ThemeAccess";
 import { ReviewAccess } from "./ReviewAccess";
@@ -17,21 +19,22 @@ const ROLE_HELP: Record<string, string> = {
 export default async function PeoplePage() {
   const user = await requireUser("/people");
   if (user && user.role !== "admin") redirect("/");
-  const people = hasDb() ? await listPeople() : [];
+  const [people, counts] = hasDb() ? await Promise.all([listPeople(), deckCounts()]) : [[], new Map<string, number>()];
   return (
     <main className="shell">
       <Nav on="people" user={user} />
-      <h1 className="page">People</h1>
+      <PageHero title="People">Everyone who has signed in, with their role, theme access and what they may review.</PageHero>
       <dl className="roles-key">
         {ROLES.map((r) => <div key={r}><dt>{r[0].toUpperCase() + r.slice(1)}</dt><dd>{ROLE_HELP[r]}</dd></div>)}
       </dl>
-      <table className="links people" style={{ maxWidth: 980 }}>
-        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Themes</th><th>Can review</th></tr></thead>
+      <table className="links people" style={{ maxWidth: 1080 }}>
+        <thead><tr><th>Name</th><th>Email</th><th>Decks</th><th>Role</th><th>Themes</th><th>Can review</th></tr></thead>
         <tbody>
           {people.map((p) => (
             <tr key={p.id}>
               <td>{p.name || "—"}{user?.id === p.id && <span className="mono"> (you)</span>}</td>
               <td>{p.email}</td>
+              <td><Decks n={counts.get(p.id) ?? 0} href={user?.id === p.id ? "/?tab=mine" : `/?tab=employees&owner=${p.id}`} /></td>
               <td><RoleSelect userId={p.id} role={p.role} roles={ROLES} /></td>
               <td><ThemeAccess userId={p.id} allowed={p.canEditThemes} admin={p.role === "admin"} /></td>
               <td><ReviewAccess userId={p.id} scopes={p.reviewScopes} admin={p.role === "admin"} options={ALL_SCOPES} /></td>
@@ -41,4 +44,9 @@ export default async function PeoplePage() {
       </table>
     </main>
   );
+}
+
+/** Decks someone owns (not archived); opens them on the Decks home. */
+function Decks({ n, href }: { n: number; href: string }) {
+  return n ? <Link href={href} className="people-decks">{n} {n === 1 ? "deck" : "decks"}</Link> : <span className="people-none">None</span>;
 }

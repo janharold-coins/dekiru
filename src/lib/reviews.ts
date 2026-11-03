@@ -15,7 +15,7 @@ import { and, desc, eq, inArray, ne } from "drizzle-orm";
 import { db } from "@/db/client";
 import { decks, deckVersions, reviewEvents, reviews, slideApprovals, users } from "@/db/schema";
 import { resolveSlides } from "@/content/resolve";
-import { fingerprint, isTargetLang, LANGUAGES, TARGET_LANGS, type Lang, type TargetLang } from "@/deck/i18n";
+import { enabledLangs, fingerprint, isTargetLang, onlyLangs, LANGUAGES, TARGET_LANGS, type Lang, type TargetLang } from "@/deck/i18n";
 import type { SlideData } from "@/deck/types";
 import type { SignedInUser } from "./auth";
 import { canEdit, deckRow, type DeckRow } from "./access";
@@ -135,7 +135,7 @@ export async function reviewState(deckId: string): Promise<DeckReviewState> {
   const row = await deckRow(deckId);
   const { published } = await getDeckVersions(deckId);
   if (!row || !published) return empty;
-  const slides = (await resolveSlides(published.slides, lookup)).filter((s) => !s.hidden);
+  const slides = onlyLangs((await resolveSlides(published.slides, lookup)).filter((s) => !s.hidden), enabledLangs(row));
   const content = await reviewOf(published.id, contentKind(row), null);
   const state: DeckReviewState = { versionId: published.id, content: content ? await summarize(content, slides) : null, translations: {}, approved: [] };
   for (const lang of TARGET_LANGS) {
@@ -294,7 +294,7 @@ export async function sendForReview(user: SignedInUser | null, deckId: string, l
   const published = versions.draft ? await publish(user, deckId) : versions.published;
   if (!published) throw new EditError("There is nothing to send yet.");
   const t = target(row, lang);
-  const slides = (await resolveSlides(published.slides, lookup)).filter((s) => !s.hidden);
+  const slides = onlyLangs((await resolveSlides(published.slides, lookup)).filter((s) => !s.hidden), enabledLangs(row));
   if (lang !== "en" && !slides.some((s) => s.i18n?.[lang])) throw new EditError(`This deck has no ${LANGUAGES[lang].english} translation yet.`);
   const existing = await reviewOf(published.id, t.kind, t.lang);
   if (existing?.status === "for_review") throw new EditError("This version is already waiting for review.");
@@ -376,7 +376,7 @@ async function openReview(user: SignedInUser | null, deckId: string, lang: Lang)
     throw new EditError(user && review.requestedBy === user.id ? "You sent this for review, so someone else has to approve it."
       : lang === "en" ? "You're not set up to review this kind of deck (People → Can review)." : `You're not set up to review ${LANGUAGES[lang].english} translations (People → Can review).`);
   }
-  const slides = (await resolveSlides(published.slides, lookup)).filter((s) => !s.hidden);
+  const slides = onlyLangs((await resolveSlides(published.slides, lookup)).filter((s) => !s.hidden), enabledLangs(row));
   return { row, review, slides };
 }
 
@@ -425,7 +425,7 @@ export async function approveForEveryone(user: SignedInUser | null, deckId: stri
   if (!published) throw new EditError("Nothing published to approve.");
   const t = target(row, lang);
   if (lang !== "en") {
-    const slides = (await resolveSlides(published.slides, lookup)).filter((s) => !s.hidden);
+    const slides = onlyLangs((await resolveSlides(published.slides, lookup)).filter((s) => !s.hidden), enabledLangs(row));
     if (!slides.some((s) => s.i18n?.[lang as TargetLang])) throw new EditError(`This deck has no ${LANGUAGES[lang].english} translation yet.`);
   }
   let review = await reviewOf(published.id, t.kind, t.lang);

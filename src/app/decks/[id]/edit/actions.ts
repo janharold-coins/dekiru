@@ -11,7 +11,7 @@ import {
 } from "@/lib/editing";
 import type { SeedSlide } from "@/content/resolve";
 import type { Lang, TargetLang } from "@/deck/i18n";
-import { setTranslation } from "@/lib/editing";
+import { setLanguage, setTranslation } from "@/lib/editing";
 import { addComment, deleteComment, editComment, listComments, setResolved, type CommentAnchor } from "@/lib/comments";
 import { approveDeck, approveForEveryone, approveSlide, promoteDeck, requestChanges, sendForReview, withdrawReview } from "@/lib/reviews";
 
@@ -76,6 +76,14 @@ export async function saveDeckStateAction(deckId: string, slides: SeedSlide[], t
 /** Autosave of one slide's translation (text by path; paths left out stay English; empty = remove the translation). */
 export async function saveTranslationAction(deckId: string, slideId: string, lang: TargetLang, text: Record<string, string>): Promise<EditorResult> {
   const r = await run(deckId, (u) => setTranslation(u, deckId, lang, [{ slide_id: slideId, text }], "app"));
+  return { error: r.error };
+}
+
+/** Turn a language on or off for one of people's own decks (Language picker → Add / Remove). */
+export async function setLanguageAction(deckId: string, lang: TargetLang, on: boolean): Promise<EditorResult> {
+  const r = await run(deckId, (u) => setLanguage(u, deckId, lang, on));
+  for (const p of ["", "/present", "/share"]) revalidatePath(`/decks/${deckId}${p}`);
+  revalidatePath("/");
   return { error: r.error };
 }
 

@@ -4,7 +4,7 @@ import { Nav } from "./Nav";
 import { HomeDecks, type HomeDeck } from "./HomeDecks";
 import { ALL_SCOPES, contentReviewStatuses, hasScope, reviewQueue, translationReviewStatuses } from "@/lib/reviews";
 import { statusLabel } from "@/lib/status";
-import { deckTranslationStatus, LANGUAGES } from "@/deck/i18n";
+import { deckTranslationStatus, LANGUAGES, onlyLangs } from "@/deck/i18n";
 
 const fmt = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Manila" });
 
@@ -46,8 +46,8 @@ export default async function Home({ searchParams }: PageProps<"/">) {
     status: statusLabel({ kind: d.kind, hasDraft: d.hasDraft && (d.kind === "master" ? canEditMasters : d.ownerId === user?.id || d.shared?.role === "editor"), review: statuses.get(d.id)?.latest ?? null, approvedBefore: statuses.get(d.id)?.approvedBefore }),
     shared: d.shared ? `Shared by ${d.shared.owner ?? "someone"} · ${d.shared.role === "editor" ? "you can edit" : "view only"}` : undefined,
     archived: Boolean(d.archivedAt),
-    // Languages the live version can be shown in (share links and Present offer them), with how complete and reviewed each is.
-    translations: deckTranslationStatus(d.slides).filter((t) => t.fresh + t.stale > 0).map((t) => {
+    // Languages the live version can be shown in (share links and Present offer them; own decks: only those the owner turned on), with how complete and reviewed each is.
+    translations: deckTranslationStatus(onlyLangs(d.slides, d.languages)).filter((t) => t.fresh + t.stale > 0).map((t) => {
       const total = t.fresh + t.stale + t.missing;
       const r = trStatuses.get(`${d.id}:${t.lang}`);
       return {

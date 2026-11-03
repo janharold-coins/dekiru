@@ -57,7 +57,7 @@ export default async function DeckPage({ params, searchParams }: { params: Promi
     <DeckEditor
       key={`${deck.versionId}-${deck.status}`}
       deck={{ id: deck.id, title: deck.title, kind: deck.kind, hasDraft: deck.status === "draft", versionNumber: deck.versionNumber ?? null,
-        sentVersion: deck.sentVersionNumber ?? null, approvedVersion: deck.approvedVersionNumber ?? null }}
+        sentVersion: deck.sentVersionNumber ?? null, approvedVersion: deck.approvedVersionNumber ?? null, languages: deck.languages }}
       slides={slides}
       initialSlide={slides.some((s) => s.slide.id === slide) ? slide! : slides[0]?.slide.id ?? null}
       theme={deck.theme}

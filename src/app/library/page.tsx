@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth";
 import { canEditThemes } from "@/lib/themes";
 import { EditError, newDeck } from "@/lib/editing";
 import { Nav } from "../Nav";
+import { PageHero } from "../PageHero";
 import { BlockPicker } from "../decks/BlockPicker";
 import { blockGroups, slideCount } from "../decks/blocks";
 import { addBlocksAction } from "../decks/[id]/actions";
@@ -28,8 +29,8 @@ export default async function ApprovedSlidesPage({ searchParams }: { searchParam
   return (
     <main className="shell">
       <Nav on="library" user={user} />
+      <PageHero title="Library">Approved slides to add to a deck, or to start a new deck from.</PageHero>
       <div className="page-head">
-        <h1 className="page">Library</h1>
         <LibraryTabs on="approved" counts={{ approved: count, templates: templates.length }} deck={deck} themes={canEditThemes(user)} />
       </div>
       <BlockPicker groups={groups} submitLabel="Add slides" onSubmit={add} targets={targets}

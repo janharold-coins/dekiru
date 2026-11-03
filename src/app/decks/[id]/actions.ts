@@ -6,9 +6,10 @@ import {
   addBlocks, duplicateDeck, EditError, restoreVersion, setArchived, setDeckTheme,
 } from "@/lib/editing";
 
-export async function copyAction(deckId: string) {
+/** Make a copy. It starts in English only unless the person chose to keep the source's translations. */
+export async function copyAction(deckId: string, keepTranslations = false) {
   const user = await requireUser(`/decks/${deckId}`);
-  const id = await duplicateDeck(user, deckId);
+  const id = await duplicateDeck(user, deckId, undefined, keepTranslations);
   redirect(`/decks/${id}`);
 }
 

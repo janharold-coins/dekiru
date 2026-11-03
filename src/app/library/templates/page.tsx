@@ -8,6 +8,7 @@ import { editableDecks } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { canEditThemes } from "@/lib/themes";
 import { Nav } from "../../Nav";
+import { PageHero } from "../../PageHero";
 import { blockGroups, slideCount } from "../../decks/blocks";
 import { LibraryTabs } from "../Tabs";
 
@@ -23,8 +24,8 @@ export default async function TemplatesPage({ searchParams }: { searchParams: Pr
   return (
     <main className="shell" style={themeStyle(target?.theme)}>
       <Nav on="library" user={user} />
+      <PageHero title="Library">Every layout a slide can use, shown with example content.</PageHero>
       <div className="page-head">
-        <h1 className="page">Library</h1>
         <LibraryTabs on="templates" counts={{ approved, templates: templates.length }} deck={deck} themes={canEditThemes(user)} />
       </div>
       <div className="tpl-grid">

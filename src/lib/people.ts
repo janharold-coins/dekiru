@@ -1,6 +1,6 @@
-import { and, eq, ne, sql } from "drizzle-orm";
+import { and, eq, isNull, ne, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { role as roleEnum, users } from "@/db/schema";
+import { decks, role as roleEnum, users } from "@/db/schema";
 import type { Role, SignedInUser } from "./auth";
 
 export const ROLES = roleEnum.enumValues as readonly Role[];
@@ -8,6 +8,13 @@ export const ROLES = roleEnum.enumValues as readonly Role[];
 export async function listPeople() {
   return db().select({ id: users.id, email: users.email, name: users.name, image: users.image, role: users.role, canEditThemes: users.canEditThemes, reviewScopes: users.reviewScopes, createdAt: users.createdAt })
     .from(users).orderBy(sql`case ${users.role} when 'admin' then 0 when 'manager' then 1 else 2 end`, users.createdAt);
+}
+
+/** Active (not archived) decks each person owns, by user id — the People page's Decks column. */
+export async function deckCounts() {
+  const rows = await db().select({ ownerId: decks.ownerId, n: sql<number>`count(*)`.mapWith(Number) }).from(decks)
+    .where(and(eq(decks.kind, "copy"), isNull(decks.archivedAt))).groupBy(decks.ownerId);
+  return new Map(rows.filter((r) => r.ownerId).map((r) => [r.ownerId!, r.n]));
 }
 
 /** Admins only. There must always be at least one admin. */

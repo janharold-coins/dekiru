@@ -27,7 +27,7 @@ export default async function ThemeEditorPage({ params, searchParams }: { params
       {error && <p className="signin-error" role="alert">{error}</p>}
       <ThemeEditor
         id={id} name={theme.name} tokens={theme.tokens} live={theme.publishedTokens} hasDraft={theme.hasDraft}
-        samples={samples} canArchive={id !== DEFAULT_THEME_ID && !usage[id]}
+        samples={samples} usedBy={id === DEFAULT_THEME_ID ? null : usage[id] ?? 0}
       />
       <h2 className="section-h">History</h2>
       <table className="links" style={{ maxWidth: 980 }}>

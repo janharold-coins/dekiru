@@ -7,16 +7,17 @@ import { RenderSlide } from "@/deck/RenderSlide";
 import { PreviewChecks } from "@/deck/frame/PreviewChecks";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
 import { checkOverflow } from "@/deck/overflow";
-import { deckTranslationStatus, LANGUAGES, localize, overlayFromEntries, textEntries, translationState, withTranslation, type Lang, type TargetLang } from "@/deck/i18n";
+import { availableLangs, deckTranslationStatus, LANGUAGES, TARGET_LANGS, localize, overlayFromEntries, textEntries, translationState, withTranslation, type Lang, type TargetLang } from "@/deck/i18n";
 import { fieldLabel } from "@/deck/fields";
 import { themeStyle, type ThemeTokens } from "@/deck/theme";
 import type { SlideData } from "@/deck/types";
 import { copyAction } from "../actions";
+import { CopyDialog } from "./CopyDialog";
 import { ContentFields } from "./ContentFields";
 import { ConfirmDialog, Menu } from "./Menu";
 import { PublishDialog, PublishSplit } from "./Publish";
 import {
-  saveTranslationAction,
+  saveTranslationAction, setLanguageAction,
   discardDraftAction, draftChangesAction, hideSlideAction, moveSlideAction, removeSlideAction, renameDeckAction, resetSlideAction, sendForReviewAction,
   saveDeckStateAction, saveSlideAction, setThemeAction,
 } from "./actions";
@@ -76,7 +77,9 @@ const SLIDE_W = 1920;
 const SLIDE_H = 1080;
 
 export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: initialTheme, themes, readOnly = false, review, initialComments = [], initialLang = "en" }: {
-  deck: { id: string; title: string; kind: "master" | "copy"; hasDraft: boolean; versionNumber: number | null; sentVersion: number | null; approvedVersion: number | null };
+  deck: { id: string; title: string; kind: "master" | "copy"; hasDraft: boolean; versionNumber: number | null; sentVersion: number | null; approvedVersion: number | null;
+    /** Languages the deck offers besides English: null = company master (every language it holds); else what the owner turned on. */
+    languages: TargetLang[] | null };
   /** Review state and what the signed-in person may do about it (spec §7a). */
   review: ReviewProps;
   /** Comments on every slide of the deck (Comments tab). */
@@ -97,7 +100,21 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
   const [save, setSave] = useState<SaveState>({ kind: "saved" });
   const [navOpen, setNavOpen] = useState(true);
   // Preview language: translations are made with Claude (connector); the editor shows them and their status.
-  const [lang, setLang] = useState<Lang>(initialLang);
+  // People's own decks offer only the languages their owner turned on (Language picker → Add); masters offer all.
+  const [languages, setLanguages] = useState<TargetLang[] | null>(deck.languages);
+  const offers = (l: Lang) => l === "en" || !languages || languages.includes(l);
+  const [lang, setLang] = useState<Lang>(offers(initialLang) ? initialLang : "en");
+  const toggleLanguage = async (l: TargetLang, on: boolean) => {
+    const before = languages;
+    setLanguages((cur) => (cur ? (on ? [...cur.filter((x) => x !== l), l] : cur.filter((x) => x !== l)) : cur));
+    setLang(on ? l : "en");
+    const r = await setLanguageAction(deck.id, l, on);
+    if (r.error) { setLanguages(before); setLang("en"); setSave({ kind: "error", message: r.error }); }
+  };
+  // Make a copy: asks whether to keep the translations the deck offers; English-only decks copy straight away.
+  const [copyAsk, setCopyAsk] = useState(false);
+  const copyLangs = availableLangs(slides.map((s) => s.slide)).filter((l) => !languages || languages.includes(l));
+  const startCopy = () => { if (copyLangs.length) setCopyAsk(true); else void copyAction(deck.id); };
   const [reviewDialog, setReviewDialog] = useState<Dialog | null>(null);
   const [panelWidth, setPanelWidth] = useState(360);
   const [unlocked, setUnlocked] = useState<Set<string>>(new Set());
@@ -403,6 +420,7 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
         save={save} hasDraft={hasDraft} publishing={publishing} onPublish={() => setPublishAsk(true)} onDiscard={discard}
         canUndo={historySize.undo > 0} canRedo={historySize.redo > 0} onUndo={undo} onRedo={redo}
         lang={lang} onLang={setLang} translations={deckTranslationStatus(slides.map((s) => s.slide))}
+        languages={languages} onToggleLanguage={readOnly ? undefined : toggleLanguage} onCopy={startCopy}
         review={review} onReviewDialog={setReviewDialog} onReviewError={(m) => setSave({ kind: "error", message: m })}
         presentHref={`/decks/${deck.id}/present${lang !== "en" ? `?lang=${lang}` : ""}${selected && !selected.slide.hidden ? `#${presentNumber(selectedIndex)}` : ""}`}
       />
@@ -431,6 +449,7 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
           lang={lang}
           review={review}
           onReviewError={(m) => setSave({ kind: "error", message: m })}
+          onCopy={startCopy}
           tab={tab} onTab={(t) => { setTab(t); if (t === "editor") patchCm({ pinMode: false, activeId: null }); }}
           commentCount={selected ? openCount(cm.comments, selected.slide.id) : 0}
           comments={<CommentsPanel deckId={deck.id} slideId={selected?.slide.id ?? null} state={cm} onState={patchCm} onComments={setComments} composerRef={composerRef}
@@ -439,19 +458,21 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
       </div>
       {publishAsk && <PublishDialog load={loadChanges} onCancel={() => setPublishAsk(false)} onConfirm={() => { setPublishAsk(false); publishNow(); }} />}
       {reviewDialog && <ReviewDialog deckId={deck.id} dialog={reviewDialog} onClose={() => setReviewDialog(null)} onError={(m) => setSave({ kind: "error", message: m })} />}
+      {copyAsk && <CopyDialog deckId={deck.id} title={title} langs={copyLangs} onClose={() => setCopyAsk(false)} />}
     </div>
   );
 }
 
 /* ================= Top bar ================= */
 
-function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save, hasDraft, publishing, onPublish, onDiscard, presentHref, canUndo, canRedo, onUndo, onRedo, lang, onLang, translations, review, onReviewDialog, onReviewError }: {
+function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save, hasDraft, publishing, onPublish, onDiscard, presentHref, canUndo, canRedo, onUndo, onRedo, lang, onLang, translations, languages, onToggleLanguage, onCopy, review, onReviewDialog, onReviewError }: {
   deck: { id: string; kind: "master" | "copy"; versionNumber: number | null; sentVersion: number | null; approvedVersion: number | null }; readOnly: boolean;
   title: string; onRename: (t: string) => void;
   themes: ThemeOption[]; theme: ThemeOption; onTheme: (id: string) => void;
   save: SaveState; hasDraft: boolean; publishing: boolean; onPublish: () => void; onDiscard: () => void; presentHref: string;
   canUndo: boolean; canRedo: boolean; onUndo: () => void; onRedo: () => void;
   lang: Lang; onLang: (l: Lang) => void; translations: ReturnType<typeof deckTranslationStatus>;
+  languages: TargetLang[] | null; onToggleLanguage?: (l: TargetLang, on: boolean) => void; onCopy: () => void;
   review: ReviewProps; onReviewDialog: (d: Dialog) => void; onReviewError: (m: string) => void;
 }) {
   const mac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
@@ -464,7 +485,7 @@ function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save,
         <Link href="/" className="ed-icon-btn" aria-label="Back to decks">{ICON("arrow-left")}</Link>
         <span className="ed-divider" aria-hidden />
         <div className="ed-title-block">
-          <span className="ed-crumb"><span><Link href="/">Decks</Link> / {deck.kind === "master" ? "Company decks" : "My decks"}</span><DeckId id={deck.id} className="deck-id-sm" /></span>
+          <span className="ed-crumb"><span><Link href="/">Decks</Link> / {deck.kind === "master" ? "Company-wide" : "My decks"}</span><DeckId id={deck.id} className="deck-id-sm" /></span>
           {readOnly ? (
             <h1 className="ed-title ed-title-static"><span>{title}</span></h1>
           ) : editing ? (
@@ -483,7 +504,7 @@ function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save,
       {readOnly ? (
         <span className="ed-theme"><span className="ed-theme-btn static"><span>Theme</span><i className="ed-theme-dot" style={{ background: theme.tokens.accent[0] }} aria-hidden /><span>{theme.name}</span></span></span>
       ) : <ThemePicker themes={themes} theme={theme} onTheme={onTheme} />}
-        <LanguagePicker lang={lang} onLang={onLang} translations={translations} review={review}
+        <LanguagePicker lang={lang} onLang={onLang} translations={translations} languages={languages} onToggle={onToggleLanguage} review={review}
           ctx={{ kind: deck.kind, hasDraft: !readOnly && hasDraft, sentVersion: deck.sentVersion, approvedVersion: deck.approvedVersion }} />
       </div>
 
@@ -506,7 +527,7 @@ function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save,
         <Link className="ed-icon-btn ed-share" href={`/decks/${deck.id}/share`} aria-label="Share" title="Share">{ICON("share")}</Link>
         <Menu label="More deck actions" trigger={ICON("ellipsis")} items={[
           ...reviewMenuItems(deck.id, review, lang, deck.kind, hasDraft, onReviewDialog),
-          { label: "Make a copy", onSelect: () => copyAction(deck.id) },
+          { label: "Make a copy", onSelect: onCopy },
           { label: "Version history", href: `/decks/${deck.id}/history` },
           { label: "Presentations", href: `/decks/${deck.id}/presentations` },
           { label: "Compare with Figma", href: `/decks/${deck.id}/compare`, hidden: deck.kind !== "master" },
@@ -551,10 +572,14 @@ function ThemePicker({ themes, theme, onTheme }: { themes: ThemeOption[]; theme:
 }
 
 /**
- * "Language: EN 🇬🇧" — which language the slides are previewed in. Translations are made with Claude
- * (Dekiru connector); the list says how complete each one is.
+ * "Language: EN 🇬🇧" — which language the slides are previewed in, with how complete each translation is.
+ * Company masters offer every language they hold. People's own decks start in English: the owner adds a
+ * language here (translations that came with master slides show up straight away) and can remove it again.
  */
-function LanguagePicker({ lang, onLang, translations, review, ctx }: { lang: Lang; onLang: (l: Lang) => void; translations: ReturnType<typeof deckTranslationStatus>; review: ReviewProps; ctx: StatusCtx }) {
+function LanguagePicker({ lang, onLang, translations, languages, onToggle, review, ctx }: {
+  lang: Lang; onLang: (l: Lang) => void; translations: ReturnType<typeof deckTranslationStatus>;
+  languages: TargetLang[] | null; onToggle?: (l: TargetLang, on: boolean) => void; review: ReviewProps; ctx: StatusCtx;
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -566,14 +591,18 @@ function LanguagePicker({ lang, onLang, translations, review, ctx }: { lang: Lan
     document.addEventListener("keydown", close);
     return () => { document.removeEventListener("mousedown", close); document.removeEventListener("keydown", close); };
   }, [open]);
+  const noteOf = (t: (typeof translations)[number]) => {
+    const n = t.fresh + t.stale + t.missing;
+    const note = t.fresh === n ? `${n} of ${n} slides` : `${t.fresh} of ${n} slides${t.stale ? ` · ${t.stale} out of date` : ""}`;
+    return { note, state: t.fresh === n ? "ok" as const : t.fresh + t.stale === 0 ? "none" as const : "part" as const };
+  };
+  const on = (l: TargetLang) => !languages || languages.includes(l);
   const options: { lang: Lang; note: string; state: "ok" | "part" | "none" }[] = [
     { lang: "en", note: "Original", state: "ok" },
-    ...translations.map((t) => {
-      const n = t.fresh + t.stale + t.missing;
-      const note = t.fresh === n ? `${n} of ${n} slides` : `${t.fresh} of ${n} slides${t.stale ? ` · ${t.stale} out of date` : ""}`;
-      return { lang: t.lang, note, state: t.fresh === n ? "ok" as const : t.fresh + t.stale === 0 ? "none" as const : "part" as const };
-    }),
+    ...translations.filter((t) => on(t.lang)).map((t) => ({ lang: t.lang, ...noteOf(t) })),
   ];
+  // Own decks: languages the owner can add (in the deck's language order).
+  const addable = languages && onToggle ? TARGET_LANGS.filter((l) => !on(l)) : [];
   const current = LANGUAGES[lang];
   // Reviews are per language, so the button carries this language's review state and the list shows every language's.
   const status = reviewLabel(summaryFor(review, lang), ctx, lang);
@@ -595,7 +624,27 @@ function LanguagePicker({ lang, onLang, translations, review, ctx }: { lang: Lan
               {(() => { const r = reviewLabel(summaryFor(review, o.lang), ctx, o.lang); return <span className={`ed-lang-status ${r.tone}`} title={reviewTitle(summaryFor(review, o.lang), o.lang, ctx)}><i aria-hidden />{r.text}</span>; })()}
             </button>
           ))}
-          <p className="ed-menu-note">Translations are made with Claude (Dekiru connector). Share links offer every language the deck has.</p>
+          {addable.length > 0 && <p className="ed-menu-label">Add a language</p>}
+          {addable.map((l) => {
+            const t = translations.find((x) => x.lang === l);
+            const ready = t ? t.fresh : 0;
+            return (
+              <button key={l} type="button" className="ed-menu-item ed-lang-opt ed-lang-add" onClick={() => { setOpen(false); onToggle!(l, true); }}>
+                <span className="ed-lang-flag" aria-hidden>{LANGUAGES[l].flag}</span>
+                <span className="ed-lang-name"><span lang={l}>{LANGUAGES[l].name}</span><small>{LANGUAGES[l].english}</small></span>
+                <span className="ed-lang-hint">{ready ? `${ready} slide${ready === 1 ? "" : "s"} already translated` : "Not translated yet"}</span>
+                <span className="ed-lang-plus" aria-hidden>Add</span>
+              </button>
+            );
+          })}
+          {languages && onToggle && lang !== "en" && (
+            <button type="button" className="ed-menu-item danger ed-lang-remove" onClick={() => { setOpen(false); onToggle(lang, false); }}>
+              Remove {LANGUAGES[lang].english} from this deck
+            </button>
+          )}
+          <p className="ed-menu-note">{languages
+            ? "Only the languages listed above show in Present and share links. Translations are made with Claude (Dekiru connector) or typed here; removing a language keeps them."
+            : "Translations are made with Claude (Dekiru connector). Share links offer every language the deck has."}</p>
         </div>
       )}
     </div>
@@ -780,8 +829,8 @@ function Canvas({ selected, number, lang, overlay }: { selected: EditorSlide | n
 
 /* ================= Content panel ================= */
 
-function ContentPanel({ deckId, item, readOnly, locked, onUnlock, onChange, onToggleHidden, canReset, onReset, onResize, width, lang, review, onReviewError, tab, onTab, commentCount, comments }: {
-  deckId: string; item: EditorSlide | null; readOnly: boolean; locked: boolean; onUnlock: () => void; lang: Lang;
+function ContentPanel({ deckId, item, readOnly, locked, onUnlock, onChange, onToggleHidden, canReset, onReset, onResize, width, lang, review, onReviewError, onCopy, tab, onTab, commentCount, comments }: {
+  deckId: string; onCopy: () => void; item: EditorSlide | null; readOnly: boolean; locked: boolean; onUnlock: () => void; lang: Lang;
   tab: "editor" | "comments"; onTab: (t: "editor" | "comments") => void; commentCount: number; comments: React.ReactNode;
   review: ReviewProps; onReviewError: (m: string) => void;
   onChange: (props: Record<string, unknown>) => void; onToggleHidden: () => void;
@@ -830,7 +879,7 @@ function ContentPanel({ deckId, item, readOnly, locked, onUnlock, onChange, onTo
             {readOnly && !review.canReview[lang] && (
               <div className="ed-note">
                 <p>You can view, present and share this deck. To change it, make your own copy.</p>
-                <button type="button" className="ed-btn ed-btn-sm" onClick={() => copyAction(deckId)}>Make a copy</button>
+                <button type="button" className="ed-btn ed-btn-sm" onClick={onCopy}>Make a copy</button>
               </div>
             )}
             {readOnly && review.canReview[lang] && (

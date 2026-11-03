@@ -16,6 +16,7 @@ import { deckVersions, decks, shareLinks, users } from "@/db/schema";
 import { opensByLink } from "./analytics";
 import { pickTheme, publishedThemes } from "./themes";
 import { resolveSlides } from "@/content/resolve";
+import { enabledLangs, onlyLangs } from "@/deck/i18n";
 import type { SignedInUser } from "./auth";
 import { reviewState } from "./reviews";
 import { getDeckVersions, liveSlidesOf } from "./decks";
@@ -87,7 +88,8 @@ export async function createShareLink(deckId: string, input: CreateLinkInput, us
   const version = draft ?? published;
   if (!version) throw new Error("This deck has nothing to share yet");
 
-  const slides = (await resolveSlides(version.slides, liveSlidesOf)).filter((s) => !s.hidden);
+  // Frozen with the languages the deck offers today (own decks: the ones the owner turned on).
+  const slides = onlyLangs((await resolveSlides(version.slides, liveSlidesOf)).filter((s) => !s.hidden), enabledLangs(deck));
   const state = await reviewState(deckId);
 
   const password = input.password === "generate" ? generatePassword()
