@@ -1008,6 +1008,8 @@ select.nd-input { appearance: none; -webkit-appearance: none; padding-right: 36p
 .studio-ask-head, .studio-ask-foot { display: flex; align-items: center; gap: 16px; justify-content: space-between; flex-wrap: wrap; }
 .studio-kind { display: flex; gap: 16px; font-size: 14px; }
 .studio-kind label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+/* Browsers give radios a top margin, which sits them below the label text. */
+.studio-kind input { margin: 0; flex: none; accent-color: var(--blue); }
 .studio-ask textarea, .studio-decide textarea { font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; resize: vertical; background: #fff; width: 100%; }
 .studio-ask textarea:focus, .studio-decide textarea:focus { outline: 2px solid var(--blue); outline-offset: -1px; }
 .studio-queue { max-width: 1080px; margin: 0 auto 28px; }
