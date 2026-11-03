@@ -1,9 +1,10 @@
 "use client";
+import Link from "next/link";
 import { useActionState, useRef, useTransition } from "react";
 import { decideAction, dismissAction, requestAction, type Result } from "./actions";
 
 /** "Ask for something new": a layout or a theme, in your own words. */
-export function RequestForm() {
+export function RequestForm({ kind = "layout" }: { kind?: "layout" | "theme" | "rule" }) {
   const [state, action, pending] = useActionState(async (prev: Result, form: FormData) => {
     const r = await requestAction(prev, form);
     if (r.ok) ref.current?.reset();
@@ -13,16 +14,20 @@ export function RequestForm() {
   return (
     <form ref={ref} action={action} className="studio-ask card">
       <div className="studio-ask-head">
-        <b>Ask for something new</b>
+        <span className="studio-ask-title">
+          <b>Ask for something new</b>
+          <Link href="/studio/rules" className="studio-rules-link">Studio rules →</Link>
+        </span>
         <span className="studio-kind">
-          <label><input type="radio" name="kind" value="layout" defaultChecked /> Slide layout</label>
-          <label><input type="radio" name="kind" value="theme" /> Theme</label>
+          <label><input type="radio" name="kind" value="layout" defaultChecked={kind === "layout"} /> Slide layout</label>
+          <label><input type="radio" name="kind" value="theme" defaultChecked={kind === "theme"} /> Theme</label>
+          <label><input type="radio" name="kind" value="rule" defaultChecked={kind === "rule"} /> Rule change</label>
         </span>
       </div>
       <textarea name="prompt" rows={3} required maxLength={4000}
         placeholder="e.g. A comparison slide: Coins.ph vs. two alternatives, five rows, our column highlighted." />
       <div className="studio-ask-foot">
-        <span className={`hint${state.error ? " warn" : ""}`}>{state.error ?? state.ok ?? "Claude builds it as a proposal on this page for you to approve."}</span>
+        <span className={`hint${state.error ? " warn" : ""}`}>{state.error ?? state.ok ?? "Layouts and themes come back here as proposals to approve; rule changes go into the Studio rules."}</span>
         <button className="btn primary" disabled={pending}>{pending ? "Sending…" : "Send request"}</button>
       </div>
     </form>

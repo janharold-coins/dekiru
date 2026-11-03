@@ -63,6 +63,8 @@ export default async function ProposalPage({ params, searchParams }: { params: P
             <b>Brief</b>
             <p>{p.brief}</p>
             {p.changes && <><b>Changed in rev {p.revision}</b><p>{p.changes}</p></>}
+            <b>Studio rules</b>
+            <p>{p.exceptions ? <>Exceptions: {p.exceptions}</> : "Follows all of them."} <Link href="/studio/rules" className="studio-rules-link">Read the rules</Link></p>
             {p.kind === "layout" && (
               <>
                 <b>How it works</b>

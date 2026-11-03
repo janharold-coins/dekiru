@@ -5,6 +5,8 @@ import { ClientQuote, clientQuoteMeta } from "./layouts/ClientQuote";
 
 /**
  * Studio proposals: layouts and themes Claude built for review, not yet in the library.
+ * Every proposal follows the Studio rules (./STUDIO.md: 8-point grid, centred and non-overlapping content,
+ * the type scale; helpers in ./grid.ts). Where one gives way, say so in `exceptions`.
  * Add one per request (newest first). When changes are asked for, edit it in place, bump `revision`
  * and say what changed in `changes`: the Studio then shows it as for review again.
  * Once approved, a layout moves into src/deck/patterns + registry.ts (and templates); a theme is
@@ -21,6 +23,8 @@ interface Base {
   /** What changed in this revision, for revisions after the first. */
   changes?: string;
   date: string; // YYYY-MM-DD
+  /** Studio rules this proposal doesn't follow, and why (asked for, a Figma frame, or optical alignment). */
+  exceptions?: string;
 }
 export interface LayoutProposal extends Base { kind: "layout"; entry: PatternEntry; examples: SlideData[] }
 export interface ThemeProposal extends Base { kind: "theme"; tokens: ThemeTokens }
@@ -28,7 +32,9 @@ export type Proposal = LayoutProposal | ThemeProposal;
 
 export const proposals: Proposal[] = [
   {
-    id: "client-quote", kind: "layout", name: "Client quote", revision: 1, date: "2026-11-03",
+    id: "client-quote", kind: "layout", name: "Client quote", revision: 2, date: "2026-11-03",
+    changes: "Rebuilt on the Studio rules: one block centred between logo and footer, spacing on the 8-point grid, sizes from the type scale (quote h2 72/88, mark h1, name body, eyebrow and role caption). Added a four-line example to show longer quotes don't collide with the attribution.",
+    exceptions: "The quote mark's box is cropped to 64 (g(8)) instead of its 112 line, because the glyph sits at the top of its line and would otherwise leave a visible gap above the quote.",
     brief: "Example to show how the Studio works (not requested): a slide for one client testimonial: their words large, with name and role. Light background, fits the content slides.",
     entry: { meta: clientQuoteMeta, Component: ClientQuote },
     examples: [
@@ -36,6 +42,14 @@ export const proposals: Proposal[] = [
         id: "client-quote", pattern: "client-quote", props: {
           eyebrow: "What clients say",
           quote: "A short quote from the client about the result they got, in their own words, in two or three lines.",
+          name: "Client name",
+          role: "Role, Company",
+        },
+      },
+      {
+        id: "client-quote-long", pattern: "client-quote", props: {
+          eyebrow: "Longest quote the layout takes",
+          quote: "A longer quote from the client, up to four lines: what they needed, what changed after working with us, and the result they saw in their own words.",
           name: "Client name",
           role: "Role, Company",
         },

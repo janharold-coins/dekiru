@@ -13,7 +13,11 @@ export async function requestAction(_prev: Result, form: FormData): Promise<Resu
     return { error: (e as Error).message };
   }
   revalidatePath("/studio");
-  return { ok: "Sent. Ask Claude to check the Studio and it will build this as a proposal here." };
+  return {
+    ok: form.get("kind") === "rule"
+      ? "Sent. Ask Claude to check the Studio and it will update the rules."
+      : "Sent. Ask Claude to check the Studio and it will build this as a proposal here.",
+  };
 }
 
 export async function dismissAction(id: string): Promise<void> {

@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // The Studio rules page reads the rules file at request time (src/studio/STUDIO.md).
+  outputFileTracingIncludes: { "/studio/rules": ["./src/studio/STUDIO.md"] },
 };
 
 export default nextConfig;

@@ -17,7 +17,8 @@ function mustUse(u: SignedInUser | null) {
   if (!canUseStudio(u)) throw new StudioError("Only admins and people with Studio access can use the Studio.");
 }
 
-export type RequestKind = "layout" | "theme";
+export type RequestKind = "layout" | "theme" | "rule";
+export const KIND_LABEL: Record<RequestKind, string> = { layout: "Layout", theme: "Theme", rule: "Rule change" };
 export type Decision = "approved" | "changes_requested" | "rejected";
 export type Status = "waiting" | Decision;
 
@@ -29,13 +30,19 @@ export async function addRequest(u: SignedInUser | null, kind: RequestKind, prom
   mustUse(u);
   const text = prompt.trim();
   if (!text) throw new StudioError("Describe what you'd like.");
-  if (kind !== "layout" && kind !== "theme") throw new StudioError("Pick a layout or a theme.");
+  if (!(kind in KIND_LABEL)) throw new StudioError("Pick a layout, a theme or a rule change.");
   await db().insert(studioRequests).values({ kind, prompt: text.slice(0, 4000), authorId: u?.id ?? null });
 }
 
 export async function dismissRequest(u: SignedInUser | null, id: string) {
   mustUse(u);
   await db().update(studioRequests).set({ closedAt: new Date() }).where(eq(studioRequests.id, id));
+}
+
+/** Claude closes a request it answered without a proposal (a rule change): `npm run studio -- close <id>`. */
+export async function closeRequest(id: string) {
+  const rows = await db().update(studioRequests).set({ closedAt: new Date() }).where(eq(studioRequests.id, id)).returning({ id: studioRequests.id });
+  if (!rows.length) throw new StudioError(`No request "${id}".`);
 }
 
 /** Requests no proposal answers yet and nobody dismissed, oldest first: what Claude has to build. */
