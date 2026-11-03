@@ -3,7 +3,7 @@
  *   npm run studio
  * Lists open requests (build each as a proposal in src/studio/proposals.ts, with `request` set to its id),
  * proposals sent back with changes (revise, bump `revision`, fill `changes`), and approved layouts
- * still to move into the library. Every proposal follows src/studio/STUDIO.md (rule-change requests edit it).
+ * still to move into the library (move them straight away: approval means it ships, see src/studio/proposals.ts). Every proposal follows src/studio/STUDIO.md (rule-change requests edit it).
  *   npm run studio -- close <request id>    closes a request answered without a proposal (a rule change)
  * Images attached to a change request are saved to .studio/attachments/ (git-ignored) so Claude can open them.
  */
@@ -36,7 +36,7 @@ async function main() {
     }
   }
   const ship = rows.filter((r) => r.status === "approved" && r.p.kind === "layout" && !patterns[r.p.entry.meta.id]);
-  console.log(`\nApproved layouts not yet in the library (${ship.length})`);
+  console.log(`\nApproved layouts to move into the library now (${ship.length}), with the Tune line from their approval`);
   for (const { p } of ship) console.log(`  ${p.id}`);
   const waiting = rows.filter((r) => r.status === "waiting").map((r) => r.p.id);
   console.log("\nRules: src/studio/STUDIO.md (rule changes: edit it, log the change at the bottom, then close the request)");

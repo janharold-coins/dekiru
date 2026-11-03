@@ -1,7 +1,7 @@
 import type { PatternEntry } from "@/deck/registry";
 import type { ThemeTokens } from "@/deck/theme";
 import type { SlideData } from "@/deck/types";
-import { ClientQuote, clientQuoteMeta } from "./layouts/ClientQuote";
+import { ClientQuote, clientQuoteMeta } from "@/deck/patterns/ClientQuote";
 
 /**
  * Studio proposals: layouts and themes Claude built for review, not yet in the library.
@@ -9,8 +9,10 @@ import { ClientQuote, clientQuoteMeta } from "./layouts/ClientQuote";
  * the type scale; helpers in ./grid.ts). Where one gives way, say so in `exceptions`.
  * Add one per request (newest first). When changes are asked for, edit it in place, bump `revision`
  * and say what changed in `changes`: the Studio then shows it as for review again.
- * Once approved, a layout moves into src/deck/patterns + registry.ts (and templates); a theme is
- * created on approval and can be removed here after.
+ * New layouts live in ./layouts/ while they're reviewed. Approval puts a layout in the library: Claude moves it to
+ * src/deck/patterns, registers it in registry.ts, adds its first example to the templates (src/content/templates.ts)
+ * and builds in any Tune line from the approval, without asking again. The proposal stays here, pointing at the
+ * library entry, so its review history stays on the Studio. A theme is created and published on approval.
  */
 interface Base {
   id: string;
@@ -32,7 +34,7 @@ export type Proposal = LayoutProposal | ThemeProposal;
 
 export const proposals: Proposal[] = [
   {
-    id: "client-quote", kind: "layout", name: "Client quote", revision: 3, date: "2026-11-03",
+    id: "client-quote", kind: "layout", name: "Client quote", revision: 3, date: "2026-11-03", // in the library, with the Golden Ratio scale it was approved with
     brief: "Example to show how the Studio works (not requested): a slide for one client testimonial: their words large, with name and role. Light background, fits the content slides.",
     changes: "Balanced spacing: every gap is 32, measured between visible edges (text trimmed to cap height and baseline), so the quote mark and the orange rule each have equal space above and below. The mark is now a shape with an exact 48px height instead of a font glyph with empty space under it. Name and role pair at 16.",
     entry: { meta: clientQuoteMeta, Component: ClientQuote },

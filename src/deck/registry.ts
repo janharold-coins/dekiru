@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 import type { PatternMeta } from "./types";
 import { Agenda, agendaMeta } from "./patterns/Agenda";
 import { CardGrid, cardGridMeta } from "./patterns/CardGrid";
+import { ClientQuote, clientQuoteMeta } from "./patterns/ClientQuote";
 import { Closing, closingMeta } from "./patterns/Closing";
 import { Cover, coverMeta } from "./patterns/Cover";
 import { CtaContact, ctaMeta } from "./patterns/CtaContact";
@@ -31,6 +32,7 @@ export const patterns: Record<string, PatternEntry> = {
   timeline: { meta: timelineMeta, Component: Timeline },
   "logo-wall": { meta: logoWallMeta, Component: LogoWall },
   "statement-highlights": { meta: statementMeta, Component: StatementHighlights },
+  "client-quote": { meta: clientQuoteMeta, Component: ClientQuote },
   "product-index": { meta: productIndexMeta, Component: ProductIndex },
   "product-hero": { meta: productHeroMeta, Component: ProductHero },
   "product-detail": { meta: productDetailMeta, Component: ProductDetail },

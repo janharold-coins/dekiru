@@ -40,10 +40,12 @@ export const TYPE: Record<TypeStep, { size: number; line: number; track: number;
  * full line height. Browsers without text-box (Firefox, for now) show slightly larger gaps; nothing overlaps.
  *
  * Size, line height and the bottom edge read CSS variables first (--st-<step>-size, --st-<step>-line, --st-under),
- * so the Studio's Tune card can preview another scale live; without them the values above apply.
+ * so the Studio's Tune card can preview another scale live; without them the values above apply. A layout
+ * approved with another scale passes it as `sizes` (scaleSizes("golden") from ./scales).
  */
-export function type(step: TypeStep, weight: 400 | 500 | 600 | 700, color?: string, family?: Parameters<typeof t>[5]): CSSProperties {
-  const s = TYPE[step];
+export function type(step: TypeStep, weight: 400 | 500 | 600 | 700, color?: string, family?: Parameters<typeof t>[5],
+  sizes: Record<TypeStep, { size: number; line: number }> = TYPE): CSSProperties {
+  const s = { ...TYPE[step], ...sizes[step] };
   const size = `var(--st-${step}-size, ${s.size}px)`;
   return {
     ...t(s.size, s.line / s.size, +(s.size * s.track).toFixed(2), weight, color, family),

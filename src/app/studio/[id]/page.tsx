@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { hasDb } from "@/db/client";
+import { patterns } from "@/deck/registry";
 import { RenderSlide } from "@/deck/RenderSlide";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
 import { ThemeScope } from "@/deck/ThemeScope";
@@ -8,6 +9,7 @@ import { checkTheme, normalizeTokens } from "@/deck/theme";
 import { requireUser } from "@/lib/auth";
 import { canUseStudio, decisionsOf, STATUS_LABEL, statusOf } from "@/lib/studio";
 import { pickTheme, publishedThemes } from "@/lib/themes";
+import { templates } from "@/content/templates";
 import { proposal } from "@/studio/proposals";
 import { Nav } from "../../Nav";
 import { layoutSamples } from "../../library/themes/samples";
@@ -30,6 +32,10 @@ export default async function ProposalPage({ params, searchParams }: { params: P
   const look = pickTheme(themes, theme);
   const samples = p.kind === "theme" ? await layoutSamples(user?.id ?? null) : [];
   const issues = p.kind === "theme" ? checkTheme(normalizeTokens(p.tokens)) : [];
+  // Approved layouts go into the library (Claude moves them on its next check; see proposals.ts).
+  const listed = p.kind === "layout" && !!patterns[p.entry.meta.id];
+  const library = p.kind === "layout" && status === "approved"
+    ? { listed, template: listed ? templates.find((t) => t.slide.pattern === p.entry.meta.id)?.id : undefined } : null;
   return (
     <main className="shell">
       <Nav on="studio" user={user} />
@@ -38,6 +44,9 @@ export default async function ProposalPage({ params, searchParams }: { params: P
         <h1>{p.name}</h1>
         <span className="tag">{p.kind === "theme" ? "Theme" : "Layout"}</span>
         <span className={`tag${status === "waiting" || status === "changes_requested" ? " warn" : ""}`}>{STATUS_LABEL[status]}</span>
+        {library && (library.template
+          ? <Link className="tag" href={`/library/templates/${library.template}`}>In the library →</Link>
+          : <span className="tag">{library.listed ? "In the library" : "Joins the library on Claude's next Studio check"}</span>)}
         <span className="mono">rev {p.revision} · {p.date}</span>
       </header>
       <TuneProvider defaultGap={TUNE_GAP}>
