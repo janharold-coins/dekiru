@@ -6,7 +6,7 @@ import { deckCounts, listPeople, ROLES } from "@/lib/people";
 import { Nav } from "../Nav";
 import { PageHero } from "../PageHero";
 import { RoleSelect } from "./RoleSelect";
-import { ThemeAccess } from "./ThemeAccess";
+import { StudioAccess, ThemeAccess } from "./ThemeAccess";
 import { ReviewAccess } from "./ReviewAccess";
 import { ALL_SCOPES } from "@/lib/reviews";
 
@@ -23,12 +23,12 @@ export default async function PeoplePage() {
   return (
     <main className="shell">
       <Nav on="people" user={user} />
-      <PageHero title="People">Everyone who has signed in, with their role, theme access and what they may review.</PageHero>
+      <PageHero title="People">Everyone who has signed in, with their role, theme and Studio access, and what they may review.</PageHero>
       <dl className="roles-key">
         {ROLES.map((r) => <div key={r}><dt>{r[0].toUpperCase() + r.slice(1)}</dt><dd>{ROLE_HELP[r]}</dd></div>)}
       </dl>
-      <table className="links people" style={{ maxWidth: 1080 }}>
-        <thead><tr><th>Name</th><th>Email</th><th>Decks</th><th>Role</th><th>Themes</th><th>Can review</th></tr></thead>
+      <table className="links people" style={{ maxWidth: 1240 }}>
+        <thead><tr><th>Name</th><th>Email</th><th>Decks</th><th>Role</th><th>Themes</th><th>Studio</th><th>Can review</th></tr></thead>
         <tbody>
           {people.map((p) => (
             <tr key={p.id}>
@@ -37,6 +37,7 @@ export default async function PeoplePage() {
               <td><Decks n={counts.get(p.id) ?? 0} href={user?.id === p.id ? "/?tab=mine" : `/?tab=employees&owner=${p.id}`} /></td>
               <td><RoleSelect userId={p.id} role={p.role} roles={ROLES} /></td>
               <td><ThemeAccess userId={p.id} allowed={p.canEditThemes} admin={p.role === "admin"} /></td>
+              <td><StudioAccess userId={p.id} allowed={p.canUseStudio} admin={p.role === "admin"} /></td>
               <td><ReviewAccess userId={p.id} scopes={p.reviewScopes} admin={p.role === "admin"} options={ALL_SCOPES} /></td>
             </tr>
           ))}

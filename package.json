@@ -11,7 +11,8 @@
     "db:migrate": "tsx scripts/prepare-db.ts",
     "db:seed": "tsx scripts/db-seed.ts",
     "db:studio": "drizzle-kit studio",
-    "user:role": "tsx scripts/user-role.ts"
+    "user:role": "tsx scripts/user-role.ts",
+    "studio": "tsx scripts/studio.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "^2.3.1",

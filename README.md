@@ -83,6 +83,16 @@ Code: `src/lib/share.ts`, `src/lib/analytics.ts`, `src/app/decks/[id]/present/` 
 - Code: `src/deck/i18n.ts` (entries, fingerprint, overlay, status), `RenderSlide lang`, `checkOverflow(slide, lang)`, `deckText` / `setTranslation` in `src/lib/editing.ts`, `src/app/s/[slug]/Viewer.tsx`. Re-seeding a master from Figma carries its translations over by slide id.
 - **Editing a translation:** with Chinese or Thai selected, the content form shows the translated text and saves corrections as you type (whatever differs from the English is the slide's overlay; putting a field back to the English wording un-translates it; undo works). Switch to English to change the original. The Present button goes full screen on click, shows "Opening presentation…" and opens in the language the editor is previewing (`?lang=`). Later: record the language a visit used; more languages (add to `LANGUAGES` and a script font).
 
+## Studio (new layouts and themes)
+
+A private page (`/studio`, **Studio** in the header) where new slide layouts and themes are requested and approved before they reach the library. Admins always see it; anyone else needs **Can use Studio** ticked on the People page. Everyone else gets a 404.
+
+- **Ask:** type a request on the page (slide layout or theme), or ask Claude in chat. Requests queue under "Requested" until a proposal answers them; Dismiss drops one.
+- **Claude builds:** run `npm run studio` to see open requests, proposals sent back with changes, and approved layouts still to ship. A proposal is code in `src/studio/proposals.ts` (layouts in `src/studio/layouts/`), with real example props and `request` set to the request's id. It renders with the real renderer (`RenderSlide entry=…`) but is **not** in the registry, so decks and the connector can't use it yet.
+- **Review:** each proposal page shows every example (layouts: in any published theme; themes: every master layout) with the brief, budgets and readability checks. **Approve**, **Request changes** (with a note) or **Reject**. Decisions are per revision. When Claude revises a proposal it bumps `revision` and fills `changes`, so it shows under **For review** again.
+- **After approval:** an approved **theme** is published to Library → Themes right away (when the approver can edit themes). An approved **layout** moves into `src/deck/patterns/` + `registry.ts` (and `scripts/build-templates.py` for a template). Then remove it from `proposals.ts`.
+- Data: `studio_requests`, `studio_decisions`, `users.can_use_studio` (migration 0014). Code: `src/lib/studio.ts`, `src/app/studio/`, `scripts/studio.ts`.
+
 ## Hosting notes
 
 - `vercel.json` pins the functions to **Singapore (sin1)**, next to the Neon database (ap-southeast-1): every page makes several queries, and from the default US region each one costs a ~200 ms round trip, which is what made Present take seconds to open.

@@ -46,6 +46,8 @@ export const users = pgTable("users", {
   role: role("role").notNull().default("member"),
   /** May create and edit themes (admins always can). Set on the People page. */
   canEditThemes: boolean("can_edit_themes").notNull().default(false),
+  /** May open the Studio, where new layouts and themes are requested and approved (admins always can). */
+  canUseStudio: boolean("can_use_studio").notNull().default(false),
   /** What this person may review (see src/lib/reviews.ts): "employee", "company", "lang:zh", … Admins review everything. */
   reviewScopes: jsonb("review_scopes").$type<string[]>().notNull().default([]),
   createdAt: created(),
@@ -396,3 +398,35 @@ export const deckComments = pgTable(
   (t) => [index("deck_comments_slide").on(t.deckId, t.slideId, t.createdAt)],
 );
 
+/**
+ * Studio (src/lib/studio.ts): people with Studio access ask for a new layout or theme; Claude builds it as a
+ * proposal in code (src/studio/proposals.ts) and the requester approves, asks for changes or rejects it.
+ * A request is open until a proposal answers it.
+ */
+export const studioRequests = pgTable(
+  "studio_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    kind: text("kind").notNull(), // "layout" | "theme"
+    prompt: text("prompt").notNull(),
+    authorId: uuid("author_id").references(() => users.id, { onDelete: "set null" }),
+    closedAt: timestamp("closed_at", { withTimezone: true }), // dismissed by the author, or answered
+    createdAt: created(),
+  },
+  (t) => [index("studio_requests_open").on(t.closedAt, t.createdAt)],
+);
+
+/** Decisions on a proposal, newest wins. `revision` is the proposal's revision when decided: a newer one reopens it. */
+export const studioDecisions = pgTable(
+  "studio_decisions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    proposalId: text("proposal_id").notNull(),
+    revision: integer("revision").notNull(),
+    decision: text("decision").notNull(), // "approved" | "changes_requested" | "rejected"
+    note: text("note"),
+    byId: uuid("by_id").references(() => users.id, { onDelete: "set null" }),
+    createdAt: created(),
+  },
+  (t) => [index("studio_decisions_proposal").on(t.proposalId, t.createdAt)],
+);
