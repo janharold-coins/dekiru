@@ -32,11 +32,25 @@ export const TYPE: Record<TypeStep, { size: number; line: number; track: number;
 /**
  * Text style for one step of the scale. Wraps the deck's t(), so theme text flipping and translated line heights
  * still apply. The wrap is set as `text-wrap-style` (not the `text-wrap` shorthand), so a `whiteSpace` spread
- * after it (keepBreaks, noWrap) keeps it. Browsers without support simply wrap as usual.
+ * after it (keepBreaks, noWrap) keeps it.
+ *
+ * The box is trimmed to the letters (`text-box: trim-both cap alphabetic`): its top is the cap height of the
+ * first line and its bottom the baseline of the last, so the line height's invisible half-leading no longer
+ * adds to the gaps around it. A 32 gap then looks like 32. Lines inside a paragraph keep their full line height.
+ * Browsers without text-box (Firefox, for now) show slightly larger gaps; nothing overlaps.
  */
 export function type(step: TypeStep, weight: 400 | 500 | 600 | 700, color?: string, family?: Parameters<typeof t>[5]): CSSProperties {
   const s = TYPE[step];
-  return { ...t(s.size, s.line / s.size, +(s.size * s.track).toFixed(2), weight, color, family), textWrapStyle: s.wrap };
+  return {
+    ...t(s.size, s.line / s.size, +(s.size * s.track).toFixed(2), weight, color, family),
+    textWrapStyle: s.wrap, textBox: "trim-both cap alphabetic",
+  };
+}
+
+/** The opening quote mark as a shape with an exact box, so space above and below it is what the grid says. */
+export function QuoteMark({ height = g(6), color }: { height?: number; color: string }) {
+  return createElement("svg", { "aria-hidden": true, viewBox: "0 0 88 64", height, width: (height * 88) / 64, style: { display: "block", flex: "none" } },
+    createElement("path", { fill: color, d: "M0 64V36C0 15 11 3 32 0v13c-10 3-15 9-16 19h16v32H0Zm48 0V36C48 15 59 3 80 0v13c-10 3-15 9-16 19h16v32H48Z" }));
 }
 
 /**

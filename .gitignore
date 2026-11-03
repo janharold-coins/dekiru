@@ -45,3 +45,6 @@ next-env.d.ts
 
 # example env file is committed
 !.env.example
+
+# Studio images saved by `npm run studio` for Claude
+/.studio/

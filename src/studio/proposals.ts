@@ -32,10 +32,9 @@ export type Proposal = LayoutProposal | ThemeProposal;
 
 export const proposals: Proposal[] = [
   {
-    id: "client-quote", kind: "layout", name: "Client quote", revision: 2, date: "2026-11-03",
-    changes: "Rebuilt on the Studio rules: one block centred between logo and footer, spacing on the 8-point grid, sizes from the type scale (quote h2 72/88, mark h1, name body, eyebrow and role caption). Added a four-line example to show longer quotes don't collide with the attribution.",
-    exceptions: "The quote mark's box is cropped to 64 (g(8)) instead of its 112 line, because the glyph sits at the top of its line and would otherwise leave a visible gap above the quote.",
+    id: "client-quote", kind: "layout", name: "Client quote", revision: 3, date: "2026-11-03",
     brief: "Example to show how the Studio works (not requested): a slide for one client testimonial: their words large, with name and role. Light background, fits the content slides.",
+    changes: "Balanced spacing: every gap is 32, measured between visible edges (text trimmed to cap height and baseline), so the quote mark and the orange rule each have equal space above and below. The mark is now a shape with an exact 48px height instead of a font glyph with empty space under it. Name and role pair at 16.",
     entry: { meta: clientQuoteMeta, Component: ClientQuote },
     examples: [
       {

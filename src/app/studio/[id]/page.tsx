@@ -59,6 +59,7 @@ export default async function ProposalPage({ params, searchParams }: { params: P
           )}
         </div>
         <aside className="studio-side">
+          <DecisionForm id={p.id} revision={p.revision} />
           <section className="card studio-box">
             <b>Brief</b>
             <p>{p.brief}</p>
@@ -80,7 +81,6 @@ export default async function ProposalPage({ params, searchParams }: { params: P
             )}
             {issues.length > 0 && <><b>Readability</b><ul className="studio-budgets">{issues.map((i, n) => <li key={n} className="hint warn">{i.message}</li>)}</ul></>}
           </section>
-          <DecisionForm id={p.id} revision={p.revision} />
           {history.length > 0 && (
             <section className="card studio-box">
               <b>History</b>
@@ -90,6 +90,14 @@ export default async function ProposalPage({ params, searchParams }: { params: P
                     <span>{DECIDED[h.decision] ?? h.decision} rev {h.revision}</span>
                     <span className="mono">{h.by ?? "—"} · {h.createdAt.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
                     {h.note && <p>{h.note}</p>}
+                    {h.images.length > 0 && (
+                      <span className="studio-thumbs">
+                        {h.images.map((img, n) => (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <a key={img} href={`/studio/attachments/${img}`} target="_blank" rel="noreferrer"><img src={`/studio/attachments/${img}`} alt={`Image ${n + 1} with this decision`} /></a>
+                        ))}
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>

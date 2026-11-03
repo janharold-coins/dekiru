@@ -1,6 +1,6 @@
-import { asc, desc, eq, isNull } from "drizzle-orm";
+import { asc, desc, eq, inArray, isNull } from "drizzle-orm";
 import { db } from "@/db/client";
-import { studioDecisions, studioRequests, users } from "@/db/schema";
+import { studioAttachments, studioDecisions, studioRequests, users } from "@/db/schema";
 import { proposal, proposals, type Proposal } from "@/studio/proposals";
 import type { SignedInUser } from "./auth";
 import { canEditThemes, createTheme, publishTheme, publishedThemes, saveThemeDraft } from "./themes";
@@ -55,12 +55,30 @@ export async function openRequests() {
   return rows.filter((r) => !answered.has(r.id));
 }
 
+/** Images on a decision: resized in the browser (StudioForms), at most MAX_IMAGES, each under MAX_IMAGE_BYTES. */
+export const MAX_IMAGES = 6;
+export const MAX_IMAGE_BYTES = 1_500_000;
+const IMAGE_TYPES = ["image/webp", "image/png", "image/jpeg"];
+export interface NewImage { mime: string; bytes: Buffer }
+
 export async function decisionsOf(proposalId?: string) {
-  return db()
-    .select({ proposalId: studioDecisions.proposalId, revision: studioDecisions.revision, decision: studioDecisions.decision, note: studioDecisions.note, createdAt: studioDecisions.createdAt, by: users.name })
+  const rows = await db()
+    .select({ id: studioDecisions.id, proposalId: studioDecisions.proposalId, revision: studioDecisions.revision, decision: studioDecisions.decision, note: studioDecisions.note, createdAt: studioDecisions.createdAt, by: users.name })
     .from(studioDecisions).leftJoin(users, eq(users.id, studioDecisions.byId))
     .where(proposalId ? eq(studioDecisions.proposalId, proposalId) : undefined)
     .orderBy(desc(studioDecisions.createdAt));
+  const files = rows.length
+    ? await db().select({ id: studioAttachments.id, decisionId: studioAttachments.decisionId }).from(studioAttachments)
+      .where(inArray(studioAttachments.decisionId, rows.map((r) => r.id))).orderBy(asc(studioAttachments.createdAt))
+    : [];
+  return rows.map((r) => ({ ...r, images: files.filter((f) => f.decisionId === r.id).map((f) => f.id) }));
+}
+
+/** One attached image (served at /studio/attachments/<id> to people with Studio access). */
+export async function attachment(id: string) {
+  if (!/^[0-9a-f-]{36}$/.test(id)) return null;
+  const [row] = await db().select({ mime: studioAttachments.mime, data: studioAttachments.data }).from(studioAttachments).where(eq(studioAttachments.id, id)).limit(1);
+  return row ? { mime: row.mime, bytes: Buffer.from(row.data, "base64") } : null;
 }
 type DecisionRow = Awaited<ReturnType<typeof decisionsOf>>[number];
 
@@ -75,13 +93,18 @@ export function statusOf(p: Proposal, rows: DecisionRow[]): { status: Status; la
  * Records a decision on the current revision. Approving a theme also adds it to the library (published),
  * when the person may edit themes; otherwise the approval is recorded and a theme editor adds it.
  */
-export async function decide(u: SignedInUser | null, id: string, decision: Decision, note: string) {
+export async function decide(u: SignedInUser | null, id: string, decision: Decision, note: string, images: NewImage[] = []) {
   mustUse(u);
   const p = proposal(id);
   if (!p) throw new StudioError(`No proposal "${id}".`);
   if (!["approved", "changes_requested", "rejected"].includes(decision)) throw new StudioError("Unknown decision.");
   const text = note.trim();
-  if (decision === "changes_requested" && !text) throw new StudioError("Say what should change.");
+  if (decision === "changes_requested" && !text && !images.length) throw new StudioError("Say what should change, or add an image.");
+  if (images.length > MAX_IMAGES) throw new StudioError(`Up to ${MAX_IMAGES} images.`);
+  for (const img of images) {
+    if (!IMAGE_TYPES.includes(img.mime)) throw new StudioError("Images must be PNG, JPEG or WebP.");
+    if (img.bytes.length > MAX_IMAGE_BYTES) throw new StudioError("An image is too large.");
+  }
   let added: string | undefined;
   if (decision === "approved" && p.kind === "theme" && canEditThemes(u)) {
     const existing = (await publishedThemes()).find((t) => t.name === p.name);
@@ -89,7 +112,11 @@ export async function decide(u: SignedInUser | null, id: string, decision: Decis
     await saveThemeDraft(u, added, { tokens: p.tokens, note: `Approved in the Studio (rev ${p.revision})` });
     await publishTheme(u, added);
   }
-  await db().insert(studioDecisions).values({ proposalId: id, revision: p.revision, decision, note: text || null, byId: u?.id ?? null });
+  const [row] = await db().insert(studioDecisions)
+    .values({ proposalId: id, revision: p.revision, decision, note: text || null, byId: u?.id ?? null }).returning({ id: studioDecisions.id });
+  if (images.length) {
+    await db().insert(studioAttachments).values(images.map((img) => ({ decisionId: row.id, mime: img.mime, data: img.bytes.toString("base64") })));
+  }
   return { themeId: added };
 }
 

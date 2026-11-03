@@ -5,9 +5,11 @@
  * proposals sent back with changes (revise, bump `revision`, fill `changes`), and approved layouts
  * still to move into the library. Every proposal follows src/studio/STUDIO.md (rule-change requests edit it).
  *   npm run studio -- close <request id>    closes a request answered without a proposal (a rule change)
+ * Images attached to a change request are saved to .studio/attachments/ (git-ignored) so Claude can open them.
  */
 import { hasDb, MISSING_DB_HELP } from "@/db/client";
-import { closeRequest, decisionsOf, openRequests, statusOf } from "@/lib/studio";
+import { mkdir, writeFile } from "node:fs/promises";
+import { attachment, closeRequest, decisionsOf, openRequests, statusOf } from "@/lib/studio";
 import { patterns } from "@/deck/registry";
 import { proposals } from "@/studio/proposals";
 
@@ -22,7 +24,17 @@ async function main() {
   for (const r of requests) console.log(`  [${r.kind}] ${r.id}  ${r.email ?? "—"}  ${r.createdAt.toISOString().slice(0, 10)}\n    ${r.prompt.replace(/\n/g, "\n    ")}`);
   const changes = rows.filter((r) => r.status === "changes_requested");
   console.log(`\nChanges requested (${changes.length})`);
-  for (const { p, latest } of changes) console.log(`  ${p.id} rev ${p.revision}: ${latest?.note ?? ""}`);
+  for (const { p, latest } of changes) {
+    console.log(`  ${p.id} rev ${p.revision}: ${latest?.note ?? "(no note)"}`);
+    for (const [n, img] of (latest?.images ?? []).entries()) {
+      const file = await attachment(img);
+      if (!file) continue;
+      await mkdir(".studio/attachments", { recursive: true });
+      const path = `.studio/attachments/${p.id}-rev${p.revision}-${n + 1}.${file.mime.split("/")[1]}`;
+      await writeFile(path, file.bytes);
+      console.log(`    image: ${path}`);
+    }
+  }
   const ship = rows.filter((r) => r.status === "approved" && r.p.kind === "layout" && !patterns[r.p.entry.meta.id]);
   console.log(`\nApproved layouts not yet in the library (${ship.length})`);
   for (const { p } of ship) console.log(`  ${p.id}`);

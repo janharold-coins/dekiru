@@ -430,3 +430,16 @@ export const studioDecisions = pgTable(
   },
   (t) => [index("studio_decisions_proposal").on(t.proposalId, t.createdAt)],
 );
+
+/** Images attached to a Studio decision (pasted or dropped into the note), resized in the browser. Base64. */
+export const studioAttachments = pgTable(
+  "studio_attachments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    decisionId: uuid("decision_id").notNull().references(() => studioDecisions.id, { onDelete: "cascade" }),
+    mime: text("mime").notNull(),
+    data: text("data").notNull(),
+    createdAt: created(),
+  },
+  (t) => [index("studio_attachments_decision").on(t.decisionId)],
+);

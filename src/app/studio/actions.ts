@@ -1,7 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth";
-import { addRequest, decide, dismissRequest, isStudioDecision, type RequestKind } from "@/lib/studio";
+import { addRequest, decide, dismissRequest, isStudioDecision, type NewImage, type RequestKind } from "@/lib/studio";
 
 export type Result = { error?: string; ok?: string };
 
@@ -31,7 +31,11 @@ export async function decideAction(id: string, _prev: Result, form: FormData): P
   const decision = String(form.get("decision"));
   if (!isStudioDecision(decision)) return { error: "Unknown decision." };
   try {
-    const { themeId } = await decide(user, id, decision, String(form.get("note") ?? ""));
+    const images: NewImage[] = await Promise.all(
+      form.getAll("images").filter((f): f is File => f instanceof File && f.size > 0)
+        .map(async (f) => ({ mime: f.type, bytes: Buffer.from(await f.arrayBuffer()) })),
+    );
+    const { themeId } = await decide(user, id, decision, String(form.get("note") ?? ""), images);
     revalidatePath("/studio");
     revalidatePath(`/studio/${id}`);
     if (themeId) revalidatePath("/library/themes");

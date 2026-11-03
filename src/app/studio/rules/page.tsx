@@ -19,6 +19,8 @@ export default async function StudioRulesPage() {
       <p className="crumb"><Link href="/studio">← Studio</Link></p>
       <div className="studio-rules">
         <aside className="card studio-box">
+          <b>Instructions for Claude</b>
+          <p>Claude follows these rules whenever it builds or revises a proposal. You don&apos;t apply them yourself; they set what Claude does.</p>
           <b>Change a rule</b>
           <p>On the Studio page, choose <b>Rule change</b> and describe it. Claude updates the rules and notes the change at the bottom of this page. New proposals follow the change from then on.</p>
           <Link href="/studio?ask=rule" className="btn">Ask for a rule change</Link>

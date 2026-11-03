@@ -106,6 +106,13 @@
       "when": 1793684453761,
       "tag": "0014_studio",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1793688860050,
+      "tag": "0015_studio_attachments",
+      "breakpoints": true
     }
   ]
 }

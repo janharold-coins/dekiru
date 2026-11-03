@@ -1,6 +1,6 @@
 # Studio rules
 
-Every Studio proposal (`src/studio/proposals.ts`) follows these rules. Read this before building or revising one.
+**These are instructions for Claude.** Claude follows them every time it builds or revises a Studio proposal (`src/studio/proposals.ts`), and reads this file first. People don't need to apply them by hand: they set what Claude does, and anyone with Studio access can ask to change them.
 
 This page shows at **Studio → Studio rules** (`/studio/rules`). To change a rule, ask on the Studio page (**Rule change**) or in chat. Claude edits this file, adds a line under **Changes** below, and closes the request with `npm run studio -- close <id>`. Changes to the shared helpers in `src/studio/grid.ts` (such as how text wraps) reach every proposal at once. Other changes apply when a proposal is next revised.
 
@@ -14,6 +14,8 @@ Whenever a rule gives way, say which one and why in the proposal's `exceptions`,
 ## 1. Spacing: 8-point grid
 
 - Every distance on the slide is a multiple of 8: positions, widths, heights, gaps, padding, radii, rule thicknesses above 4px. Slide px are 1920×1080 design px.
+- **Spacing is measured between visible edges,** the way it's measured in Figma: from the top of the capitals to the bottom of the baseline, not from the line box. `type()` trims every text box to its letters (`text-box: trim-both cap alphabetic`), so the invisible half-leading of the line height never adds to a gap. Non-text marks (quote marks, icons, arrows) are shapes with an exact box, like `<QuoteMark>`, never font glyphs that carry empty space.
+- **Spacing is balanced.** An element sits with the same space above and below it: a 48 gap above a title means a 48 gap below it. Separators (rules, quote marks, dividers) are centred in their gap. A tight pair that reads as one unit, such as name and role or a number and its label, gets a smaller inner gap (8 or 16), but the pair's outer gaps are still equal.
 - 4 is allowed as a half step, but only inside a component (icon-to-label, chip padding). Never between blocks.
 - Use `g(n)` from `src/studio/grid.ts` (n × 8) instead of typing numbers. `g(3)` means 24, so a stray `27` stands out in review.
 - Horizontal safe area: content runs from x 80 to x 1840 (`SAFE.left` / `SAFE.right`). Columns and gutters inside it are on the grid too.
@@ -23,7 +25,7 @@ Whenever a rule gives way, say which one and why in the proposal's `exceptions`,
 
 - **Nothing overlaps** unless it is a deliberate layer, such as a background image, a ghost number or a glow. Text never overlaps text, chrome or another block, at any length the budgets allow.
 - Build the content as **one block** (a flex column, or a grid) with grid gaps, not as separate absolutely placed items with fixed tops. Then longer text pushes the next item down instead of running into it.
-- **Centre the block vertically** in the content band, y 200 to 912 (`BAND`), which sits between the logo and the footer. Use `<Band>` from `src/studio/grid.ts`. When line heights and gaps are on the grid, the block's height is a multiple of 8, so the centred offset lands on 4 at worst; that's fine.
+- **Centre the block vertically** in the content band, y 200 to 912 (`BAND`), which sits between the logo and the footer. Use `<Band>` from `src/studio/grid.ts`. Because text is trimmed to its letters, the block's height isn't a multiple of 8, and its centred offset may land between grid lines. That's expected: the gaps are what stay on the grid.
 - Top-aligned or bottom-aligned content only when the request asks for it or a Figma layout shows it.
 - Set budgets (`maxChars`, `maxLines`, `maxItems`) so that the longest allowed text still fits the band without overlap. Check it with a long example in `examples`, not just a short one.
 
@@ -52,3 +54,4 @@ Sizes come from this scale only (`TYPE` in `src/studio/grid.ts`). Every line hei
 
 - 2026-11-03: First rules: 8-point grid, centred content with no overlap, one type scale.
 - 2026-11-03: Text wraps automatically: `balance` for headings (display to h3), `pretty` for running text (lead to micro). Applies to every proposal built with `type()`.
+- 2026-11-03: Spacing is balanced (equal space above and below an element) and measured between visible edges: `type()` trims text to cap height and baseline; marks and icons are exact shapes (`<QuoteMark>`).
