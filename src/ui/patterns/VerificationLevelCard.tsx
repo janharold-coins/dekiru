@@ -14,7 +14,7 @@ import { Tag } from "../components/Tag";
  */
 export const verificationLevelCardOrigin: FigmaOrigin = {
   variants: ["Style", "Status", "Type", "Expand", "Device"],
-  sources: [{ status: "canonical", library: "KYC - KYB (file-local, unpublished)", set: "Component 2", mainNode: "21099:34179" }],
+  sources: [{ status: "canonical", library: "KYC - KYB (file-local, unpublished)", set: "Component 2", mainNode: "21099:34179", preview: "/ui/sources/level-card-kyc-21099-34179.png", url: "https://www.figma.com/design/sm9kOVLwixDucqoX7etLI4/KYC---KYB?node-id=21099-34179" }],
 };
 
 export interface Requirement { icon: IconName; text: string }

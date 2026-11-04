@@ -9,9 +9,9 @@ import type { FigmaOrigin } from "../types";
 export const statusBarOrigin: FigmaOrigin = {
   variants: ["Dark", "island"],
   sources: [
-    { status: "canonical", library: "unknown (not App V2, Foundation V2 or Web Revamp V2)", set: "Status Bar 状态栏", mainNode: "2:18171", libraryNode: "3823:46707", note: "56px; first KYC screen" },
-    { status: "candidate", library: "KYC - KYB (file-local?)", set: "Status Bar", mainNode: "20638:28683", note: "44px, no variant properties; Failed screen" },
-    { status: "candidate", library: "[App] Component library V2", set: "Status Bar", setKey: "07d7a4c9dc45c0e4741bf130ae78cff437613098", updatedAt: "2026-10-25" },
+    { status: "canonical", library: "unknown (not App V2, Foundation V2 or Web Revamp V2)", set: "Status Bar 状态栏", mainNode: "2:18171", libraryNode: "3823:46707", preview: "/ui/sources/status-bar-56-kyc-20638-29176.png", url: "https://www.figma.com/design/sm9kOVLwixDucqoX7etLI4/KYC---KYB?node-id=20638-29176", note: "56px; first KYC screen" },
+    { status: "candidate", library: "KYC - KYB (file-local?)", set: "Status Bar", mainNode: "20638:28683", preview: "/ui/sources/status-bar-44-kyc-21100-46630.png", url: "https://www.figma.com/design/sm9kOVLwixDucqoX7etLI4/KYC---KYB?node-id=21100-46630", note: "44px, no variant properties; Failed screen" },
+    { status: "candidate", library: "[App] Component library V2", set: "Status Bar", setKey: "07d7a4c9dc45c0e4741bf130ae78cff437613098", updatedAt: "2026-10-25", url: "https://www.figma.com/design/praz6iby9CKDJfCBHew816/-App--Component-library-V2?node-id=24-10989" },
   ],
 };
 

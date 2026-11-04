@@ -4,9 +4,9 @@ import type { FigmaOrigin } from "../types";
 export const coinsLogoOrigin: FigmaOrigin = {
   variants: ["Country", "Logo", "Text", "Padding"],
   sources: [
-    { status: "canonical", library: "Foundation Library V2", set: "Icon/Logo", mainNode: "22361:39411", libraryNode: "405:3284", note: "Code Connect set here." },
-    { status: "candidate", library: "Foundation Library V2", set: "Icon/Logo", setKey: "a8818784bc76b866af3e5a6489aff05af1208c68", updatedAt: "2026-10-20", note: "Foundation holds two Icon/Logo sets; one of them is the canonical node." },
-    { status: "candidate", library: "Foundation Library V2", set: "Icon/Logo", setKey: "4220c47d7533ddcc21b6bcb7e06e9c06d9c44483", updatedAt: "2026-09-09" },
+    { status: "canonical", library: "Foundation Library V2", set: "Icon/Logo", mainNode: "22361:39411", libraryNode: "405:3284", preview: "/ui/sources/logo-foundation-405-3284.png", url: "https://www.figma.com/design/3kFnLlMxm4UUBiBzntqZ54/Foundation-Library-V2?node-id=405-3284", note: "Code Connect set here." },
+    { status: "candidate", library: "Foundation Library V2", set: "Icon/Logo", setKey: "a8818784bc76b866af3e5a6489aff05af1208c68", updatedAt: "2026-10-20", url: "https://www.figma.com/design/3kFnLlMxm4UUBiBzntqZ54/Foundation-Library-V2?node-id=407-10210", note: "Foundation holds two Icon/Logo sets; one of them is the canonical node." },
+    { status: "candidate", library: "Foundation Library V2", set: "Icon/Logo", setKey: "4220c47d7533ddcc21b6bcb7e06e9c06d9c44483", updatedAt: "2026-09-09", url: "https://www.figma.com/design/3kFnLlMxm4UUBiBzntqZ54/Foundation-Library-V2?node-id=407-10210" },
   ],
 };
 

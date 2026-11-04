@@ -41,6 +41,10 @@ export interface FigmaSource {
    */
   status: "canonical" | "candidate" | "retired";
   note?: string;
+  /** A render of the source from Figma (public/ui/sources/*.png), so people can see what they are deciding on. */
+  preview?: string;
+  /** Where to open it in Figma: the component/set when its node is known, else its library page. */
+  url?: string;
 }
 
 /** Where a coded component came from: every Figma identity it answers to, one of them canonical. */

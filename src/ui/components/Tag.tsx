@@ -9,8 +9,8 @@ import type { FigmaOrigin } from "../types";
 export const tagOrigin: FigmaOrigin = {
   variants: ["Color", "Type", "Icon"],
   sources: [
-    { status: "canonical", library: "[Web] Revamp Library V2", set: "C-Tag/Rectangle", mainNode: "20286:21567", libraryNode: "29:736", note: "What the KYC screen uses; Code Connect set here." },
-    { status: "candidate", library: "[App] Component library V2", set: "Tag", setKey: "b0aeebaa3b8bf017cc28aa148491def9571ac59c", updatedAt: "2026-09-25" },
+    { status: "canonical", library: "[Web] Revamp Library V2", set: "C-Tag/Rectangle", mainNode: "20286:21567", libraryNode: "29:736", preview: "/ui/sources/tag-web-29-736.png", url: "https://www.figma.com/design/x1WmXmPBqry9bBTPlm9Abj/-Web--Revamp-Library-V2?node-id=29-736", note: "What the KYC screen uses; Code Connect set here." },
+    { status: "candidate", library: "[App] Component library V2", set: "Tag", setKey: "b0aeebaa3b8bf017cc28aa148491def9571ac59c", updatedAt: "2026-09-25", preview: "/ui/sources/tag-app-1895-20106.png", url: "https://www.figma.com/design/praz6iby9CKDJfCBHew816/-App--Component-library-V2?node-id=1895-20106" },
   ],
 };
 

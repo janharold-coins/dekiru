@@ -6,7 +6,7 @@ import type { FigmaOrigin } from "../types";
  */
 export const iconOrigin: FigmaOrigin = {
   variants: ["Name", "Form"],
-  sources: [{ status: "canonical", library: "Foundation Library V2", set: "1 Color", setKey: "36332540b928ba2ac21f1e722d25fe393db0941f", mainNode: "20074:18651", libraryNode: "1:595" }],
+  sources: [{ status: "canonical", library: "Foundation Library V2", set: "1 Color", setKey: "36332540b928ba2ac21f1e722d25fe393db0941f", mainNode: "20074:18651", libraryNode: "1:595", preview: "/ui/sources/icon-foundation-1-595.png", url: "https://www.figma.com/design/3kFnLlMxm4UUBiBzntqZ54/Foundation-Library-V2?node-id=1-595" }],
 };
 
 export const ICONS = {

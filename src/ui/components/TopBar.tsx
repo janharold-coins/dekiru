@@ -5,7 +5,7 @@ import { Icon } from "./Icon";
 /** [App] Component library V2 → "Nav bar/Top bar": Title × Left × Right. 48px, 16px side padding. */
 export const topBarOrigin: FigmaOrigin = {
   variants: ["Title", "Left", "Right"],
-  sources: [{ status: "canonical", library: "[App] Component library V2", set: "Nav bar/Top bar", setKey: "e42f4dedde8356f7819cee5cf582634120b98b78", mainNode: "20587:32072", libraryNode: "239:9680" }],
+  sources: [{ status: "canonical", library: "[App] Component library V2", set: "Nav bar/Top bar", setKey: "e42f4dedde8356f7819cee5cf582634120b98b78", mainNode: "20587:32072", libraryNode: "239:9680", preview: "/ui/sources/top-bar-app-239-9680.png", url: "https://www.figma.com/design/praz6iby9CKDJfCBHew816/-App--Component-library-V2?node-id=239-9680" }],
 };
 
 export interface TopBarProps { title?: string; left?: boolean; right?: boolean }
