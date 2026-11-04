@@ -40,6 +40,8 @@ Rule for the renderer: **instance with a main component → component; frame wit
 
 Same triage as decks: block / variant / pattern / component.
 
+**Patterns.** A repeated arrangement that is not itself a library component (a file-local component, or a frame copied across screens) is a **pattern**, as on the deck side: it lives in `src/ui/patterns/`, keyed by its local component key (or, for plain frames, by a fingerprint of its structure), and it is built **from** library components plus layout. The audit looks inside it and reports its composition: which library components it uses (coded as components, reused everywhere) and which parts are hand-built (layout, or a hygiene flag). A pattern whose insides are all library components is in good standing; one that redraws a Button by hand is flagged. Promoting a pattern to the library in Figma later is a rename of its key, not a rebuild.
+
 ## 5. Tokens
 
 `get_variable_defs` (Figma connector) returns the **variables** a node uses, as `name → value` (`icon/default/secondary → #949494`; colour, spacing, type).
@@ -58,8 +60,9 @@ Point it at a frame; it reports five lists and **stops**:
 |---|---|---|
 | **Known** | instances whose key is already coded | reused |
 | **New** | instances with a key not yet coded, by name and variant | built, once accepted |
+| **Patterns** | repeated arrangements that aren't library components (file-local components, copied frames), with their composition: library components inside, hand-built parts | built as patterns over the components they contain |
 | **Detached** | frames with no key that look like components | not built: "re-attach in Figma, or confirm as layout" |
-| **Local / duplicate** | a key that isn't from the library file | "swap for the library component, or accept as new" |
+| **Local / duplicate** | a one-off local component that duplicates a library one | "swap for the library component, or accept as new" |
 | **Tokens** | new or changed variables the frame uses | added / diffed |
 
 Nothing is coded until the list is accepted (Studio, or chat for the first screens). Design-file hygiene gets fixed in Figma, at the source, instead of being baked into code. The audit is useful on its own: a designer can run it on any screen to check library compliance.
@@ -69,6 +72,7 @@ Nothing is coded until the list is accepted (Studio, or chat for the first scree
 | | Location | Keyed by |
 |---|---|---|
 | Coded components | `src/ui/components/*.tsx` (+ `registry.ts`, like `src/deck/registry.ts`) | Figma component key |
+| Patterns | `src/ui/patterns/*.tsx`, composed from components | local component key, or structure fingerprint |
 | Tokens | `src/ui/tokens.json` | Figma variable name |
 | Screens | database, own tables (`screens`, `screen_versions`; decision 2 in the app-screens plan), with masters seeded from `src/content/screens/*.json` | Figma node id |
 | Code mapping for handoff | `src/ui/code-connect.json`: Figma key → `@coins/ui-widget` export, where one exists | Figma component key |

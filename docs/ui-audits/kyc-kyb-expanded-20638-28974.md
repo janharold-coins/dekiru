@@ -23,11 +23,18 @@ None. First screen.
 | `1 Color` (×15: lock, check marks, chevron, row icons) | **1 Color** icon set (`36332540…`) | Foundation V2 | one `Icon` component with a `name` prop |
 | `Icon/Logo/Light` | not found by search | ? | likely a Foundation logo asset; confirm |
 
+## Patterns (repeated arrangements built from library components)
+
+| Instances | Pattern | Composition |
+|---|---|---|
+| `Component 2`, `Component 3`, `Component 4` (the three level cards, 328 wide; file-local components with Figma's default names) | **Verification level card** → `src/ui/patterns/VerificationLevelCard` | **Library inside:** `Tag` (`C-Tag/Rectangle`, the "Level N" chip), `1 Color` icons ×8 (lock, chevron, row icons, check marks). **Hand-built:** title + description text, the divider `line`, the `Requirement:` rows (icon frame + text) and `Unlocks:` rows (label, optional amount, check), all plain frames → layout. **Flag:** the "Quick selfie check" icon slot holds four alternatives with three hidden, done by hand; should be an icon swap. In good standing otherwise: nothing inside redraws a library component. Promoting it to the App library later is a key rename, not a rebuild. |
+
+Decision (Jan, 2026-11-04): treat as a pattern, not as a local component to promote first.
+
 ## Local / duplicate (fix in Figma, or accept)
 
-| Instance | Finding |
+| Finding | |
 |---|---|
-| `Component 2`, `Component 3`, `Component 4` (the three level cards, 328 wide) | **File-local components** with Figma's default names; no match in any subscribed library. They are the main thing on the screen (title + tag + description, requirement rows, unlock rows with amounts and checks, expand chevron). Decision needed: promote to the App library as e.g. `Verification level card`, or accept as a screen-local component in Dekiru (coded once, keyed by their local key). |
 | The App library itself has **two `Button` component sets** (`8bc60634…` 2026-10-15 and `b211b8a8…` 2025-11-23) plus a lowercase `button` (`172d80af…`) | Library hygiene: which one is current? The instances on this screen must be keyed to the one actually used (needs the per-instance key, see below). |
 
 ## Detached / hand-built (layout, not components)
