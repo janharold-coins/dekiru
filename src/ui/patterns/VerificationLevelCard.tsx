@@ -9,8 +9,8 @@ import { Tag } from "../components/Tag";
  * components (Tag, 1 Color icons) plus layout; see docs/ui-audits/kyc-kyb-expanded-20638-28974.md.
  */
 export const verificationLevelCardOrigin: FigmaOrigin = {
-  library: "KYC - KYB (file-local)", set: "Component 2", mainNode: "21099:34179",
   variants: ["Style", "Status", "Type", "Expand", "Device"],
+  sources: [{ status: "canonical", library: "KYC - KYB (file-local, unpublished)", set: "Component 2", mainNode: "21099:34179" }],
 };
 
 export interface Requirement { icon: IconName; text: string }

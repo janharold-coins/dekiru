@@ -4,7 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { canUseStudio } from "@/lib/studio";
 import { screens } from "@/content/screens";
 import { ui } from "@/ui/registry";
-import type { Node } from "@/ui/types";
+import { canonical, type Node } from "@/ui/types";
 import { Nav } from "../../Nav";
 import { PageHero } from "../../PageHero";
 
@@ -41,11 +41,12 @@ export default async function UiScreenPage({ params }: PageProps<"/ui/[id]">) {
         <div style={{ maxWidth: 360 }}>
           <h2 style={{ marginTop: 0 }}>Built from</h2>
           <ul className="list">
-            {[...counts].map(([k, n]) => (
-              <li key={k}><strong>{ui[k].name}</strong> <span className="muted">× {n} · {ui[k].kind} · {ui[k].figma.set} ({ui[k].figma.library})</span></li>
-            ))}
+            {[...counts].map(([k, n]) => {
+              const src = canonical(ui[k].figma);
+              return <li key={k}><strong>{ui[k].name}</strong> <span className="muted">× {n} · {ui[k].kind} · {src.set} ({src.library})</span></li>;
+            })}
           </ul>
-          <p className="muted">Layout and text nodes carry no component; they come from the auto-layout of the frame.</p>
+          <p className="muted">Layout and text nodes carry no component; they come from the auto-layout of the frame. Device entries are OS chrome Dekiru draws itself.</p>
         </div>
       </div>
     </main>

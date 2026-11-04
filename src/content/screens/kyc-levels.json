@@ -68,7 +68,8 @@
       {
         "component": "bottom", "figma": "20638:29174",
         "props": { "type": "2_TextOnly", "status": "Default", "primary": "Start verification", "secondaryLead": "Representing a company?", "secondaryLink": "Apply for corporate verification" }
-      }
+      },
+      { "component": "home-indicator", "figma": "I20638:29174;4431:9135" }
     ]
   }
 }

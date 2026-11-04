@@ -4,8 +4,13 @@ import type { FigmaOrigin } from "../types";
 
 /** [App] Component library V2 → "Button": Type × Size × Status. The set in use on the KYC screens is main node 20531:26780. */
 export const buttonOrigin: FigmaOrigin = {
-  library: "[App] Component library V2", set: "Button", mainNode: "20531:26780", libraryNode: "3196:22767",
   variants: ["Type", "Size", "Status"],
+  sources: [
+    { status: "canonical", library: "[App] Component library V2", set: "Button", mainNode: "20531:26780", libraryNode: "3196:22767", note: "The set the KYC screen uses; Code Connect set here." },
+    { status: "candidate", library: "[App] Component library V2", set: "Button", setKey: "8bc60634c74e06391f76a267f4eb3fdf2b7a85e8", updatedAt: "2026-10-15", note: "May be the same set as the canonical one; the set key of node 3196:22767 settles it." },
+    { status: "candidate", library: "[App] Component library V2", set: "Button", setKey: "b211b8a82a4af616c95e19faf842471df32587cc", updatedAt: "2025-11-23" },
+    { status: "candidate", library: "[App] Component library V2", set: "button", setKey: "172d80af8a5145c1fce2c9a36edafd01e085b136", updatedAt: "2026-08-04" },
+  ],
 };
 
 export interface ButtonProps {

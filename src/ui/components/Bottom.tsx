@@ -5,11 +5,13 @@ import { Button } from "./Button";
 
 /**
  * [App] Component library V2 → "Bottom" (Status × Type × Keyboard × Left icon): the sticky footer that holds the
- * primary button, an optional text-only button, and the home indicator. Type 2_TextOnly = primary + text-only.
+ * primary button and an optional text-only button. Type 2_TextOnly = primary + text-only. In Figma the component
+ * also contains the home indicator and an optional number keyboard; those are OS chrome (ui-device: HomeIndicator,
+ * and a keyboard later), placed by the screen after this footer.
  */
 export const bottomOrigin: FigmaOrigin = {
-  library: "[App] Component library V2", set: "Bottom", mainNode: "20587:26257", libraryNode: "3436:20116",
   variants: ["Status", "Type", "Keyboard", "Left icon"],
+  sources: [{ status: "canonical", library: "[App] Component library V2", set: "Bottom", mainNode: "20587:26257", libraryNode: "3436:20116" }],
 };
 
 export interface BottomProps {
@@ -30,15 +32,9 @@ export function Bottom({ type: kind = "2_TextOnly", primary, secondary, secondar
     </>
   ));
   return (
-    <div style={{ display: "flex", flexDirection: "column", width: "100%", background: token("Fill/Float (25)") }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "16px 16px 8px" }}>
-        <Button fullWidth>{primary}</Button>
-        {kind === "2_TextOnly" && text && <Button type="Text-only" fullWidth>{text}</Button>}
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "22px 0 8px", overflow: "hidden" }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img alt="" src="/ui/chrome/home-indicator.svg" width={100} height={4} style={{ display: "block" }} />
-      </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "16px 16px 8px", width: "100%", boxSizing: "border-box", background: token("Fill/Float (25)") }}>
+      <Button fullWidth>{primary}</Button>
+      {kind === "2_TextOnly" && text && <Button type="Text-only" fullWidth>{text}</Button>}
     </div>
   );
 }

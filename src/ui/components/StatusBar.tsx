@@ -2,14 +2,16 @@ import { token, FONT_STACK } from "../tokens";
 import type { FigmaOrigin } from "../types";
 
 /**
- * "Status Bar 状态栏" (Dark × island). 56px tall; iOS time left, status icons right. Its library node 3823:46707 is in
- * none of App V2, Foundation V2 or Web Revamp V2 (Code Connect: node not found in each), so the screen's instance comes
- * from some other library; the App library has its own Status Bar set (07d7a4c9…).
+ * ui-device: the phone's status bar ("Status Bar 状态栏" in Figma: "ios时间栏"). OS chrome that designers drop into
+ * mockups, not part of our design: Dekiru draws it, never audits, maps or hands it off. Sources kept only so the
+ * audit recognises the instances on screens.
  */
 export const statusBarOrigin: FigmaOrigin = {
-  library: "unknown (not App V2, Foundation V2 or Web Revamp V2)", set: "Status Bar 状态栏", mainNode: "2:18171", libraryNode: "3823:46707",
   variants: ["Dark", "island"],
-  aliases: [{ library: "[App] Component library V2", set: "Status Bar", setKey: "07d7a4c9dc45c0e4741bf130ae78cff437613098" }],
+  sources: [
+    { status: "canonical", library: "unknown (not App V2, Foundation V2 or Web Revamp V2)", set: "Status Bar 状态栏", mainNode: "2:18171", libraryNode: "3823:46707" },
+    { status: "candidate", library: "[App] Component library V2", set: "Status Bar", setKey: "07d7a4c9dc45c0e4741bf130ae78cff437613098", updatedAt: "2026-10-25" },
+  ],
 };
 
 export interface StatusBarProps { dark?: boolean; island?: boolean; time?: string }

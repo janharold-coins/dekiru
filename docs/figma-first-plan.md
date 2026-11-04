@@ -28,7 +28,8 @@ instance on Frame B  →  componentKey "a1b2…"  →  same file, reused; overri
 
 - **Variants** (`Button/Primary/Large`, `Button/Secondary/Small`) are one component set → one coded `Button` with `variant` and `size` props. An unseen variant is an addition to the existing component, not a new one.
 - **Matching is by key only.** Never by name or by looks. Anything without a key is reported, not guessed.
-- **One component per real thing, whatever library it came from** (Jan, 2026-11-04). The app and web libraries both ship a Tag, a Status Bar, two Button sets; designers use either. Dekiru keeps one coded component and lists every Figma set that is the same thing as an **alias** identity (`FigmaOrigin.aliases`). The audit treats an instance of any alias as Known, and still reports which library it came from, so the libraries can converge into one over time. Nothing is built twice because Figma has it twice.
+- **One component per real thing, whatever library it came from** (Jan, 2026-11-04). The app and web libraries both ship a Tag, a Status Bar, two Button sets; designers use either, and nobody is sure which is current. Dekiru keeps one coded component with **every Figma source it has been matched to** (`FigmaOrigin.sources`), one marked `canonical`, the rest `candidate` until decided, `retired` once decided against. The audit treats an instance of any non-retired source as Known and reports which source it hit. The decision is made later, in Dekiru's **UI library page**, by picking the canonical source per component (changes what the audit recommends and where Code Connect points; rebuilds nothing). Nothing is built twice because Figma has it twice, and nothing is thrown away before anyone knows which is which.
+- **`ui-device`** (Jan, 2026-11-04): a third kind beside component and pattern, for anything beyond our design that the OS draws: status bar, home indicator, Android or iOS keyboards. Dekiru supplies these as frame chrome (as decks supply logo and footer). They are recognised on screens (so the audit doesn't flag them) but never audited against the libraries, mapped with Code Connect, or handed off.
 
 ## 4. Granularity
 
@@ -74,6 +75,7 @@ Nothing is coded until the list is accepted (Studio, or chat for the first scree
 |---|---|---|
 | Coded components | `src/ui/components/*.tsx` (+ `registry.ts`, like `src/deck/registry.ts`) | Figma component key |
 | Patterns | `src/ui/patterns/*.tsx`, composed from components | local component key, or structure fingerprint |
+| Device chrome (`ui-device`) | `src/ui/components/` with `kind: "device"` in the registry (StatusBar, HomeIndicator, keyboards later) | recognised by source, never mapped |
 | Tokens | `src/ui/tokens.json` | Figma variable name |
 | Screens | database, own tables (`screens`, `screen_versions`; decision 2 in the app-screens plan), with masters seeded from `src/content/screens/*.json` | Figma node id |
 | Code mapping for handoff | `src/ui/code-connect.json`: Figma key → `@coins/ui-widget` export, where one exists | Figma component key |

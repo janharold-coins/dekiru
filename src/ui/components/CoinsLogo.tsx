@@ -2,9 +2,12 @@ import type { FigmaOrigin } from "../types";
 
 /** "Icon/Logo/Light" (Country × Logo × Text × Padding): the Coins.ph mark with the PH badge, 40px. */
 export const coinsLogoOrigin: FigmaOrigin = {
-  // Foundation holds two "Icon/Logo" sets (a8818784… 2026-10-20 and 4220c47d… 2026-09-09); the library node 405:3284 says which once mapped from there.
-  library: "Foundation Library V2", set: "Icon/Logo", mainNode: "22361:39411", libraryNode: "405:3284",
   variants: ["Country", "Logo", "Text", "Padding"],
+  sources: [
+    { status: "canonical", library: "Foundation Library V2", set: "Icon/Logo", mainNode: "22361:39411", libraryNode: "405:3284", note: "Code Connect set here." },
+    { status: "candidate", library: "Foundation Library V2", set: "Icon/Logo", setKey: "a8818784bc76b866af3e5a6489aff05af1208c68", updatedAt: "2026-10-20", note: "Foundation holds two Icon/Logo sets; one of them is the canonical node." },
+    { status: "candidate", library: "Foundation Library V2", set: "Icon/Logo", setKey: "4220c47d7533ddcc21b6bcb7e06e9c06d9c44483", updatedAt: "2026-09-09" },
+  ],
 };
 
 export interface CoinsLogoProps { country?: "Philippines"; size?: number }

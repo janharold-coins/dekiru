@@ -19,24 +19,35 @@ export interface Screen {
   tree: Node;
 }
 
-/** Where a coded component came from: the Figma identity the audit matches on. */
-export interface FigmaOrigin {
+/** One Figma set (or component) a coded component has been matched to. */
+export interface FigmaSource {
   /** Library the main component lives in, as Figma names it. */
   library: string;
   /** Component set name in the library. */
   set: string;
   /** Component set key (from the library search); the stable identity across files. */
   setKey?: string;
-  /** Main component node id as seen from the screen's file (from the Code Connect pass). */
+  /** Main component node id as seen from a consuming file (from the Code Connect pass). */
   mainNode?: string;
-  /** The same component's node id inside the library file that defines it (Figma reports it when a mapping is attempted from a consuming file). Where Code Connect is set. */
+  /** The same component's node id inside the library file that defines it. Where Code Connect is set. */
   libraryNode?: string;
+  updatedAt?: string;
+  /**
+   * canonical: the source Dekiru considers current (one per component). candidate: also matched, not yet decided
+   * (the app and web libraries both ship a Tag; the App library has two Button sets). retired: decided against.
+   * Rule (Jan, 2026-11-04): one Dekiru component per real thing, whatever library it came from; keep every source,
+   * decide in Dekiru's UI library page once it's known which is which. The audit treats an instance of any
+   * non-retired source as Known and reports which source it hit.
+   */
+  status: "canonical" | "candidate" | "retired";
+  note?: string;
+}
+
+/** Where a coded component came from: every Figma identity it answers to, one of them canonical. */
+export interface FigmaOrigin {
+  sources: FigmaSource[];
   /** Variant axes the set has, so the audit can map instance properties to props. */
   variants?: string[];
-  /**
-   * Other Figma sets that are the same component (the app and web libraries both ship a Tag; designers use either).
-   * Rule (Jan, 2026-11-04): one Dekiru component per real thing, whatever library it came from. The audit treats an
-   * instance of any alias as Known.
-   */
-  aliases?: { library: string; set: string; setKey?: string; mainNode?: string; libraryNode?: string }[];
 }
+
+export const canonical = (o: FigmaOrigin) => o.sources.find((s) => s.status === "canonical") ?? o.sources[0];

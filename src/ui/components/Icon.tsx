@@ -5,8 +5,8 @@ import type { FigmaOrigin } from "../types";
  * SVGs are the library's own, exported from the screen (public/ui/icons); add a file per new name met.
  */
 export const iconOrigin: FigmaOrigin = {
-  library: "Foundation Library V2", set: "1 Color", setKey: "36332540b928ba2ac21f1e722d25fe393db0941f", mainNode: "20074:18651", libraryNode: "1:595",
   variants: ["Name", "Form"],
+  sources: [{ status: "canonical", library: "Foundation Library V2", set: "1 Color", setKey: "36332540b928ba2ac21f1e722d25fe393db0941f", mainNode: "20074:18651", libraryNode: "1:595" }],
 };
 
 export const ICONS = {

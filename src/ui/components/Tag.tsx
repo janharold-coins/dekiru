@@ -3,14 +3,15 @@ import { token, type } from "../tokens";
 import type { FigmaOrigin } from "../types";
 
 /**
- * Tag (Color × Type × Icon). The KYC screen's instance ("C-Tag/Rectangle") is the [Web] Revamp Library V2 set
- * (node 29:736 there); the App library ships its own Tag set (b0aeebaa…). They are the same component to Dekiru:
- * one Tag, both sets as its identity (the one-library rule).
+ * Tag (Color × Type × Icon). The KYC screen's instance ("C-Tag/Rectangle") is the [Web] Revamp Library V2 set;
+ * the App library ships its own Tag set. One Dekiru Tag, both sources kept until the canonical one is decided.
  */
 export const tagOrigin: FigmaOrigin = {
-  library: "[Web] Revamp Library V2", set: "C-Tag/Rectangle", mainNode: "20286:21567", libraryNode: "29:736",
   variants: ["Color", "Type", "Icon"],
-  aliases: [{ library: "[App] Component library V2", set: "Tag", setKey: "b0aeebaa3b8bf017cc28aa148491def9571ac59c" }],
+  sources: [
+    { status: "canonical", library: "[Web] Revamp Library V2", set: "C-Tag/Rectangle", mainNode: "20286:21567", libraryNode: "29:736", note: "What the KYC screen uses; Code Connect set here." },
+    { status: "candidate", library: "[App] Component library V2", set: "Tag", setKey: "b0aeebaa3b8bf017cc28aa148491def9571ac59c", updatedAt: "2026-09-25" },
+  ],
 };
 
 export interface TagProps {
