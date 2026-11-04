@@ -17,6 +17,8 @@ export const ICONS = {
   IdCard: "/ui/icons/id-card.svg",
   Selfie: "/ui/icons/selfie.svg",
   Income: "/ui/icons/income.svg",
+  Left: "/ui/icons/left.svg", // library name "Left" (back chevron)
+  Failed: "/ui/icons/failed-solid.svg", // library name "Failed", Form=Solid (red circle, white cross)
 } as const;
 export type IconName = keyof typeof ICONS;
 

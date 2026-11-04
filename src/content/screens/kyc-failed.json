@@ -1,0 +1,37 @@
+{
+  "id": "kyc-failed",
+  "title": "Account verification (Level 1 failed)",
+  "figma": { "file": "sm9kOVLwixDucqoX7etLI4", "node": "21100:46618", "name": "KYC - KYB → Failed" },
+  "device": { "width": 360, "height": 800 },
+  "tree": {
+    "component": "Stack", "figma": "21100:46618",
+    "children": [
+      { "component": "status-bar", "figma": "21100:46630", "props": { "height": 44 } },
+      { "component": "top-bar", "figma": "21100:46631", "props": { "left": true } },
+      {
+        "component": "Stack", "figma": "21100:46619", "props": { "padding": "16px 16px 0", "gap": 16 },
+        "children": [
+          { "component": "Text", "figma": "21100:46623", "props": { "style": "Line 1.5x/H2 20px-700", "color": "Text/Primary (950)", "text": "Account verification" } },
+          {
+            "component": "verification-level-card", "figma": "21100:46624",
+            "props": { "level": "L1", "status": "Failed", "expanded": false, "tag": "Level 1", "title": "Basic verification", "description": "Your address information has been rejected due to your street being invalid." }
+          },
+          {
+            "component": "verification-level-card", "figma": "21100:46625",
+            "props": { "level": "L2", "status": "Inactive", "expanded": false, "tag": "Level 2", "title": "Identity verification", "description": "3-5 mins to enjoy full withdrawal access and trade like a pro." }
+          },
+          {
+            "component": "verification-level-card", "figma": "21100:46626",
+            "props": { "level": "L3", "status": "Inactive", "expanded": false, "tag": "Level 3", "title": "Enhanced verification", "description": "Upgrade to premium limits for large-scale trading." }
+          }
+        ]
+      },
+      { "component": "Stack", "props": { "flex": 1 } },
+      {
+        "component": "bottom", "figma": "21100:54150",
+        "props": { "type": "2_TextOnly", "status": "Default", "primary": "Verify now", "secondary": "Check account limits", "secondaryType": "Secondary" }
+      },
+      { "component": "home-indicator", "figma": "I21100:54150;4431:9135" }
+    ]
+  }
+}

@@ -22,9 +22,11 @@ export interface BottomProps {
   secondary?: ReactNode;
   secondaryLead?: string;
   secondaryLink?: string;
+  /** How the second button is drawn: the library's Text-only, or the grey "Secondary" pill (see Button). */
+  secondaryType?: "Text-only" | "Secondary";
 }
 
-export function Bottom({ type: kind = "2_TextOnly", primary, secondary, secondaryLead, secondaryLink }: BottomProps) {
+export function Bottom({ type: kind = "2_TextOnly", primary, secondary, secondaryLead, secondaryLink, secondaryType = "Text-only" }: BottomProps) {
   const text = secondary ?? (secondaryLink && (
     <>
       {secondaryLead && <span style={{ color: token("Text/Secondary (500)") }}>{secondaryLead}</span>}
@@ -34,7 +36,7 @@ export function Bottom({ type: kind = "2_TextOnly", primary, secondary, secondar
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "16px 16px 8px", width: "100%", boxSizing: "border-box", background: token("Fill/Float (25)") }}>
       <Button fullWidth>{primary}</Button>
-      {kind === "2_TextOnly" && text && <Button type="Text-only" fullWidth>{text}</Button>}
+      {kind === "2_TextOnly" && text && <Button type={secondaryType} fullWidth>{text}</Button>}
     </div>
   );
 }

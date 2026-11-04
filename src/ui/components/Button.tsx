@@ -14,7 +14,11 @@ export const buttonOrigin: FigmaOrigin = {
 };
 
 export interface ButtonProps {
-  type?: "Primary" | "Text-only";
+  /**
+   * Primary and Text-only are the variants seen on the KYC screens. "Secondary" is the grey pill the Failed screen
+   * draws by overriding a Text-only instance's fill with Fill/Control (75) (audit: hand override, not a variant).
+   */
+  type?: "Primary" | "Secondary" | "Text-only";
   size?: "L";
   status?: "Default";
   children: ReactNode;
@@ -27,7 +31,7 @@ export function Button({ type: kind = "Primary", children, fullWidth }: ButtonPr
     <button type="button" style={{
       display: "flex", alignItems: "center", justifyContent: "center", height: 44, maxHeight: 44, padding: "12px 32px", borderRadius: 40, border: 0,
       width: fullWidth ? "100%" : undefined, minWidth: fullWidth ? undefined : 158, cursor: "pointer",
-      background: primary ? token("Core/Blue") : "transparent",
+      background: primary ? token("Core/Blue") : kind === "Secondary" ? token("Fill/Control (75)") : "transparent",
       ...(primary ? type("Line 1.5x/Subtitle 14px-700") : type("Line 1.5x/Subtitle 14px-600")),
       color: primary ? token("Text/Inverse") : token("Core/Brand"), textAlign: "center",
     }}>
