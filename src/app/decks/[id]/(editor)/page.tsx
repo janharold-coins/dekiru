@@ -10,6 +10,7 @@ import { inArray } from "drizzle-orm";
 import type { ReviewProps } from "../edit/Review";
 import { requireUser } from "@/lib/auth";
 import { publishedThemes } from "@/lib/themes";
+import { listDepartments } from "@/lib/departments";
 import { listComments } from "@/lib/comments";
 import { ViewAsBanner } from "../../../view-as/ViewAs";
 import { slideName } from "../Report";
@@ -31,7 +32,7 @@ export default async function DeckPage({ params, searchParams }: { params: Promi
     notFound();
   }
   const { deck } = found;
-  const themes = await publishedThemes();
+  const [themes, departments] = await Promise.all([publishedThemes(), listDepartments()]);
   const review = await reviewProps(id, user);
   const comments = hasDb() ? await listComments(id, user) : [];
 
@@ -57,11 +58,12 @@ export default async function DeckPage({ params, searchParams }: { params: Promi
     <DeckEditor
       key={`${deck.versionId}-${deck.status}`}
       deck={{ id: deck.id, title: deck.title, kind: deck.kind, hasDraft: deck.status === "draft", versionNumber: deck.versionNumber ?? null,
-        sentVersion: deck.sentVersionNumber ?? null, approvedVersion: deck.approvedVersionNumber ?? null, languages: deck.languages }}
+        sentVersion: deck.sentVersionNumber ?? null, approvedVersion: deck.approvedVersionNumber ?? null, languages: deck.languages, tags: deck.tags }}
       slides={slides}
       initialSlide={slides.some((s) => s.slide.id === slide) ? slide! : slides[0]?.slide.id ?? null}
       theme={deck.theme}
       themes={themes.map((t) => ({ id: t.id, name: t.name, tokens: t.tokens }))}
+      departments={departments}
       readOnly={!found.canEdit}
       review={review}
       initialComments={comments}

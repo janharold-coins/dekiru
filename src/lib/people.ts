@@ -6,7 +6,7 @@ import type { Role, SignedInUser } from "./auth";
 export const ROLES = roleEnum.enumValues as readonly Role[];
 
 export async function listPeople() {
-  return db().select({ id: users.id, email: users.email, name: users.name, image: users.image, role: users.role, canEditThemes: users.canEditThemes, canUseStudio: users.canUseStudio, reviewScopes: users.reviewScopes, createdAt: users.createdAt })
+  return db().select({ id: users.id, email: users.email, name: users.name, image: users.image, role: users.role, canEditThemes: users.canEditThemes, canUseStudio: users.canUseStudio, reviewScopes: users.reviewScopes, departmentId: users.departmentId, createdAt: users.createdAt })
     .from(users).orderBy(sql`case ${users.role} when 'admin' then 0 when 'manager' then 1 else 2 end`, users.createdAt);
 }
 

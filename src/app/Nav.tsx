@@ -6,6 +6,7 @@ import { Bell } from "./notifications/Bell";
 import { hasDb } from "@/db/client";
 import { listNotifications, unreadCount } from "@/lib/notifications";
 import { canUseStudio } from "@/lib/studio";
+import { ThemeToggle } from "./ThemeToggle";
 
 /** "Jan Harold Diaz" → "JD": first and last initials. */
 function initials(name: string) {
@@ -38,6 +39,7 @@ export async function Nav({ on, user }: { on?: "decks" | "library" | "people" | 
       </div>
       {user ? (
         <div className="app-account">
+          <ThemeToggle />
           {isAdmin && <ViewAsSelect role={user.role} />}
           <Bell items={items} unread={unread} />
           <div className="app-who">
@@ -55,7 +57,10 @@ export async function Nav({ on, user }: { on?: "decks" | "library" | "people" | 
           </SignOutButton>
         </div>
       ) : (
-        <span className="app-local">local · sign-in off</span>
+        <div className="app-account">
+          <ThemeToggle />
+          <span className="app-local">local · sign-in off</span>
+        </div>
       )}
     </header>
   );

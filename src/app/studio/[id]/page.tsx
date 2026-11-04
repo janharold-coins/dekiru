@@ -7,12 +7,15 @@ import { ScaledSlide } from "@/deck/frame/ScaledSlide";
 import { ThemeScope } from "@/deck/ThemeScope";
 import { checkTheme, normalizeTokens } from "@/deck/theme";
 import { requireUser } from "@/lib/auth";
-import { canUseStudio, decisionsOf, STATUS_LABEL, statusOf } from "@/lib/studio";
+import { canUseStudio, decisionsOf, remixSource, requestById, STATUS_LABEL, statusOf } from "@/lib/studio";
 import { pickTheme, publishedThemes } from "@/lib/themes";
 import { templates } from "@/content/templates";
 import { proposal } from "@/studio/proposals";
 import { Nav } from "../../Nav";
 import { layoutSamples } from "../../library/themes/samples";
+import { discardDraftAction } from "../actions";
+import { proposalSlides, remixThread } from "../remix";
+import { RemixEditor } from "../RemixEditor";
 import { DecisionForm } from "../StudioForms";
 import { TuneCard, TunedPreview, TuneProvider } from "../Tuner";
 
@@ -27,8 +30,18 @@ export default async function ProposalPage({ params, searchParams }: { params: P
   const user = await requireUser(`/studio/${id}`);
   const p = proposal(id);
   if (!p || !canUseStudio(user) || !hasDb()) notFound();
-  const [history, themes] = await Promise.all([decisionsOf(id), publishedThemes()]);
-  const { status } = statusOf(p, history);
+  const [history, themes, from] = await Promise.all([decisionsOf(id), publishedThemes(), p.remixOf ? remixSource(p.remixOf) : null]);
+  const { status, building } = statusOf(p, history);
+  // A remix draft opens in the remix editor until it's sent for review.
+  if (p.remixOf && status === "draft") {
+    const [req, from, canvas] = await Promise.all([p.request ? requestById(p.request) : null, remixSource(p.remixOf), proposalSlides(p, user?.id ?? null)]);
+    const name = from?.name ?? p.remixOf;
+    return (
+      <RemixEditor target={p.id} name={p.name} source={{ name, href: from?.href }}
+        status={building ? "Draft · Claude is building your last prompt" : `Draft · revision ${p.revision} ready`} building={building}
+        slides={canvas.slides} labels={canvas.labels} thread={await remixThread(req, p)} canSubmit={!building} discard={discardDraftAction.bind(null, p.id)} />
+    );
+  }
   const look = pickTheme(themes, theme);
   const samples = p.kind === "theme" ? await layoutSamples(user?.id ?? null) : [];
   const issues = p.kind === "theme" ? checkTheme(normalizeTokens(p.tokens)) : [];
@@ -43,11 +56,13 @@ export default async function ProposalPage({ params, searchParams }: { params: P
       <header className="studio-head">
         <h1>{p.name}</h1>
         <span className="tag">{p.kind === "theme" ? "Theme" : "Layout"}</span>
-        <span className={`tag${status === "waiting" || status === "changes_requested" ? " warn" : ""}`}>{STATUS_LABEL[status]}</span>
+        <span className={`tag${status === "waiting" || status === "draft" ? " warn" : ""}`}>{STATUS_LABEL[status]}</span>
         {library && (library.template
           ? <Link className="tag" href={`/library/templates/${library.template}`}>In the library →</Link>
           : <span className="tag">{library.listed ? "In the library" : "Joins the library on Claude's next Studio check"}</span>)}
         <span className="mono">rev {p.revision} · {p.date}</span>
+        {from && (from.href ? <Link className="tag" href={from.href}>Remix of {from.name}</Link> : <span className="tag">Remix of {from.name}</span>)}
+        {status === "approved" && <Link className="btn studio-remix" href={`/studio/remix?of=${encodeURIComponent(p.id)}`}>Remix</Link>}
       </header>
       <TuneProvider defaultGap={TUNE_GAP}>
       <div className="studio-detail">

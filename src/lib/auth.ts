@@ -24,6 +24,8 @@ export interface SignedInUser {
   canUseStudio?: boolean;
   /** What they may review (src/lib/reviews.ts); admins review everything. */
   reviewScopes?: string[];
+  /** Their department (src/lib/departments.ts), or null: the Decks home offers it as a quick tag filter. */
+  departmentId?: string | null;
   /** Set only while an admin is using "View as": their real role. `role` then holds the role being previewed. */
   realRole?: Role;
 }
@@ -140,8 +142,8 @@ export async function sessionUser(): Promise<SignedInUser | null> {
   const s = await auth().api.getSession({ headers: await headers() });
   if (!s) return null;
   const u = s.user as typeof s.user & { role?: Role; canEditThemes?: boolean };
-  const [row] = await db().select({ reviewScopes: users.reviewScopes, canUseStudio: users.canUseStudio }).from(users).where(eq(users.id, u.id)).limit(1);
-  return { id: u.id, email: u.email, name: u.name, image: u.image, role: u.role ?? "member", canEditThemes: Boolean(u.canEditThemes), reviewScopes: row?.reviewScopes ?? [], canUseStudio: Boolean(row?.canUseStudio) };
+  const [row] = await db().select({ reviewScopes: users.reviewScopes, canUseStudio: users.canUseStudio, departmentId: users.departmentId }).from(users).where(eq(users.id, u.id)).limit(1);
+  return { id: u.id, email: u.email, name: u.name, image: u.image, role: u.role ?? "member", canEditThemes: Boolean(u.canEditThemes), reviewScopes: row?.reviewScopes ?? [], canUseStudio: Boolean(row?.canUseStudio), departmentId: row?.departmentId ?? null };
 }
 
 /**

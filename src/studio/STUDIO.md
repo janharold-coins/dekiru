@@ -2,7 +2,7 @@
 
 **These are instructions for Claude.** Claude follows them every time it builds or revises a Studio proposal (`src/studio/proposals.ts`), and reads this file first. People don't need to apply them by hand: they set what Claude does, and anyone with Studio access can ask to change them.
 
-This page shows at **Studio → Studio rules** (`/studio/rules`). To change a rule, ask on the Studio page (**Rule change**) or in chat. Claude edits this file, adds a line under **Changes** below, and closes the request with `npm run studio -- close <id>`. Changes to the shared helpers in `src/studio/grid.ts` (such as how text wraps) reach every proposal at once. Other changes apply when a proposal is next revised.
+This page shows at **Studio → Studio rules** (`/studio/rules`). To change a rule, write it in **Rule prompts** beside the rules on that page, or ask in chat. Claude edits this file, adds a line under **Changes** below, and closes the request with `npm run studio -- close <id>`. Changes to the shared helpers in `src/studio/grid.ts` (such as how text wraps) reach every proposal at once. Other changes apply when a proposal is next revised.
 
 **When the rules give way**, in this order:
 1. **The request says otherwise.** For example, "pin the quote to the top" or "use 56px for the title".
@@ -59,3 +59,4 @@ Sizes come from this scale only (`TYPE` in `src/studio/grid.ts`). Every line hei
 - 2026-11-03: Text wraps automatically: `balance` for headings (display to h3), `pretty` for running text (lead to micro). Applies to every proposal built with `type()`.
 - 2026-11-03: Spacing is balanced (equal space above and below an element) and measured between visible edges: `type()` trims text to cap height and baseline; marks and icons are exact shapes (`<QuoteMark>`).
 - 2026-11-03: Text is trimmed to its descender line, not the baseline, so descenders keep their room (reviewer found baseline trim too tight). Tune card added: type scale, element spacing and text edge, previewed live and sent with the decision.
+- 2026-11-04: Rule changes are asked for in Rule prompts on the rules page (the Studio's request form no longer has a Rule change option).

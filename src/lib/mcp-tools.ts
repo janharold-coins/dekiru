@@ -13,8 +13,9 @@ import { getDeck, getDeckVersions, listDecks } from "./decks";
 import { publishedThemes } from "./themes";
 import {
   addSlide, canEdit, canView, checkSlides, deckRow, deckText, duplicateDeck, EditError, moveSlide, newDeck, publish,
-  removeSlide, setDeckTheme, setHidden, setTranslation, updateSlide, type SlideInput,
+  removeSlide, setDeckTags, setDeckTheme, setHidden, setTranslation, updateSlide, type SlideInput,
 } from "./editing";
+import { listDepartments, resolveDepartments } from "./departments";
 import { availableLangs, LANGUAGES, TARGET_LANGS } from "@/deck/i18n";
 import { reviewState, sendForReview } from "./reviews";
 
@@ -31,7 +32,9 @@ How to work
    shorter phrasing that keeps the meaning; if it can't fit, propose a different pattern. Never shrink text.
 5. Never invent figures, rates, corridors or claims. Take them from the masters or from what the person gives you.
    If a number is missing, ask.
-6. Share the preview link so the person can review. Send for review (publish_deck) only when they say so: it freezes
+6. Tags: decks can be tagged with departments (Legal, Training…) from a fixed list (list_decks → tags). When the person
+   says who a deck is for, pass tags to create_deck / copy_deck or use set_deck_tags. Never make up a tag that isn't listed.
+7. Share the preview link so the person can review. Send for review (publish_deck) only when they say so: it freezes
    the draft as a version and asks reviewers to approve it; the deck goes live once approved.
 
 Translations (Chinese zh, Thai th). Decks keep their English; a translation is a layer of text per slide that
@@ -71,17 +74,23 @@ const slideInput = z.union([
 export function registerTools(server: McpServer, user: SignedInUser) {
   server.registerTool("list_decks", {
     title: "List decks",
-    description: "Company master decks plus the person's own decks: id, title, slide count, whether they can edit it, and links.",
-    inputSchema: z.object({}),
+    description: "Company master decks plus the person's own decks: id, title, tags, slide count, whether they can edit it, and links. "
+      + "Also lists the departments decks can be tagged with. Pass tag to see only decks tagged with that department.",
+    inputSchema: z.object({ tag: z.string().optional().describe("A department name, e.g. \"Legal\". Only decks with this tag.") }),
     annotations: { readOnlyHint: true },
-  }, async () => run(async () => {
-    const decks = await listDecks({ viewerId: user.id });
-    return decks.map((d) => ({
-      id: d.id, title: d.title, kind: d.kind === "master" ? "company master" : "own deck",
-      slides: d.slides.filter((s) => !s.hidden).length, version: d.version, unsentChanges: d.hasDraft,
-      canEdit: d.kind === "master" ? user.role !== "member" : d.ownerId === user.id,
-      url: deckUrl(d.id),
-    }));
+  }, async ({ tag }) => run(async () => {
+    const want = tag ? (await resolveDepartments([tag]))[0] : null;
+    const decks = (await listDecks({ viewerId: user.id })).filter((d) => !want || d.tags.some((t) => t.id === want.id));
+    return {
+      tags: (await listDepartments()).map((d) => d.name),
+      decks: decks.map((d) => ({
+        id: d.id, title: d.title, kind: d.kind === "master" ? "company master" : "own deck",
+        tags: d.tags.map((t) => t.name),
+        slides: d.slides.filter((s) => !s.hidden).length, version: d.version, unsentChanges: d.hasDraft,
+        canEdit: d.kind === "master" ? user.role !== "member" : d.ownerId === user.id,
+        url: deckUrl(d.id),
+      })),
+    };
   }));
 
   server.registerTool("get_deck", {
@@ -102,7 +111,7 @@ export function registerTools(server: McpServer, user: SignedInUser) {
       !r ? "not reviewed" : r.status === "for_review" ? `for review (${r.level} of ${r.required} approvals)` : r.status.replace("_", " ");
     let n = 0;
     return {
-      id: deck.id, title: deck.title, kind: deck.kind, version: deck.version,
+      id: deck.id, title: deck.title, kind: deck.kind, version: deck.version, tags: deck.tags.map((t) => t.name),
       showing: deck.status === "draft" ? "draft (unsent changes)" : "sent version", canEdit: editable, url: deckUrl(deck.id),
       theme: { id: deck.theme.id, name: deck.theme.name },
       languages: deck.languages === null
@@ -164,11 +173,14 @@ export function registerTools(server: McpServer, user: SignedInUser) {
     inputSchema: z.object({
       source_deck_id: z.string(), title: z.string().optional().describe("e.g. \"Sales deck — Acme Remit\""),
       keep_translations: z.boolean().optional().describe("true: the copy offers the source's languages too. Default false (English only). Ask the person."),
+      tags: z.array(z.string()).optional().describe("Department names from list_decks → tags. Default: the source's tags."),
     }),
-  }, async ({ source_deck_id, title, keep_translations }) => run(async () => {
+  }, async ({ source_deck_id, title, keep_translations, tags }) => run(async () => {
+    const chosen = tags ? await resolveDepartments(tags) : null; // checked first, so a bad tag doesn't leave a stray copy
     const id = await duplicateDeck(user, source_deck_id, title, keep_translations ?? false);
+    if (chosen) await setDeckTags(user, id, chosen.map((d) => d.id));
     const copy = await getDeck(id);
-    return { deckId: id, url: deckUrl(id), languages: ["English", ...(copy?.languages ?? []).map((l) => LANGUAGES[l].english)], next: "Edit slides with update_slide / add_slide / remove_slide, then publish_deck (send for review) when the person says so." };
+    return { deckId: id, url: deckUrl(id), tags: copy?.tags.map((t) => t.name) ?? [], languages: ["English", ...(copy?.languages ?? []).map((l) => LANGUAGES[l].english)], next: "Edit slides with update_slide / add_slide / remove_slide, then publish_deck (send for review) when the person says so." };
   }));
 
   server.registerTool("create_deck", {
@@ -177,10 +189,26 @@ export function registerTools(server: McpServer, user: SignedInUser) {
       + "Products are added whole: any slide of a product (product-hero, its detail/flow, and slides that travel with it such as Corridor Readiness after Multi-Currency) brings all of them. "
       + "Product sections are built automatically where the first product sits: the section divider always, the product index when 3+ products (cut down to the picked ones), and pillar dividers when products span 2+ pillars; don't pick those yourself. "
       + "Agenda and section numbers: when the deck has 3+ level-1 sections, an agenda listing exactly those sections is added after the cover and the sections are numbered 01, 02, 03…; otherwise neither. Don't pick the agenda yourself.",
-    inputSchema: z.object({ title: z.string(), slides: z.array(slideInput).min(1) }),
-  }, async ({ title, slides }) => run(async () => {
+    inputSchema: z.object({
+      title: z.string(), slides: z.array(slideInput).min(1),
+      tags: z.array(z.string()).optional().describe("Department names from list_decks → tags, e.g. [\"Legal\"]."),
+    }),
+  }, async ({ title, slides, tags }) => run(async () => {
+    const chosen = tags ? await resolveDepartments(tags) : [];
     const id = await newDeck(user, title, slides as SlideInput[]);
-    return { deckId: id, url: deckUrl(id), note: "Created as v1 of the person's own deck. Further edits are drafts until sent for review." };
+    if (chosen.length) await setDeckTags(user, id, chosen.map((d) => d.id));
+    return { deckId: id, url: deckUrl(id), tags: chosen.map((d) => d.name), note: "Created as v1 of the person's own deck. Further edits are drafts until sent for review." };
+  }));
+
+  server.registerTool("set_deck_tags", {
+    title: "Set a deck's tags",
+    description: "Replace a deck's tags with these departments (names from list_decks → tags; [] removes all). "
+      + "Applies straight away: tags aren't part of the draft or a review. Same rule as editing: only admins and managers tag company masters.",
+    inputSchema: z.object({ deck_id: z.string(), tags: z.array(z.string()) }),
+  }, async ({ deck_id, tags }) => run(async () => {
+    const chosen = await resolveDepartments(tags);
+    await setDeckTags(user, deck_id, chosen.map((d) => d.id));
+    return { deckId: deck_id, tags: chosen.map((d) => d.name), url: deckUrl(deck_id) };
   }));
 
   server.registerTool("add_slide", {

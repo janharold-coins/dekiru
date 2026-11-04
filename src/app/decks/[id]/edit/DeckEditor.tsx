@@ -19,7 +19,7 @@ import { PublishDialog, PublishSplit } from "./Publish";
 import {
   saveTranslationAction, setLanguageAction,
   discardDraftAction, draftChangesAction, hideSlideAction, moveSlideAction, removeSlideAction, renameDeckAction, resetSlideAction, sendForReviewAction,
-  saveDeckStateAction, saveSlideAction, setThemeAction,
+  saveDeckStateAction, saveSlideAction, setTagsAction, setThemeAction,
 } from "./actions";
 import type { SeedSlide } from "@/content/resolve";
 import { DeckId } from "../../../DeckId";
@@ -35,6 +35,7 @@ export interface EditorSlide {
   from: { block: string; deck: string } | null;
 }
 interface ThemeOption { id: string; name: string; tokens: ThemeTokens }
+interface Tag { id: string; name: string }
 /** What undo/redo restores: the slides (order, content, hidden, links to approved slides) and the theme. */
 interface Snapshot { slides: EditorSlide[]; themeId: string }
 const HISTORY_LIMIT = 100;
@@ -76,10 +77,14 @@ const SAVE_DELAY = 700;
 const SLIDE_W = 1920;
 const SLIDE_H = 1080;
 
-export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: initialTheme, themes, readOnly = false, review, initialComments = [], initialLang = "en" }: {
+export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: initialTheme, themes, departments = [], readOnly = false, review, initialComments = [], initialLang = "en" }: {
   deck: { id: string; title: string; kind: "master" | "copy"; hasDraft: boolean; versionNumber: number | null; sentVersion: number | null; approvedVersion: number | null;
     /** Languages the deck offers besides English: null = company master (every language it holds); else what the owner turned on. */
-    languages: TargetLang[] | null };
+    languages: TargetLang[] | null;
+    /** Departments the deck is tagged for. */
+    tags: Tag[] };
+  /** Every department, for the Tags picker. */
+  departments?: Tag[];
   /** Review state and what the signed-in person may do about it (spec §7a). */
   review: ReviewProps;
   /** Comments on every slide of the deck (Comments tab). */
@@ -110,6 +115,15 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
     setLang(on ? l : "en");
     const r = await setLanguageAction(deck.id, l, on);
     if (r.error) { setLanguages(before); setLang("en"); setSave({ kind: "error", message: r.error }); }
+  };
+  // Tags apply straight away (they belong to the deck, not the draft), so they aren't part of undo.
+  const [tags, setTags] = useState<Tag[]>(deck.tags);
+  const toggleTag = async (t: Tag, on: boolean) => {
+    const before = tags;
+    const next = on ? [...tags, t].sort((a, b) => a.name.localeCompare(b.name)) : tags.filter((x) => x.id !== t.id);
+    setTags(next);
+    const r = await setTagsAction(deck.id, next.map((x) => x.id));
+    if (r.error) { setTags(before); setSave({ kind: "error", message: r.error }); }
   };
   // Make a copy: asks whether to keep the translations the deck offers; English-only decks copy straight away.
   const [copyAsk, setCopyAsk] = useState(false);
@@ -421,6 +435,7 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
         canUndo={historySize.undo > 0} canRedo={historySize.redo > 0} onUndo={undo} onRedo={redo}
         lang={lang} onLang={setLang} translations={deckTranslationStatus(slides.map((s) => s.slide))}
         languages={languages} onToggleLanguage={readOnly ? undefined : toggleLanguage} onCopy={startCopy}
+        tags={tags} departments={departments} onToggleTag={readOnly ? undefined : toggleTag}
         review={review} onReviewDialog={setReviewDialog} onReviewError={(m) => setSave({ kind: "error", message: m })}
         presentHref={`/decks/${deck.id}/present${lang !== "en" ? `?lang=${lang}` : ""}${selected && !selected.slide.hidden ? `#${presentNumber(selectedIndex)}` : ""}`}
       />
@@ -465,7 +480,7 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
 
 /* ================= Top bar ================= */
 
-function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save, hasDraft, publishing, onPublish, onDiscard, presentHref, canUndo, canRedo, onUndo, onRedo, lang, onLang, translations, languages, onToggleLanguage, onCopy, review, onReviewDialog, onReviewError }: {
+function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save, hasDraft, publishing, onPublish, onDiscard, presentHref, canUndo, canRedo, onUndo, onRedo, lang, onLang, translations, languages, onToggleLanguage, onCopy, tags, departments, onToggleTag, review, onReviewDialog, onReviewError }: {
   deck: { id: string; kind: "master" | "copy"; versionNumber: number | null; sentVersion: number | null; approvedVersion: number | null }; readOnly: boolean;
   title: string; onRename: (t: string) => void;
   themes: ThemeOption[]; theme: ThemeOption; onTheme: (id: string) => void;
@@ -473,6 +488,7 @@ function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save,
   canUndo: boolean; canRedo: boolean; onUndo: () => void; onRedo: () => void;
   lang: Lang; onLang: (l: Lang) => void; translations: ReturnType<typeof deckTranslationStatus>;
   languages: TargetLang[] | null; onToggleLanguage?: (l: TargetLang, on: boolean) => void; onCopy: () => void;
+  tags: Tag[]; departments: Tag[]; onToggleTag?: (t: Tag, on: boolean) => void;
   review: ReviewProps; onReviewDialog: (d: Dialog) => void; onReviewError: (m: string) => void;
 }) {
   const mac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
@@ -506,6 +522,7 @@ function TopBar({ deck, readOnly, title, onRename, themes, theme, onTheme, save,
       ) : <ThemePicker themes={themes} theme={theme} onTheme={onTheme} />}
         <LanguagePicker lang={lang} onLang={onLang} translations={translations} languages={languages} onToggle={onToggleLanguage} review={review}
           ctx={{ kind: deck.kind, hasDraft: !readOnly && hasDraft, sentVersion: deck.sentVersion, approvedVersion: deck.approvedVersion }} />
+        <TagPicker tags={tags} departments={departments} onToggle={onToggleTag} />
       </div>
 
       <div className="ed-actions">
@@ -565,6 +582,50 @@ function ThemePicker({ themes, theme, onTheme }: { themes: ThemeOption[]; theme:
             </button>
           ))}
           <p className="ed-menu-note">Switching saves to the draft. Send for review to make it live.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * "Tags: Legal, Training" — the departments the deck is for (People page keeps the list). Editors tick them
+ * here; it saves straight away. People who can't edit see the tags, or nothing when there are none.
+ */
+function TagPicker({ tags, departments, onToggle }: { tags: Tag[]; departments: Tag[]; onToggle?: (t: Tag, on: boolean) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent | KeyboardEvent) => {
+      if (e instanceof KeyboardEvent ? e.key === "Escape" : !ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", close);
+    return () => { document.removeEventListener("mousedown", close); document.removeEventListener("keydown", close); };
+  }, [open]);
+  const label = tags.length === 0 ? "None" : tags.length <= 2 ? tags.map((t) => t.name).join(", ") : `${tags[0].name} +${tags.length - 1}`;
+  if (!onToggle) {
+    if (!tags.length) return null;
+    return <span className="ed-theme"><span className="ed-theme-btn static" title={tags.map((t) => t.name).join(", ")}><span>Tags</span><span className="ed-tags-val">{label}</span></span></span>;
+  }
+  const on = new Set(tags.map((t) => t.id));
+  return (
+    <div className="ed-theme" ref={ref}>
+      <button type="button" className="ed-theme-btn" aria-haspopup="true" aria-expanded={open} onClick={() => setOpen((o) => !o)} title={tags.map((t) => t.name).join(", ") || undefined}>
+        <span>Tags</span><span className={`ed-tags-val${tags.length ? "" : " none"}`}>{label}</span>
+      </button>
+      {open && (
+        <div className="ed-menu-list center ed-tags-list" role="group" aria-label="Tags">
+          {departments.map((d) => (
+            <label key={d.id} className="ed-menu-item ed-tag-opt">
+              <input type="checkbox" checked={on.has(d.id)} onChange={(e) => onToggle(d, e.target.checked)} />
+              <span>{d.name}</span>
+            </label>
+          ))}
+          <p className="ed-menu-note">{departments.length
+            ? "Who the deck is for. Saves straight away; tags don't need a review."
+            : "No departments yet. Admins add them on the People page."}</p>
         </div>
       )}
     </div>

@@ -11,7 +11,7 @@ import {
 } from "@/lib/editing";
 import type { SeedSlide } from "@/content/resolve";
 import type { Lang, TargetLang } from "@/deck/i18n";
-import { setLanguage, setTranslation } from "@/lib/editing";
+import { setDeckTags, setLanguage, setTranslation } from "@/lib/editing";
 import { addComment, deleteComment, editComment, listComments, setResolved, type CommentAnchor } from "@/lib/comments";
 import { approveDeck, approveForEveryone, approveSlide, promoteDeck, requestChanges, sendForReview, withdrawReview } from "@/lib/reviews";
 
@@ -48,6 +48,12 @@ export async function renameDeckAction(deckId: string, title: string) {
   const r = await run(deckId, (u) => renameDeck(u, deckId, title));
   revalidatePath("/");
   return { error: r.error, title: r.value };
+}
+/** Replace the deck's tags (department ids). Applies straight away; also refreshes the Decks home. */
+export async function setTagsAction(deckId: string, departmentIds: string[]): Promise<EditorResult> {
+  const r = await run(deckId, (u) => setDeckTags(u, deckId, departmentIds));
+  revalidatePath("/");
+  return { error: r.error };
 }
 export async function setThemeAction(deckId: string, themeId: string): Promise<EditorResult> {
   return run(deckId, (u) => setDeckTheme(u, deckId, themeId, "app"));

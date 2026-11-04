@@ -11,7 +11,7 @@ const fmt = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", y
 /** Decks home (Figma "Dekiru" 23:496): company decks and the person's own, with search and sort. */
 export default async function Home({ searchParams }: PageProps<"/">) {
   const user = await requireUser("/");
-  const { tab, owner } = await searchParams;
+  const { tab, owner, tag } = await searchParams;
   const canEditMasters = user?.role === "admin" || user?.role === "manager";
   // Admins and managers also get everyone's decks (Employee decks tab, view only).
   const decks = await listDecks({ viewerId: user?.id ?? null, includeArchived: true, everyone: canEditMasters });
@@ -33,6 +33,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
     id: d.id,
     title: d.title,
     kind: d.kind,
+    tags: d.tags.map((t) => t.name),
     ownerId: d.ownerId ?? undefined,
     owner: d.ownerName ?? undefined,
     cover: d.slides.find((s) => !s.hidden) ?? d.slides[0],
@@ -64,6 +65,8 @@ export default async function Home({ searchParams }: PageProps<"/">) {
         mine={decks.filter((d) => d.kind !== "master" && (!user || d.ownerId === user.id || d.shared)).map((d) => toCard(d))}
         employees={canEditMasters ? decks.filter((d) => d.kind !== "master" && d.ownerId !== user?.id).map((d) => toCard(d)) : undefined}
         initialOwner={typeof owner === "string" ? owner : ""}
+        initialTag={typeof tag === "string" ? tag : ""}
+        myDepartment={user?.departmentId ? decks.flatMap((d) => d.tags).find((t) => t.id === user.departmentId)?.name : undefined}
         review={forReview.map((x) => toCard(x.deck, x.review))}
         reviewer={reviewer}
         initialTab={tab === "mine" ? "mine" : tab === "review" ? "review" : tab === "employees" && canEditMasters ? "employees" : "company"}

@@ -113,6 +113,13 @@
       "when": 1793688860050,
       "tag": "0015_studio_attachments",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1793690803227,
+      "tag": "0016_departments",
+      "breakpoints": true
     }
   ]
 }

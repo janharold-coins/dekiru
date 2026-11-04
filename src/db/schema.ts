@@ -33,6 +33,16 @@ const created = () => timestamp("created_at", { withTimezone: true }).notNull().
 const updated = () => timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date());
 
 /**
+ * Departments (Legal, Sales, Training…). One list, kept by admins on the People page: each person belongs to
+ * one, and decks are tagged with any number of them (deck_tags), so a tag always means the same team.
+ */
+export const departments = pgTable("departments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull().unique(),
+  createdAt: created(),
+});
+
+/**
  * Filled on first Google sign-in (coins.ph accounts only). The first person to sign in becomes admin.
  * Admins and managers edit masters and approve; members copy and submit.
  * Column set follows Better Auth's user model (src/lib/auth.ts), plus `role`.
@@ -50,6 +60,8 @@ export const users = pgTable("users", {
   canUseStudio: boolean("can_use_studio").notNull().default(false),
   /** What this person may review (see src/lib/reviews.ts): "employee", "company", "lang:zh", … Admins review everything. */
   reviewScopes: jsonb("review_scopes").$type<string[]>().notNull().default([]),
+  /** Their department (set by admins on the People page); null = not set. */
+  departmentId: uuid("department_id").references(() => departments.id, { onDelete: "set null" }),
   createdAt: created(),
   updatedAt: updated(),
 });
@@ -329,6 +341,19 @@ export const reviewEvents = pgTable(
     createdAt: created(),
   },
   (t) => [index("review_events_deck").on(t.deckId, t.createdAt)],
+);
+
+/**
+ * Tags on a deck: departments it's for (Legal, Training…). Belong to the deck, not a version, so retagging
+ * never makes a new version or review. Copies start with their source's tags.
+ */
+export const deckTags = pgTable(
+  "deck_tags",
+  {
+    deckId: text("deck_id").notNull().references(() => decks.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    departmentId: uuid("department_id").notNull().references(() => departments.id, { onDelete: "cascade" }),
+  },
+  (t) => [primaryKey({ columns: [t.deckId, t.departmentId] }), index("deck_tags_department").on(t.departmentId)],
 );
 
 /** Old deck ids (readable slugs, before the uniform "dk-…" ids) → new ids, so old links and prompts still resolve. */

@@ -19,6 +19,8 @@ export interface HomeDeck {
   id: string;
   title: string;
   kind: "master" | "copy";
+  /** Departments the deck is tagged for (names, A–Z). */
+  tags: string[];
   /** The owner (copies): shown and filterable on Employee decks. */
   ownerId?: string;
   owner?: string;
@@ -66,16 +68,21 @@ const NOTE: Record<Tab, string> = {
   review: "Decks waiting for your approval. Check each slide, then approve or request changes.",
 };
 
-export function HomeDecks({ company, mine, employees, review = [], reviewer = false, initialTab, initialOwner = "" }: {
+export function HomeDecks({ company, mine, employees, review = [], reviewer = false, initialTab, initialOwner = "", initialTag = "", myDepartment }: {
   company: HomeDeck[]; mine: HomeDeck[];
   /** Everyone else's decks — admins and managers only (undefined hides the tab). */
   employees?: HomeDeck[];
   review?: HomeDeck[]; reviewer?: boolean; initialTab: Tab;
   /** Employee decks filtered to one person (?owner=, linked from People). */
   initialOwner?: string;
+  /** Show only decks with this tag (?tag=). */
+  initialTag?: string;
+  /** The person's own department, when some deck is tagged with it: listed first in the Tag filter. */
+  myDepartment?: string;
 }) {
   const [tab, setTab] = useState<Tab>(initialTab);
   const [owner, setOwner] = useState(initialOwner);
+  const [tag, setTag] = useState(initialTag);
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>("updated");
   const [showArchived, setShowArchived] = useState(false);
@@ -95,11 +102,18 @@ export function HomeDecks({ company, mine, employees, review = [], reviewer = fa
   const theirs = useMemo(() => (employees ?? []).filter((d) => !ownerOn || d.ownerId === ownerOn), [employees, ownerOn]);
   const archivable = tab === "mine" || tab === "employees";
   const pool = tab === "company" ? company : tab === "review" ? review : tab === "mine" ? myDecks : theirs;
-  const archivedCount = archivable ? pool.filter((d) => d.archived).length : 0;
-  const all = archivable && !showArchived ? pool.filter((d) => !d.archived) : pool;
+  // Tags used in this collection, the person's department first; a tag no deck here carries isn't offered.
+  const tagsHere = useMemo(() => {
+    const names = [...new Set(pool.flatMap((d) => d.tags))].sort((a, b) => a.localeCompare(b));
+    return myDepartment && names.includes(myDepartment) ? [myDepartment, ...names.filter((n) => n !== myDepartment)] : names;
+  }, [pool, myDepartment]);
+  const tagOn = tagsHere.includes(tag) ? tag : "";
+  const tagged = tagOn ? pool.filter((d) => d.tags.includes(tagOn)) : pool;
+  const archivedCount = archivable ? tagged.filter((d) => d.archived).length : 0;
+  const all = archivable && !showArchived ? tagged.filter((d) => !d.archived) : tagged;
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const list = q ? all.filter((d) => d.title.toLowerCase().includes(q) || d.id.toLowerCase().includes(q) || (tab === "employees" && (d.owner ?? "").toLowerCase().includes(q))) : [...all];
+    const list = q ? all.filter((d) => d.title.toLowerCase().includes(q) || d.id.toLowerCase().includes(q) || d.tags.some((t) => t.toLowerCase().includes(q)) || (tab === "employees" && (d.owner ?? "").toLowerCase().includes(q))) : [...all];
     return list.sort(sort === "name" ? (a, b) => a.title.localeCompare(b.title) : (a, b) => b.updated - a.updated);
   }, [all, query, sort, tab]);
 
@@ -116,14 +130,16 @@ export function HomeDecks({ company, mine, employees, review = [], reviewer = fa
   };
 
   // Keep the tab (and person filter) in the address so Back and reload return to it.
-  const syncUrl = (t: Tab, o: string) => {
+  const syncUrl = (t: Tab, o: string, g: string) => {
     const url = new URL(window.location.href);
     if (t === "company") url.searchParams.delete("tab"); else url.searchParams.set("tab", t);
     if (t === "employees" && o) url.searchParams.set("owner", o); else url.searchParams.delete("owner");
+    if (g) url.searchParams.set("tag", g); else url.searchParams.delete("tag");
     window.history.replaceState(null, "", url);
   };
-  const choose = (t: Tab) => { setTab(t); syncUrl(t, ownerOn); };
-  const pickOwner = (o: string) => { setOwner(o); syncUrl(tab, o); };
+  const choose = (t: Tab) => { setTab(t); syncUrl(t, ownerOn, tag); };
+  const pickOwner = (o: string) => { setOwner(o); syncUrl(tab, o, tag); };
+  const pickTag = (g: string) => { setTag(g); syncUrl(tab, ownerOn, g); };
 
   return (
     <main className="home-main">
@@ -146,6 +162,18 @@ export function HomeDecks({ company, mine, employees, review = [], reviewer = fa
               <select value={ownerOn} onChange={(e) => pickOwner(e.target.value)} aria-label="Show decks made by">
                 <option value="">All</option>
                 {people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </label>
+          )}
+          {tagsHere.length > 0 && (
+            <label className="home-sort">
+              <span>Tag</span>
+              <b>{tagOn || "All"}</b>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/app/sort-chevron.svg" alt="" width={4.92} height={4.512} />
+              <select value={tagOn} onChange={(e) => pickTag(e.target.value)} aria-label="Show decks tagged">
+                <option value="">All</option>
+                {tagsHere.map((t) => <option key={t} value={t}>{t === myDepartment ? `${t} (your department)` : t}</option>)}
               </select>
             </label>
           )}
@@ -195,9 +223,14 @@ export function HomeDecks({ company, mine, employees, review = [], reviewer = fa
               {shown.map((d) => <DeckRow key={d.id} d={d} showOwner={tab === "employees"} onArchive={tab === "mine" ? (on) => archive(d.id, on) : undefined} />)}
             </div>
           )
+        ) : tagOn && !query.trim() && !archivedCount ? (
+          <EmptyState art="search" title={`No ${tagOn} decks here`}
+            body={`Nothing in ${TAB_NAME[tab]} is tagged ${tagOn}${tab === "employees" && ownerOn ? " by this author" : ""}.`}>
+            <button type="button" className="home-empty-btn" onClick={() => pickTag("")}>Show all tags</button>
+          </EmptyState>
         ) : query.trim() ? (
           <EmptyState art="search" title="No decks match your search"
-            body={<>Nothing in {TAB_NAME[tab]} matches “{query.trim()}”. Try a deck name, an ID like dk-1a2b3c4d{tab === "employees" ? " or a person" : ""}.</>}>
+            body={<>Nothing in {TAB_NAME[tab]} matches “{query.trim()}”. Try a deck name, a tag, an ID like dk-1a2b3c4d{tab === "employees" ? " or a person" : ""}.</>}>
             <button type="button" className="home-empty-btn" onClick={() => setQuery("")}>Clear search</button>
           </EmptyState>
         ) : tab === "employees" && archivedCount ? (
@@ -306,6 +339,12 @@ function DeckMeta({ d, showOwner }: { d: HomeDeck; showOwner: boolean }) {
   );
 }
 
+/** Department tags under a deck's title (card and row). */
+function DeckTags({ tags }: { tags: string[] }) {
+  if (!tags.length) return null;
+  return <ul className="home-tags" aria-label="Tags">{tags.map((t) => <li key={t}>{t}</li>)}</ul>;
+}
+
 /** List view: small cover, title and status, slide count, menu. */
 function DeckRow({ d, showOwner = false, onArchive }: { d: HomeDeck; showOwner?: boolean; onArchive?: (archived: boolean) => void }) {
   const [copyAsk, setCopyAsk] = useState(false);
@@ -319,6 +358,7 @@ function DeckRow({ d, showOwner = false, onArchive }: { d: HomeDeck; showOwner?:
       <div className="home-title home-row-title">
         <Link href={`/decks/${d.id}`}><h2>{d.title}</h2></Link>
         <DeckMeta d={d} showOwner={showOwner} />
+        <DeckTags tags={d.tags} />
       </div>
       <DeckId id={d.id} className="home-row-id" />
       <span className="home-row-langs" title={d.translations.map((t) => t.english).join(", ") || undefined}>
@@ -351,6 +391,7 @@ function DeckCard({ d, showOwner = false, onArchive }: { d: HomeDeck; showOwner?
         <div className="home-title">
           <Link href={`/decks/${d.id}`}><h2>{d.title}</h2></Link>
           <DeckMeta d={d} showOwner={showOwner} />
+          <DeckTags tags={d.tags} />
         </div>
         <Menu
           className="home-options"

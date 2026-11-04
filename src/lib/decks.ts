@@ -17,6 +17,7 @@ import { seedDecks } from "@/content/decks";
 import type { Deck } from "@/deck/types";
 import { availableLangs, enabledLangs, type TargetLang } from "@/deck/i18n";
 import { DEFAULT_THEME, pickTheme, publishedThemes, type ThemeInfo } from "./themes";
+import { tagsOf, writeDeckTags, type Department } from "./departments";
 
 export interface DeckInfo extends Deck {
   kind: "master" | "copy";
@@ -45,6 +46,8 @@ export interface DeckInfo extends Deck {
   ownerName?: string | null;
   /** Set when the deck is someone else's and shared with the viewer (spec §7b): their role on it and the owner's name. */
   shared?: { role: "editor" | "viewer"; owner: string | null };
+  /** Departments the deck is tagged for (A–Z); empty when untagged or running from the JSON seed. */
+  tags: Department[];
 }
 
 /** The database, or a transaction on it. */
@@ -107,7 +110,7 @@ export async function listDecks(opts: { viewerId?: string | null; includeArchive
   if (!hasDb()) {
     return Promise.all(
       seedDecks.map(async (d) => ({
-        ...d, kind: "master" as const, status: "published" as const, hasDraft: false, themeId: null, theme: DEFAULT_THEME, languages: null,
+        ...d, kind: "master" as const, status: "published" as const, hasDraft: false, themeId: null, theme: DEFAULT_THEME, languages: null, tags: [],
         slides: await resolveSlides(d.slides, seedLookup),
       })),
     );
@@ -121,12 +124,13 @@ export async function listDecks(opts: { viewerId?: string | null; includeArchive
     : new Map<string, "editor" | "viewer">();
   const rows = opts.viewerId && !opts.everyone ? all.filter((r) => r.kind === "master" || r.ownerId === opts.viewerId || shared.has(r.id)) : all;
   const themes = await publishedThemes();
-  const out = (await Promise.all(rows.map((r) => load(q, r, false, themes)))).filter((d): d is DeckInfo => Boolean(d));
+  const out = (await Promise.all(rows.map((r) => load(q, r, false, themes)))).filter((d): d is NonNullable<typeof d> => Boolean(d));
   const ids = [...new Set([...out.map((d) => d.updatedById), ...out.filter((d) => d.kind === "copy").map((d) => d.ownerId)].filter((x): x is string => Boolean(x)))];
   const names = ids.length ? await q.select({ id: users.id, name: users.name, email: users.email }).from(users).where(inArray(users.id, ids)) : [];
   const nameOf = new Map(names.map((u) => [u.id, u.name || u.email]));
+  const tags = await tagsOf(out.map((d) => d.id), q);
   return out.map((d) => ({
-    ...d, updatedBy: d.updatedById ? nameOf.get(d.updatedById) ?? null : null,
+    ...d, tags: tags.get(d.id) ?? [], updatedBy: d.updatedById ? nameOf.get(d.updatedById) ?? null : null,
     ownerName: d.kind === "copy" && d.ownerId ? nameOf.get(d.ownerId) ?? null : null,
     shared: shared.has(d.id) && d.ownerId !== opts.viewerId ? { role: shared.get(d.id)!, owner: d.ownerId ? nameOf.get(d.ownerId) ?? null : null } : undefined,
   }));
@@ -138,10 +142,12 @@ export async function getDeck(id: string, opts: { draft?: boolean } = {}): Promi
   await connection();
   const q = db();
   const [row] = await q.select().from(decks).where(eq(decks.id, id)).limit(1);
-  return row ? load(q, row, Boolean(opts.draft), await publishedThemes()) : undefined;
+  if (!row) return undefined;
+  const [deck, tags] = await Promise.all([load(q, row, Boolean(opts.draft), await publishedThemes()), tagsOf([id], q)]);
+  return deck && { ...deck, tags: tags.get(id) ?? [] };
 }
 
-async function load(q: Db, row: typeof decks.$inferSelect, wantDraft: boolean, themes: ThemeInfo[]): Promise<DeckInfo | undefined> {
+async function load(q: Db, row: typeof decks.$inferSelect, wantDraft: boolean, themes: ThemeInfo[]): Promise<Omit<DeckInfo, "tags"> | undefined> {
   const [pub, draft, approved] = await Promise.all([latestPublished(q, row.id), draftOf(q, row.id), latestApproved(q, row.id)]);
   // Editors work on the draft (else the newest sent version); everyone else sees the live one.
   // A deck that was never sent (saved as a draft from the New deck screen) shows its draft everywhere.
@@ -245,10 +251,13 @@ export async function copyDeck(sourceId: string, input: { id: string; title: str
   const slides = await snapshotSlides(src.slides, dbLookup(q));
   const enabled = enabledLangs(row);
   const languages = input.keepLanguages ? availableLangs(slides).filter((l) => !enabled || enabled.includes(l)) : [];
-  return createDeck({
+  const v = await createDeck({
     id: input.id, title: input.title, kind: "copy", slides, themeId: src.themeId, note: `Copied from ${sourceId} v${src.number}`,
     copiedFromDeckId: sourceId, copiedFromVersionId: src.id, languages,
   }, who);
+  // The copy starts with the source's tags; the owner can change them.
+  await writeDeckTags(input.id, ((await tagsOf([sourceId], q)).get(sourceId) ?? []).map((t) => t.id), q);
+  return v;
 }
 
 /** Turn a language on or off for one of people's own decks (the translations themselves are kept either way). */

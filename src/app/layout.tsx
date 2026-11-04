@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Encode_Sans_Semi_Expanded, Inter, Manrope, Noto_Sans_SC, Noto_Sans_Thai, Zalando_Sans, Zalando_Sans_Expanded } from "next/font/google";
 import "./globals.css";
+import { ThemeScript } from "./ThemeScript";
 
 // Web fallbacks for the design fonts. If "Cns Manrope" / "TWK Everett" are installed
 // on the viewer's machine they win (see src/deck/tokens.ts font stacks).
@@ -26,7 +27,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${manrope.variable} ${numeral.variable} ${encode.variable} ${zalando.variable} ${wordmark.variable} ${notoSC.variable} ${notoThai.variable}`}>
+    // suppressHydrationWarning: the inline theme script sets data-theme on <html> before React hydrates.
+    <html lang="en" suppressHydrationWarning className={`${manrope.variable} ${numeral.variable} ${encode.variable} ${zalando.variable} ${wordmark.variable} ${notoSC.variable} ${notoThai.variable}`}>
+      <head>
+        <ThemeScript />
+      </head>
       <body>{children}</body>
     </html>
   );

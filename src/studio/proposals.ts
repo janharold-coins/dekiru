@@ -13,6 +13,10 @@ import { ClientQuote, clientQuoteMeta } from "@/deck/patterns/ClientQuote";
  * src/deck/patterns, registers it in registry.ts, adds its first example to the templates (src/content/templates.ts)
  * and builds in any Tune line from the approval, without asking again. The proposal stays here, pointing at the
  * library entry, so its review history stays on the Studio. A theme is created and published on approval.
+ * A remix (of an approved proposal, a library template or a theme) is a new proposal (new id, `remixOf` set,
+ * `request` set to the remix request), kept apart from the original. It's a draft, shown in the remix editor,
+ * until someone sends it for review; each remix prompt asks for the next revision. Once approved it joins the
+ * library alongside the original.
  */
 interface Base {
   id: string;
@@ -27,6 +31,8 @@ interface Base {
   date: string; // YYYY-MM-DD
   /** Studio rules this proposal doesn't follow, and why (asked for, a Figma frame, or optical alignment). */
   exceptions?: string;
+  /** What this is a variant of, for remix requests: an approved proposal id, "template:<id>" or "theme:<id>". */
+  remixOf?: string;
 }
 export interface LayoutProposal extends Base { kind: "layout"; entry: PatternEntry; examples: SlideData[] }
 export interface ThemeProposal extends Base { kind: "theme"; tokens: ThemeTokens }

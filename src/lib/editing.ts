@@ -31,6 +31,7 @@ import { pickTheme, publishedThemes } from "./themes";
 import { DEFAULT_THEME_ID } from "@/deck/theme";
 import { getTemplate } from "@/content/templates";
 import { EditError } from "./errors";
+import { listDepartments, writeDeckTags } from "./departments";
 import { coverTitle } from "@/content/cover";
 import { agendaFor, analyzeMaster, arrange, sectionNumbers } from "@/content/structure";
 
@@ -536,6 +537,18 @@ export async function setLanguage(user: SignedInUser | null, deckId: string, lan
   if (!current) throw new EditError("Company decks offer every language they're translated into.");
   await setDeckLanguages(deckId, on ? [...current, lang] : current.filter((l) => l !== lang));
   await db().update(decks).set({ updatedAt: new Date() }).where(eq(decks.id, deckId));
+}
+
+/**
+ * Replace a deck's tags (department ids). Applies straight away: tags belong to the deck, not a version,
+ * so changing them never makes a new version or review. Same rule as editing: admins and managers tag masters.
+ */
+export async function setDeckTags(user: SignedInUser | null, deckId: string, departmentIds: string[]) {
+  await editable(deckId, user);
+  const known = new Set((await listDepartments()).map((d) => d.id));
+  const unknown = departmentIds.filter((id) => !known.has(id));
+  if (unknown.length) throw new EditError("That tag no longer exists. Reload the page to see the current list.");
+  await writeDeckTags(deckId, departmentIds);
 }
 
 /** Rename a deck. Applies straight away (titles aren't versioned); share links keep the title they were made with. */
