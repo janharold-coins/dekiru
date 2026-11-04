@@ -7,12 +7,21 @@ import { ThemeScope } from "@/deck/ThemeScope";
 import { requireUser } from "@/lib/auth";
 import { canUseStudio, decisionsOf, KIND_LABEL, openRequests, STATUS_LABEL, statusOf, type RequestKind, type Status } from "@/lib/studio";
 import { proposals } from "@/studio/proposals";
+import { EmptyState, type Art } from "../EmptyState";
 import { Nav } from "../Nav";
 import { PageHero } from "../PageHero";
 import { layoutSamples } from "../library/themes/samples";
 import { DismissRequest, RequestForm } from "./StudioForms";
 
 const TABS: Status[] = ["waiting", "changes_requested", "approved", "rejected"];
+
+/** What each tab says when it has nothing in it (the decks home's empty-state design). */
+const EMPTY: Record<Status, { art: Art; title: string; body: string }> = {
+  waiting: { art: "review", title: "You're all caught up", body: "Nothing is waiting for your decision. Ask for a layout, theme or rule change above, and Claude's proposal lands here." },
+  changes_requested: { art: "changes", title: "No changes waiting on Claude", body: "When you send a proposal back with notes, it waits here until Claude revises it, then returns to For review." },
+  approved: { art: "approved", title: "Nothing approved yet", body: "Approved layouts join the library on Claude's next Studio check, and approved themes are published right away." },
+  rejected: { art: "rejected", title: "Nothing rejected", body: "Proposals you reject are kept here, with your note, for reference." },
+};
 
 /** Studio: request new layouts and themes, and approve what Claude builds. Admins and people with Studio access only. */
 export default async function StudioPage({ searchParams }: { searchParams: Promise<{ show?: string; ask?: string }> }) {
@@ -55,7 +64,7 @@ export default async function StudioPage({ searchParams }: { searchParams: Promi
         </nav>
       </div>
       {shown.length === 0 ? (
-        <p className="hint studio-empty">{on === "waiting" ? "Nothing for review. Ask for something above." : `Nothing ${STATUS_LABEL[on].toLowerCase()}.`}</p>
+        <EmptyState {...EMPTY[on]} />
       ) : (
         <div className="studio-grid">
           {shown.map(({ p, latest }) => (

@@ -9,6 +9,7 @@ import type { SlideData } from "@/deck/types";
 import { Menu, type MenuItem } from "./decks/[id]/edit/Menu";
 import { archiveAction, copyAction } from "./decks/[id]/actions";
 import { DeckId } from "./DeckId";
+import { EmptyState } from "./EmptyState";
 import { PageHero } from "./PageHero";
 import { CopyDialog } from "./decks/[id]/edit/CopyDialog";
 import type { TargetLang } from "@/deck/i18n";
@@ -248,44 +249,6 @@ function ViewToggle({ view, onChange }: { view: View; onChange: (v: View) => voi
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><rect x="1.75" y="2.25" width="4" height="3" rx="0.75" stroke="currentColor" strokeWidth="1.5" /><rect x="1.75" y="10.75" width="4" height="3" rx="0.75" stroke="currentColor" strokeWidth="1.5" /><path d="M8.5 3.75h6M8.5 12.25h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
       </button>
     </div>
-  );
-}
-
-type Art = "deck" | "search" | "archive" | "people" | "review";
-
-/** Empty collection: a small illustration, what's going on, and the next step. */
-function EmptyState({ art, title, body, children }: { art: Art; title: string; body: ReactNode; children?: ReactNode }) {
-  return (
-    <div className="home-empty-state" role="status">
-      <EmptyArt art={art} />
-      <h2>{title}</h2>
-      <p>{body}</p>
-      {children && <div className="home-empty-actions">{children}</div>}
-    </div>
-  );
-}
-
-/** Two stacked slide cards with a badge for what the state is about. */
-function EmptyArt({ art }: { art: Art }) {
-  const badge: Record<Art, ReactNode> = {
-    deck: <path d="M92 70v12M86 76h12" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" />,
-    search: <><circle cx="90.5" cy="74.5" r="5" stroke="#fff" strokeWidth="2.2" /><path d="m94.2 78.2 3.3 3.3" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" /></>,
-    archive: <><rect x="84.5" y="70" width="15" height="4.5" rx="1.2" stroke="#fff" strokeWidth="2" /><path d="M86 74.5v6.5a1.5 1.5 0 0 0 1.5 1.5h9a1.5 1.5 0 0 0 1.5-1.5v-6.5M89.5 77.5h5" stroke="#fff" strokeWidth="2" strokeLinecap="round" /></>,
-    people: <><circle cx="92" cy="72.5" r="3.2" stroke="#fff" strokeWidth="2" /><path d="M85.5 83c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5" stroke="#fff" strokeWidth="2" strokeLinecap="round" /></>,
-    review: <path d="m86 76.5 4 4 8-8.5" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />,
-  };
-  const tone = art === "review" ? "#16a34a" : "var(--app-blue)";
-  return (
-    <svg className="home-empty-art" width="132" height="100" viewBox="0 0 132 100" fill="none" aria-hidden>
-      <rect x="30" y="8" width="84" height="52" rx="8" fill="#eef1f6" stroke="#dbe0e8" />
-      <rect x="16" y="22" width="88" height="56" rx="8" fill="#fff" stroke="#d5dbe4" />
-      <rect x="27" y="34" width="34" height="5" rx="2.5" fill="#d9dfe8" />
-      <rect x="27" y="44" width="52" height="4" rx="2" fill="#e8ecf2" />
-      <rect x="27" y="52" width="44" height="4" rx="2" fill="#e8ecf2" />
-      <rect x="27" y="66" width="20" height="3" rx="1.5" fill={tone} opacity="0.35" />
-      <circle cx="92" cy="76" r="15" fill={tone} stroke="#f7f8fa" strokeWidth="4" />
-      {badge[art]}
-    </svg>
   );
 }
 

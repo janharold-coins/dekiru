@@ -941,7 +941,8 @@ select.nd-input { appearance: none; -webkit-appearance: none; padding-right: 36p
 .home-row .deck-id.home-row-id { align-self: center; }
 .home-row.archived .home-row-cover { opacity: 0.55; }
 
-.home-empty-state { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 64px 24px 72px; border: 1px dashed #d5dbe4; border-radius: 16px; background: linear-gradient(180deg, #fff 0%, #fbfcfd 100%); }
+/* Carries the home's colour tokens, so the same empty state works on other pages (Studio tabs). */
+.home-empty-state { --app-ink-2: #171a21; --app-mute: #677181; --app-line: #e3e7ed; --app-blue: #2066ed; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 64px 24px 72px; border: 1px dashed #d5dbe4; border-radius: 16px; background: linear-gradient(180deg, #fff 0%, #fbfcfd 100%); }
 .home-empty-art { display: block; margin-bottom: 20px; }
 .home-empty-state h2 { margin: 0; font-size: 18px; font-weight: 600; color: var(--app-ink-2); line-height: 1.3; }
 .home-empty-state p { margin: 8px 0 0; max-width: 440px; font-size: 14px; line-height: 1.55; color: var(--app-mute); text-wrap: pretty; }
@@ -1019,7 +1020,6 @@ select.nd-input { appearance: none; -webkit-appearance: none; padding-right: 36p
 .studio-queue li { display: grid; grid-template-columns: auto 1fr auto auto; gap: 12px; align-items: center; padding: 10px 12px; }
 .studio-queue li p { margin: 0; white-space: pre-wrap; }
 .studio-tabs { margin-bottom: 14px; }
-.studio-empty { padding: 40px 0; text-align: center; }
 .studio-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; }
 .studio-card { display: flex; flex-direction: column; color: inherit; }
 .studio-card:hover { border-color: var(--blue); }
