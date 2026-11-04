@@ -56,6 +56,26 @@ Effect: `Light- Shadow 1` drop shadow #0D1F4214 (0,1) blur 8
 
 Observations: three naming families mixed on one app screen (`Line 1.5x/*`, `Line Auto/*`, `Web/*`); `Text/Subtitle` exists with and without the `(700)` suffix at the same value; three different white tokens. Worth a tidy in Foundation before Dekiru keys components to them.
 
+## Instance identities and variant properties (from the Code Connect suggestion pass)
+
+`get_code_connect_suggestions` on the frame returns, per instance, the **main component's node ID** and the **variant properties** set on the instance. That is the identity the plan needs (per-instance, not per-set), without the REST API, as long as the file is reachable through the connector.
+
+| Instance | Main component (node) | Variant properties on this screen |
+|---|---|---|
+| `Icon/Logo/Light` 22363:35965 | 22361:39411 | Country=Philippines · Logo=On · Text=Off · Padding=Off |
+| `Component 2` 21100:43867 (level card) | 21099:34179 | Style=Verify · Status=Active · **Type=L1** · Expand=On · Device=H5 |
+| `1 Color` (lock) | 20074:18651 | Name=Locked · Form=Outline |
+| `C-Tag/Rectangle` | 20286:21567 | Color=Grey · Type=S(10px) · Icon=Off |
+| `Bottom` 20638:29174 | 20587:26257 | Status=Default · Type=2_TextOnly · Keyboard=Off · Left icon=Off |
+| `Button` (inside Bottom) | 20531:26780 | Type=Primary · Size=L · Status=Default |
+| `Status Bar 状态栏` 20638:29176 | 2:18171 | Dark=off · island=on |
+| `Top bar` 20638:29177 | 20587:32072 | Title=Off · Left=On · Right=Off |
+
+Two corrections to the sections above:
+
+- The level card is **not a loose local component**: it is a proper **component set** with five variant axes (Style, Status, Type L1/L2/L3, Expand, Device H5). `Component 2/3/4` are the same set at Type=L1/L2/L3. As a Dekiru pattern it gets exactly those props. Only its *name* is the default one.
+- `Bottom` is itself a library component set (Type=2_TextOnly etc.) that *contains* the two Buttons; the Button set in use is the one whose node is 20531:26780. Which of the three `Button` sets in the library that is still needs the set key (search gives keys per set; the suggestion pass gives node IDs), to be resolved when the audit tool joins the two.
+
 ## What the connector cannot give (affects the audit tool)
 
 The Figma MCP connector returns node names, types and sizes, and the design-system search returns library component **set** keys, but it does not return the **main-component key of each instance** on a frame. The identity rule in the plan (match by key, never by name) therefore needs the Figma REST API (`GET /v1/files/:key/nodes?ids=…`, which returns `componentId` per instance and a `components` map with `key` and `remote`), i.e. a Figma personal access token in Dekiru's environment. Decision in the plan's step 4.
