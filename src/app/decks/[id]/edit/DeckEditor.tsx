@@ -70,7 +70,7 @@ type SaveState = { kind: "saved" } | { kind: "saving" } | { kind: "error"; messa
 /** Opening and closing slides are always presented: they can't be hidden. */
 const ALWAYS_SHOWN = new Set(["cover", "closing"]);
 
-const ICON = (name: string, size = 16) => <img src={`/editor/${name}.svg`} alt="" width={size} height={size} />;
+export const ICON = (name: string, size = 16) => <img src={`/editor/${name}.svg`} alt="" width={size} height={size} />;
 const pad2 = (n: number) => String(n).padStart(2, "0");
 const SAVE_DELAY = 700;
 const SLIDE_W = 1920;
@@ -775,7 +775,7 @@ function Navigator({ open, onToggle, deckId, deckKind, slides, selectedId, readO
 
 const ZOOMS = [0.25, 0.33, 0.42, 0.5, 0.67, 0.75, 1];
 
-function Canvas({ selected, number, lang, overlay }: { selected: EditorSlide | null; number: string; lang: Lang; overlay: React.ReactNode }) {
+export function Canvas({ selected, number, lang, overlay }: { selected: EditorSlide | null; number: string; lang: Lang; overlay: React.ReactNode }) {
   const box = useRef<HTMLDivElement>(null);
   const [fit, setFit] = useState(0.42);
   const [zoom, setZoom] = useState<number | "fit">("fit");
@@ -800,7 +800,7 @@ function Canvas({ selected, number, lang, overlay }: { selected: EditorSlide | n
         {selected ? (
           <div className="ed-stage" style={{ width: SLIDE_W * scale }}>
             <div className="ed-context">
-              <span>{number} / {selected.section.toUpperCase()}</span>
+              <span>{number ? `${number} / ` : ""}{selected.section.toUpperCase()}</span>
               <span className="ed-layout">{ICON("panels-top-left", 12)}{selected.layout}</span>
             </div>
             <div className="ed-slide" style={{ width: SLIDE_W * scale, height: SLIDE_H * scale }}>

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getTemplate } from "@/content/templates";
 import { fieldLabel } from "@/deck/fields";
@@ -6,10 +5,10 @@ import { patterns } from "@/deck/registry";
 import { editableDecks } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { addSlide, EditError, newDeck } from "@/lib/editing";
-import { Nav } from "../../../Nav";
-import { SlideForm } from "../../../decks/SlideForm";
+import { ViewAsBanner } from "../../../view-as/ViewAs";
+import { TemplateEditor } from "./TemplateEditor";
 
-/** Fill in a template with your own words, then add it to one of your decks (or start a new one). */
+/** Fill in a template with your own words in the editor's frame, then add it to one of your decks (or start a new one). */
 export default async function TemplatePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ deck?: string }> }) {
   const [{ id }, { deck }] = await Promise.all([params, searchParams]);
   const t = getTemplate(id);
@@ -47,18 +46,11 @@ export default async function TemplatePage({ params, searchParams }: { params: P
   });
   const back = deck ? `/library/templates?deck=${encodeURIComponent(deck)}` : "/library/templates";
   return (
-    <main className="shell">
-      <Nav on="library" user={user} />
-      <p className="crumb"><Link href={back}>← Templates</Link></p>
-      <h1 className="page">{t.name}</h1>
-      {budgets.length > 0 && (
-        <div className="chips limits" style={{ margin: "0 0 24px" }}>
-          <span><b>{patterns[t.slide.pattern]?.meta.name} layout limits</b></span>
-          {budgets.map((b) => <span key={b.slot}>{b.text}</span>)}
-        </div>
-      )}
-      <SlideForm slide={t.slide} saveLabel="Add slide" onSave={save} targets={targets}
+    <>
+      {user?.realRole && <ViewAsBanner role={user.role} />}
+      <TemplateEditor name={t.name} layout={patterns[t.slide.pattern]?.meta.name ?? t.slide.pattern} slide={t.slide} budgets={budgets}
+        back={back} targets={targets} onSave={save}
         defaultTarget={deck && targets.some((x) => x.id === deck) ? deck : ""} />
-    </main>
+    </>
   );
 }

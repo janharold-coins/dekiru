@@ -1096,3 +1096,14 @@ select.nd-input { appearance: none; -webkit-appearance: none; padding-right: 36p
 .studio-big { position: relative; }
 .studio-big[data-too-tall] { box-shadow: 0 0 0 2px var(--warn); }
 .studio-big[data-too-tall]::after { content: "Doesn't fit at these settings: runs into the logo or footer"; position: absolute; left: 12px; top: 12px; padding: 4px 8px; border-radius: 6px; background: var(--warn-bg); color: var(--warn); font-size: 12px; font-weight: 600; }
+
+/* Template editor (/library/templates/<id>): the deck editor's frame, with where the slide goes in the top bar. */
+.tpl-ed button.ed-btn-primary { color: #fff; }
+.tpl-pick { cursor: pointer; }
+.tpl-pick > span { color: var(--ed-mute); }
+.tpl-pick select { font: inherit; font-size: 13px; color: var(--ed-ink); background: transparent; border: 0; padding: 0 2px; max-width: 240px; cursor: pointer; outline: none; }
+.tpl-pick:focus-within { outline: 2px solid var(--ed-accent); outline-offset: 2px; }
+.tpl-deck-name { height: 36px; width: 260px; padding: 0 11px; font-size: 13px; }
+.tpl-over { color: var(--warn); }
+.tpl-limits { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.tpl-limits li { font-size: 11px; color: var(--ed-mute); padding: 3px 8px; border: 1px solid var(--ed-line); border-radius: 999px; background: var(--ed-side); }
