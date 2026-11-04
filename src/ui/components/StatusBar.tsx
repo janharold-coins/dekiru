@@ -1,9 +1,13 @@
 import { token, FONT_STACK } from "../tokens";
 import type { FigmaOrigin } from "../types";
 
-/** [App] Component library V2 → "Status Bar 状态栏" (Dark × island). 56px tall; iOS time left, status icons right. */
+/**
+ * "Status Bar 状态栏" (Dark × island). 56px tall; iOS time left, status icons right. Its library node 3823:46707 is in
+ * none of App V2, Foundation V2 or Web Revamp V2 (Code Connect: node not found in each), so the screen's instance comes
+ * from some other library; the App library has its own Status Bar set (07d7a4c9…).
+ */
 export const statusBarOrigin: FigmaOrigin = {
-  library: "[App] Component library V2", set: "Status Bar", setKey: "07d7a4c9dc45c0e4741bf130ae78cff437613098", mainNode: "2:18171", libraryNode: "3823:46707",
+  library: "unknown (not App V2, Foundation V2 or Web Revamp V2)", set: "Status Bar 状态栏", mainNode: "2:18171", libraryNode: "3823:46707",
   variants: ["Dark", "island"],
 };
 

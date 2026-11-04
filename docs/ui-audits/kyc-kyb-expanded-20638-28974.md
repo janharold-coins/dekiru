@@ -35,6 +35,8 @@ Decision (Jan, 2026-11-04): treat as a pattern, not as a local component to prom
 
 | Finding | |
 |---|---|
+| `C-Tag/Rectangle` is a **[Web] Revamp Library V2** component (node `29:736` there), used on an app screen; the App library has its own `Tag` set (`b0aeebaa…`) | Found by Code Connect (2026-11-04). Swap for the App Tag, or accept that the app uses the web tag. |
+| `Status Bar 状态栏`'s library node `3823:46707` is in none of the three subscribed libraries; the App library has its own `Status Bar` set (`07d7a4c9…`) | The instance comes from a fourth library (an older or Chinese-named one). Swap for the App Status Bar, or name the library so it can be mapped. |
 | The App library itself has **two `Button` component sets** (`8bc60634…` 2026-10-15 and `b211b8a8…` 2025-11-23) plus a lowercase `button` (`172d80af…`) | Library hygiene: which one is current? The instances on this screen must be keyed to the one actually used (needs the per-instance key, see below). |
 
 ## Detached / hand-built (layout, not components)
