@@ -37,6 +37,7 @@ The instance's **variant properties** name them: `Status=Failed · Expand=Off ·
 | **"Check account limits" is a hand override.** The instance is the footer's Text-only button (same node path as screen 1's link) with `Fill/Control (75)` painted on it. The design context still reports it as `Button type="Text-only"`. | Dekiru draws it as `Button type="Secondary"` (`Bottom secondaryType`). In Figma it should be a Button variant, not an override. |
 | **A third status bar.** `Status Bar` main node `20638:28683`: 44px, "9:55", Urbanist; no variant properties, not mapped anywhere (file-local). Screen 1's was 56px from an unknown library; the App library has its own. | `status-bar` (device) takes `height: 44 \| 56`; the node is a third candidate source. Device chrome, so no mapping needed. |
 | Card 1's icon slot wraps the icon in an extra `icon` frame (24px) rather than placing the `1 Color` instance directly, unlike cards 2 and 3. | Cosmetic in Figma; no effect in Dekiru. |
+| **The rejection reason overflows its frame in Figma.** Its second line ("rejected due to your street being invalid.") measures 260.7px in Cns Manrope Medium 12px, but the text column is 228.5px; the Figma render shows it spilling toward the chevron. With the real font loaded (public/fonts), Dekiru wraps it to three lines, which is the correct result at that width. | Either the copy is shortened, or the layout gives the text its real width. Not a Dekiru difference. |
 
 ## Detached / hand-built
 

@@ -1,3 +1,13 @@
+/* Cns Manrope, the design font (Coins' own cut; public/fonts, v1.0 2022). Every font stack names it first
+   (src/deck/tokens.ts, src/ui/tokens.ts), so decks and UI screens wrap like Figma. 7 weights, one file each. */
+@font-face { font-family: "Cns Manrope"; font-weight: 200; font-style: normal; font-display: swap; src: url("/fonts/CnsManrope-ExtraLight.ttf") format("truetype"); }
+@font-face { font-family: "Cns Manrope"; font-weight: 300; font-style: normal; font-display: swap; src: url("/fonts/CnsManrope-Light.ttf") format("truetype"); }
+@font-face { font-family: "Cns Manrope"; font-weight: 400; font-style: normal; font-display: swap; src: url("/fonts/CnsManrope-Regular.ttf") format("truetype"); }
+@font-face { font-family: "Cns Manrope"; font-weight: 500; font-style: normal; font-display: swap; src: url("/fonts/CnsManrope-Medium.ttf") format("truetype"); }
+@font-face { font-family: "Cns Manrope"; font-weight: 600; font-style: normal; font-display: swap; src: url("/fonts/CnsManrope-SemiBold.ttf") format("truetype"); }
+@font-face { font-family: "Cns Manrope"; font-weight: 700; font-style: normal; font-display: swap; src: url("/fonts/CnsManrope-Bold.ttf") format("truetype"); }
+@font-face { font-family: "Cns Manrope"; font-weight: 800; font-style: normal; font-display: swap; src: url("/fonts/CnsManrope-ExtraBold.ttf") format("truetype"); }
+
 :root {
   /* App interface, matching the Decks home design (Figma "Dekiru" 23:496) */
   --bg: #f7f8fa;

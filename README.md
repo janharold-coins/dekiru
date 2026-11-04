@@ -178,7 +178,7 @@ How versions work: each deck has at most one **draft** (where edits land) and an
 
 ## Fonts
 
-The design uses **Cns Manrope** and **TWK Everett**. If they're installed on the viewer's machine they're used; otherwise the app falls back to Manrope (Google) and Inter. Add licensed `.woff2` files + `@font-face` to make every viewer see the exact faces.
+The design uses **Cns Manrope** and **TWK Everett**. **Cns Manrope ships with the app** (`public/fonts/`, 7 weights 200–800 as `.ttf`, `@font-face` at the top of `src/app/globals.css`), so every viewer gets the exact face and text wraps as in Figma. TWK Everett is used when installed on the viewer's machine and falls back to Inter otherwise; add its files the same way to ship it.
 
 ## Structure
 
