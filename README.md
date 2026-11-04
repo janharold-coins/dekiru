@@ -95,6 +95,19 @@ A private page (`/studio`, **Studio** in the header) where new slide layouts and
 - **Images on decisions:** paste, drop or pick screenshots in the decision box. They are shrunk in the browser (1600px WebP, up to 6) and stored in `studio_attachments` (migration 0015), served at `/studio/attachments/<id>` to Studio users only. `npm run studio` saves those on change requests to `.studio/attachments/` (git-ignored) for Claude.
 - Data: `studio_requests`, `studio_decisions`, `users.can_use_studio` (migration 0014). Code: `src/lib/studio.ts`, `src/app/studio/`, `scripts/studio.ts`.
 
+## UI (wip-alpha test): app screens built Figma-first
+
+Plan: `docs/figma-first-plan.md`. Screens are data (`src/content/screens/*.json`) rendered by `src/ui/RenderScreen.tsx` from a registry of coded components, patterns and device chrome (`src/ui/registry.ts`), each keyed by the Figma identities it was built from (`sources`, one canonical). Tokens are Figma variables (`src/ui/tokens.json`, `token()` / `type()` in `src/ui/tokens.ts`). Pages: `/ui`, `/ui/<id>` (Figma render beside Dekiru's), `/ui/<id>/frame`.
+
+**Audit before code** (`scripts/ui-audit.ts`): the gate for every new screen.
+
+```bash
+npm run ui:audit -- docs/ui-audits/raw/<frame>.json              # report → docs/ui-audits/<slug>.audit.md
+npm run ui:audit -- docs/ui-audits/raw/<frame>.json --write-tokens
+```
+
+The raw file is what the Figma connector returns for one frame (`get_metadata`, `get_code_connect_suggestions`, `get_variable_defs`, `get_libraries`, the `get_design_context` code); Claude captures it in chat until a `FIGMA_TOKEN` lets the script read Figma itself. The script matches instances to the registry by Figma identity (Code Connect hits, main-component nodes; never by name), separates patterns and device chrome, lists what would be New, flags design hygiene (default-named components, hidden alternatives, undecided sources, text that can overflow), and diffs the variables against `tokens.json`. It writes no code: components are built only once the report is accepted. Hand-written audits from before the script sit beside the generated ones in `docs/ui-audits/`.
+
 ## Hosting notes
 
 - `vercel.json` pins the functions to **Singapore (sin1)**, next to the Neon database (ap-southeast-1): every page makes several queries, and from the default US region each one costs a ~200 ms round trip, which is what made Present take seconds to open.

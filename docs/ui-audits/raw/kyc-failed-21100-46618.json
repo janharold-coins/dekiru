@@ -1,0 +1,47 @@
+{
+  "file": "sm9kOVLwixDucqoX7etLI4",
+  "node": "21100:46618",
+  "name": "KYC - KYB → Failed",
+  "url": "https://www.figma.com/design/sm9kOVLwixDucqoX7etLI4/KYC---KYB?node-id=21100-46618",
+  "captured": "2026-11-04T16:40:00+08:00",
+  "metadata": "<frame id=\"21100:46618\" name=\"Failed\" x=\"3636\" y=\"8459\" width=\"360\" height=\"800\">\n  <frame id=\"21100:46619\" name=\"Container\" x=\"-0.5\" y=\"92\" width=\"360\" height=\"440\">\n    <frame id=\"21100:46620\" name=\"Content\" x=\"16\" y=\"16\" width=\"328\" height=\"424\">\n      <frame id=\"21100:46621\" name=\"content\" x=\"0\" y=\"0\" width=\"328\" height=\"424\">\n        <frame id=\"21100:46622\" name=\"content\" x=\"0\" y=\"0\" width=\"328\" height=\"424\">\n          <text id=\"21100:46623\" name=\"Account verification\" x=\"0\" y=\"0\" width=\"198\" height=\"30\" />\n          <instance id=\"21100:46624\" name=\"Component 2\" x=\"0\" y=\"46\" width=\"328\" height=\"116\" />\n          <instance id=\"21100:46625\" name=\"Component 3\" x=\"0\" y=\"178\" width=\"328\" height=\"114\" />\n          <instance id=\"21100:46626\" name=\"Component 4\" x=\"0\" y=\"308\" width=\"328\" height=\"116\" />\n        </frame>\n      </frame>\n    </frame>\n  </frame>\n  <instance id=\"21100:54150\" name=\"Bottom\" x=\"0.5\" y=\"646\" width=\"360\" height=\"154\" />\n  <frame id=\"21100:46628\" name=\"Top Bar\" x=\"-0.5\" y=\"0\" width=\"360\" height=\"92\">\n    <frame id=\"21100:46629\" name=\"Top Bar\" x=\"0\" y=\"0\" width=\"360\" height=\"92\">\n      <instance id=\"21100:46630\" name=\"Status Bar\" x=\"0\" y=\"0\" width=\"360\" height=\"44\" />\n      <instance id=\"21100:46631\" name=\"Top bar\" x=\"0\" y=\"44\" width=\"360\" height=\"48\" />\n    </frame>\n  </frame>\n</frame>",
+  "suggestions": [
+    { "componentName": "Component 2", "mainComponentNodeId": "21099:34179", "instanceNodeId": "21100:46624", "properties": { "Style": "Verify", "Status": "Failed", "Type": "L1", "Expand": "Off", "Device": "H5" } },
+    { "componentName": "Status Bar", "mainComponentNodeId": "20638:28683", "instanceNodeId": "21100:46630", "properties": {} }
+  ],
+  "variables": {
+    "Text/Primary (950)": "#131b26",
+    "Line 1.5x/H2 20px-700": "Font(family: \"Cns Manrope\", style: Bold, size: 20, weight: 700, lineHeight: 1.5, letterSpacing: 0)",
+    "Core/Red": "#ff3729",
+    "System/White": "#ffffff",
+    "Text/Subtitle (700)": "#5b6572",
+    "Typography/Font size/Subtext 10px": "10",
+    "Typography/Font family/Nomal": "Cns Manrope",
+    "Typography/Font weight/Semibold": "600",
+    "Web/Subtext 10px-600": "Font(family: \"Typography/Font family/Nomal\", style: SemiBold, size: Typography/Font size/Subtext 10px, weight: Typography/Font weight/Semibold, lineHeight: 1.5, letterSpacing: 0)",
+    "Special/Tag/Grey Bg": "#8997ab14",
+    "Web/Subtitle 16px-600": "Font(family: \"Cns Manrope\", style: SemiBold, size: 16, weight: 600, lineHeight: 1.5, letterSpacing: 0)",
+    "Line 1.5x/Body 12px-500": "Font(family: \"Cns Manrope\", style: Medium, size: 12, weight: 500, lineHeight: 1.5, letterSpacing: 0)",
+    "Text/Secondary (500)": "#8795a8",
+    "Fill/Page (0)": "#ffffff",
+    "Line/Strong": "#e7e9ee",
+    "Light- Shadow 1": "Effect(type: DROP_SHADOW, color: #0D1F4214, offset: (0, 1), radius: 8, spread: 0)",
+    "Line Auto/H4 16px-600": "Font(family: \"Cns Manrope\", style: SemiBold, size: 16, weight: 600, lineHeight: 100, letterSpacing: 0)",
+    "Typography/Font size/Subtext 12px": "12",
+    "Typography/Font weight/Medium": "500",
+    "Web/Subtext 12px-500": "Font(family: \"Typography/Font family/Nomal\", style: Medium, size: Typography/Font size/Subtext 12px, weight: Typography/Font weight/Medium, lineHeight: 1.5, letterSpacing: 0)",
+    "Text/Inverse": "#ffffff",
+    "Line 1.5x/Subtitle 14px-700": "Font(family: \"Cns Manrope\", style: Bold, size: 14, weight: 700, lineHeight: 1.5, letterSpacing: 0)",
+    "Core/Blue": "#3385ff",
+    "Core/Brand": "#0e0f11",
+    "Line 1.5x/Subtitle 14px-600": "Font(family: \"Cns Manrope\", style: SemiBold, size: 14, weight: 600, lineHeight: 1.5, letterSpacing: 0)",
+    "Fill/Control (75)": "#f5f7fa",
+    "Fill/Float (25)": "#ffffff"
+  },
+  "libraries": [
+    { "name": "[App] Component library V2", "libraryKey": "lk-4614de82bb2869554034b166e7841de6271db92f7fb6d8e63c54928b8f60a2945b7a8d171cfee064ec5e30c9165dac1bcd8f491fb243342a320f224dc141699e" },
+    { "name": "Foundation Library V2", "libraryKey": "lk-61f25855d9196b5a7a0e8c406bbb43bf9c5a3161bc1bca4b6110af013677c09449c2ac76df06a1aa7aee26675382c3c8240eae1d8ebe2e2d18434cb4fec9aaed" },
+    { "name": "[Web] Revamp Library V2", "libraryKey": "lk-2ca19b9bd1711c131165dfdae14707c5462c807abb68a0ef4ced68777152f385794d07641f5c550f1e6a37487c9af69393feb4a66be2f8f27bd25fa481674ea6" }
+  ],
+  "designContext": "<CodeConnectSnippet data-node-id=\"I21100:46624;21100:39093\" data-name=\"C-Tag/Rectangle\">\n<Tag color=\"Grey\" type=\"S(10px)\" icon=\"Off\" />\n</CodeConnectSnippet>\n<p className=\"[word-break:break-word] font-['Cns_Manrope:Medium'] leading-[1.5] min-w-full not-italic relative shrink-0 text-[12px] text-[color:var(--core\\/red,#ff3729)] w-[min-content]\" data-node-id=\"I21100:46624;21100:39095\">Your address information has been rejected due to your street being invalid.</p>\n<CodeConnectSnippet data-node-id=\"I21100:46624;21100:39168\" data-name=\"1 Color\">\n<Icon name=\"Down\" form=\"Outline\" />\n</CodeConnectSnippet>\n<CodeConnectSnippet data-node-id=\"I21100:46625;21100:39182\" data-name=\"1 Color\">\n<Icon name=\"Locked\" form=\"Outline\" />\n</CodeConnectSnippet>\n<CodeConnectSnippet data-node-id=\"I21100:46625;21100:39185\" data-name=\"C-Tag/Rectangle\">\n<Tag color=\"Grey\" type=\"S(10px)\" icon=\"Off\" />\n</CodeConnectSnippet>\n<CodeConnectSnippet data-node-id=\"I21100:46625;21100:39188\" data-name=\"1 Color\">\n<Icon name=\"Down\" form=\"Outline\" />\n</CodeConnectSnippet>\n<CodeConnectSnippet data-node-id=\"I21100:46626;21100:39257\" data-name=\"1 Color\">\n<Icon name=\"Locked\" form=\"Outline\" />\n</CodeConnectSnippet>\n<CodeConnectSnippet data-node-id=\"I21100:46626;21100:39260\" data-name=\"C-Tag/Rectangle\">\n<Tag color=\"Grey\" type=\"S(10px)\" icon=\"Off\" />\n</CodeConnectSnippet>\n<CodeConnectSnippet data-node-id=\"I21100:46626;21100:39263\" data-name=\"1 Color\">\n<Icon name=\"Down\" form=\"Outline\" />\n</CodeConnectSnippet>\n<CodeConnectSnippet data-node-id=\"21100:54150\" data-name=\"Bottom\">\n<Bottom status=\"Default\" type=\"2_TextOnly\" keyboard=\"Off\" leftIcon=\"Off\">\n<Button type=\"Primary\" size=\"L\" status=\"Default\" />\n<Button type=\"Text-only\" size=\"L\" status=\"Default\" />\n</Bottom>\n</CodeConnectSnippet>\n<CodeConnectSnippet data-node-id=\"21100:46631\" data-name=\"Top bar\">\n<TopBar title=\"Off\" left=\"On\" right=\"Off\">\n<Icon name=\"Left\" form=\"Outline\" />\n</TopBar>\n</CodeConnectSnippet>"
+}

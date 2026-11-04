@@ -12,7 +12,8 @@
     "db:seed": "tsx scripts/db-seed.ts",
     "db:studio": "drizzle-kit studio",
     "user:role": "tsx scripts/user-role.ts",
-    "studio": "tsx scripts/studio.ts"
+    "studio": "tsx scripts/studio.ts",
+    "ui:audit": "tsx scripts/ui-audit.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "^2.3.1",

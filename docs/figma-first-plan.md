@@ -87,7 +87,7 @@ Home gets a **"UI (wip-alpha test)"** tab (decision 6).
 
 | # | Step | Done means |
 |---|---|---|
-| 1 | **Audit tool.** `npm run ui:audit -- <figma url>` (and a Studio page): reads the frame through the Figma connector, prints the five lists. Stores nothing. | Run on the first screen Jan supplies; lists make sense to him |
+| 1 | **Audit tool.** `npm run ui:audit -- <figma url>` (and a Studio page): reads the frame through the Figma connector, prints the five lists. Stores nothing. **Done 2026-11-04 as `scripts/ui-audit.ts`** over a raw capture of the connector's output (Claude captures; the script matches, flags, diffs tokens, writes the report). Reads Figma itself once `FIGMA_TOKEN` exists. | Run on the first screen Jan supplies; lists make sense to him |
 | 2 | **Tokens.** `tokens.json`, `token()` helper, `ui:sync-tokens` with diff report | Re-running after a Figma change shows the change |
 | 3 | **First components.** Code what the audit listed for screen 1, keyed by Figma key, props from variant properties and text slots; registry | Each renders beside its Figma screenshot in the Studio |
 | 4 | **First screen as data + renderer.** Tree from the frame, layout from auto-layout, iframe render, compare view | Screen 1 renders; gaps listed |
