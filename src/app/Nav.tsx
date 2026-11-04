@@ -16,7 +16,7 @@ function initials(name: string) {
 }
 
 /** The workspace header (Figma "Dekiru" 23:497): brand, main navigation, account and sign out. */
-export async function Nav({ on, user }: { on?: "decks" | "library" | "people" | "studio"; user: SignedInUser | null }) {
+export async function Nav({ on, user }: { on?: "decks" | "library" | "people" | "studio" | "ui"; user: SignedInUser | null }) {
   const item = (href: string, label: string, key: typeof on) => (
     <Link href={href} className={`app-nav-item${on === key ? " on" : ""}`} aria-current={on === key ? "page" : undefined}>{label}</Link>
   );
@@ -34,6 +34,7 @@ export async function Nav({ on, user }: { on?: "decks" | "library" | "people" | 
           {item("/", "Decks", "decks")}
           {item("/library", "Library", "library")}
           {canUseStudio(user) && item("/studio", "Studio", "studio")}
+          {canUseStudio(user) && item("/ui", "UI (wip-alpha test)", "ui")}
           {user?.role === "admin" && item("/people", "People", "people")}
         </nav>
       </div>

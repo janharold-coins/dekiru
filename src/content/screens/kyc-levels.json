@@ -1,0 +1,74 @@
+{
+  "id": "kyc-levels",
+  "title": "Verification levels (expanded)",
+  "figma": { "file": "sm9kOVLwixDucqoX7etLI4", "node": "20638:28974", "name": "KYC - KYB → -> Expanded" },
+  "device": { "width": 360, "height": 1681 },
+  "tree": {
+    "component": "Stack", "figma": "20638:28974",
+    "children": [
+      { "component": "status-bar", "figma": "20638:29176", "props": { "dark": false, "island": true } },
+      { "component": "top-bar", "figma": "20638:29177", "props": { "left": true } },
+      {
+        "component": "Stack", "figma": "20638:28975", "props": { "padding": "8px 16px", "gap": 24, "align": "center" },
+        "children": [
+          {
+            "component": "Stack", "figma": "20638:28977", "props": { "gap": 8, "width": "100%" },
+            "children": [
+              {
+                "component": "Stack", "figma": "20638:28978", "props": { "gap": 16, "align": "center" },
+                "children": [
+                  { "component": "coins-logo", "figma": "22363:35965", "props": { "country": "Philippines" } },
+                  { "component": "Text", "figma": "20638:28980", "props": { "style": "Line 1.5x/H2 20px-700", "color": "Text/Primary (950)", "align": "center", "text": "Welcome to Coins.ph" } }
+                ]
+              },
+              { "component": "Text", "figma": "20638:28981", "props": { "style": "Line 1.5x/Body 14px-500", "color": "Text/Subtitle (700)", "align": "center", "text": "Your crypto and payments journey starts now. Complete Level 1 to get started, then upgrade to Level 2 for full benefits." } }
+            ]
+          },
+          {
+            "component": "Stack", "figma": "20638:28982", "props": { "gap": 16, "width": "100%" },
+            "children": [
+              {
+                "component": "verification-level-card", "figma": "21100:43867",
+                "props": {
+                  "level": "L1", "status": "Active", "expanded": true, "tag": "Level 1", "title": "Basic verification",
+                  "description": "1-2 mins to kickstart your crypto and daily payments journey.",
+                  "requirements": [{ "icon": "IdCard", "text": "Basic info" }, { "icon": "Selfie", "text": "Quick selfie check" }],
+                  "unlocks": [
+                    { "label": "Cash in", "amount": "₱10,000/day" }, { "label": "Scan to pay" }, { "label": "Pay bills" }, { "label": "Buy load" },
+                    { "label": "Loyalty rewards & Rewards hub" }, { "label": "One-click buy, sell & convert (OCBS)" }
+                  ]
+                }
+              },
+              {
+                "component": "verification-level-card", "figma": "21100:43868",
+                "props": {
+                  "level": "L2", "status": "Inactive", "expanded": true, "tag": "Level 2", "title": "Identity verification",
+                  "description": "3-5 mins to enjoy full withdrawal access and trade like a pro.",
+                  "requirements": [{ "icon": "IdCard", "text": "Government-issued ID" }, { "icon": "Selfie", "text": "Quick selfie check" }],
+                  "unlocks": [
+                    { "label": "Cash in", "amount": "₱1,000,000/day" }, { "label": "Cash out", "amount": "₱1,000,000/day" }, { "label": "Spot trading" },
+                    { "label": "Send money" }, { "label": "Launchpool" }, { "label": "Crypto deposit & withdrawal" }
+                  ]
+                }
+              },
+              {
+                "component": "verification-level-card", "figma": "21100:43869",
+                "props": {
+                  "level": "L3", "status": "Inactive", "expanded": true, "tag": "Level 3", "title": "Enhanced verification",
+                  "description": "Upgrade to premium limits for large-scale trading.",
+                  "requirements": [{ "icon": "Income", "text": "Source of income" }],
+                  "unlocks": [{ "label": "Cash in", "amount": "₱200,000,000/month" }, { "label": "Cash out", "amount": "₱200,000,000/month" }]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      { "component": "Stack", "props": { "flex": 1 } },
+      {
+        "component": "bottom", "figma": "20638:29174",
+        "props": { "type": "2_TextOnly", "status": "Default", "primary": "Start verification", "secondaryLead": "Representing a company?", "secondaryLink": "Apply for corporate verification" }
+      }
+    ]
+  }
+}
