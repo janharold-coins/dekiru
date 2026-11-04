@@ -28,11 +28,16 @@ function RenderNode({ node }: { node: Node }) {
   return <Component {...p}>{kids}</Component>;
 }
 
-/** The whole screen at its device width, with every token as a CSS variable on the root. */
+/**
+ * The whole screen at its device width, with every token as a CSS variable on the root. The tree's root Stack is
+ * made to fill the device height, so a `flex: 1` spacer in the tree pushes the footer to the bottom (as the
+ * frame's absolute-positioned Bottom sits at the bottom in Figma); taller content simply scrolls.
+ */
 export function RenderScreen({ screen }: { screen: Screen }) {
+  const root: Node = screen.tree.component === "Stack" ? { ...screen.tree, props: { ...screen.tree.props, flex: 1 } } : screen.tree;
   return (
     <div style={{ width: screen.device.width, minHeight: screen.device.height, display: "flex", flexDirection: "column", background: token("Fixed/White"), ...tokenVars() }} data-screen={screen.id}>
-      <RenderNode node={screen.tree} />
+      <RenderNode node={root} />
     </div>
   );
 }
