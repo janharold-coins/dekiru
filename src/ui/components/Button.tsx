@@ -4,7 +4,7 @@ import type { FigmaOrigin } from "../types";
 
 /** [App] Component library V2 → "Button": Type × Size × Status. The set in use on the KYC screens is main node 20531:26780. */
 export const buttonOrigin: FigmaOrigin = {
-  library: "[App] Component library V2", set: "Button", mainNode: "20531:26780",
+  library: "[App] Component library V2", set: "Button", mainNode: "20531:26780", libraryNode: "3196:22767",
   variants: ["Type", "Size", "Status"],
 };
 

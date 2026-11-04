@@ -4,7 +4,7 @@ import type { FigmaOrigin } from "../types";
 
 /** [App] Component library V2 → "Tag" (instance name "C-Tag/Rectangle"): Color × Type × Icon. */
 export const tagOrigin: FigmaOrigin = {
-  library: "[App] Component library V2", set: "Tag", setKey: "b0aeebaa3b8bf017cc28aa148491def9571ac59c", mainNode: "20286:21567",
+  library: "[App] Component library V2", set: "Tag", setKey: "b0aeebaa3b8bf017cc28aa148491def9571ac59c", mainNode: "20286:21567", libraryNode: "29:736",
   variants: ["Color", "Type", "Icon"],
 };
 

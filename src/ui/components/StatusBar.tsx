@@ -3,7 +3,7 @@ import type { FigmaOrigin } from "../types";
 
 /** [App] Component library V2 → "Status Bar 状态栏" (Dark × island). 56px tall; iOS time left, status icons right. */
 export const statusBarOrigin: FigmaOrigin = {
-  library: "[App] Component library V2", set: "Status Bar", setKey: "07d7a4c9dc45c0e4741bf130ae78cff437613098", mainNode: "2:18171",
+  library: "[App] Component library V2", set: "Status Bar", setKey: "07d7a4c9dc45c0e4741bf130ae78cff437613098", mainNode: "2:18171", libraryNode: "3823:46707",
   variants: ["Dark", "island"],
 };
 

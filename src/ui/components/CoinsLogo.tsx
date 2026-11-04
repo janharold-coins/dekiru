@@ -2,7 +2,8 @@ import type { FigmaOrigin } from "../types";
 
 /** "Icon/Logo/Light" (Country × Logo × Text × Padding): the Coins.ph mark with the PH badge, 40px. */
 export const coinsLogoOrigin: FigmaOrigin = {
-  library: "Foundation Library V2 (presumed; not found by search)", set: "Icon/Logo/Light", mainNode: "22361:39411",
+  // Foundation holds two "Icon/Logo" sets (a8818784… 2026-10-20 and 4220c47d… 2026-09-09); the library node 405:3284 says which once mapped from there.
+  library: "Foundation Library V2", set: "Icon/Logo", mainNode: "22361:39411", libraryNode: "405:3284",
   variants: ["Country", "Logo", "Text", "Padding"],
 };
 

@@ -1,0 +1,19 @@
+{
+  "$comment": "Code Connect: Figma component → the Dekiru file built from it. `nodeId` is the main component as seen from the KYC file (sm9kOVLwixDucqoX7etLI4); `libraryNode` is the same component's node in the library file that defines it, which is where Code Connect must be set (Figma refuses mappings from a consuming file: CODE_CONNECT_EXTERNAL_LIBRARY_COMPONENT, 2026-11-04). `uiWidget` is the handoff mapping to @coins/ui-widget where a web code component exists. Status: not yet sent; needs the library files' keys.",
+  "consumerFile": "sm9kOVLwixDucqoX7etLI4",
+  "label": "React",
+  "libraries": {
+    "[App] Component library V2": { "libraryKey": "lk-4614de82bb2869554034b166e7841de6271db92f7fb6d8e63c54928b8f60a2945b7a8d171cfee064ec5e30c9165dac1bcd8f491fb243342a320f224dc141699e", "fileKey": null },
+    "Foundation Library V2": { "libraryKey": "lk-61f25855d9196b5a7a0e8c406bbb43bf9c5a3161bc1bca4b6110af013677c09449c2ac76df06a1aa7aee26675382c3c8240eae1d8ebe2e2d18434cb4fec9aaed", "fileKey": null }
+  },
+  "mappings": [
+    { "nodeId": "20531:26780", "libraryNode": "3196:22767", "set": "Button", "library": "[App] Component library V2", "dekiru": "src/ui/components/Button.tsx", "uiWidget": "CButton", "sent": false },
+    { "nodeId": "20286:21567", "libraryNode": "29:736", "set": "Tag", "library": "[App] Component library V2", "dekiru": "src/ui/components/Tag.tsx", "uiWidget": "CTag", "sent": false },
+    { "nodeId": "20074:18651", "libraryNode": "1:595", "set": "1 Color", "library": "Foundation Library V2", "dekiru": "src/ui/components/Icon.tsx", "uiWidget": "@coins/ui-icons", "sent": false },
+    { "nodeId": "20587:32072", "libraryNode": "239:9680", "set": "Nav bar/Top bar", "library": "[App] Component library V2", "dekiru": "src/ui/components/TopBar.tsx", "uiWidget": "CNavBar", "sent": false },
+    { "nodeId": "2:18171", "libraryNode": "3823:46707", "set": "Status Bar", "library": "[App] Component library V2", "dekiru": "src/ui/components/StatusBar.tsx", "uiWidget": null, "sent": false },
+    { "nodeId": "20587:26257", "libraryNode": "3436:20116", "set": "Bottom", "library": "[App] Component library V2", "dekiru": "src/ui/components/Bottom.tsx", "uiWidget": "CBottom", "sent": false },
+    { "nodeId": "22361:39411", "libraryNode": "405:3284", "set": "Icon/Logo (instance Icon/Logo/Light; two sets exist in Foundation)", "library": "Foundation Library V2", "dekiru": "src/ui/components/CoinsLogo.tsx", "uiWidget": null, "sent": false },
+    { "nodeId": "21099:34179", "libraryNode": null, "set": "Component 2 (verification level card)", "library": "KYC - KYB (file-local, not published)", "dekiru": "src/ui/patterns/VerificationLevelCard.tsx", "uiWidget": null, "sent": false, "note": "CODE_CONNECT_COMPONENT_NOT_PUBLISHED: map once the KYC file (or a library the card moves to) is published." }
+  ]
+}

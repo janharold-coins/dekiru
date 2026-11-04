@@ -29,6 +29,8 @@ export interface FigmaOrigin {
   setKey?: string;
   /** Main component node id as seen from the screen's file (from the Code Connect pass). */
   mainNode?: string;
+  /** The same component's node id inside the library file that defines it (Figma reports it when a mapping is attempted from a consuming file). Where Code Connect is set. */
+  libraryNode?: string;
   /** Variant axes the set has, so the audit can map instance properties to props. */
   variants?: string[];
 }

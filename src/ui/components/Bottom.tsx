@@ -8,7 +8,7 @@ import { Button } from "./Button";
  * primary button, an optional text-only button, and the home indicator. Type 2_TextOnly = primary + text-only.
  */
 export const bottomOrigin: FigmaOrigin = {
-  library: "[App] Component library V2", set: "Bottom", mainNode: "20587:26257",
+  library: "[App] Component library V2", set: "Bottom", mainNode: "20587:26257", libraryNode: "3436:20116",
   variants: ["Status", "Type", "Keyboard", "Left icon"],
 };
 
