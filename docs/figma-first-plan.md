@@ -28,6 +28,7 @@ instance on Frame B  →  componentKey "a1b2…"  →  same file, reused; overri
 
 - **Variants** (`Button/Primary/Large`, `Button/Secondary/Small`) are one component set → one coded `Button` with `variant` and `size` props. An unseen variant is an addition to the existing component, not a new one.
 - **Matching is by key only.** Never by name or by looks. Anything without a key is reported, not guessed.
+- **One component per real thing, whatever library it came from** (Jan, 2026-11-04). The app and web libraries both ship a Tag, a Status Bar, two Button sets; designers use either. Dekiru keeps one coded component and lists every Figma set that is the same thing as an **alias** identity (`FigmaOrigin.aliases`). The audit treats an instance of any alias as Known, and still reports which library it came from, so the libraries can converge into one over time. Nothing is built twice because Figma has it twice.
 
 ## 4. Granularity
 

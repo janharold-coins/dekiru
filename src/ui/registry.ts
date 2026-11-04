@@ -32,5 +32,10 @@ export const ui: Record<string, UiEntry> = {
   "verification-level-card": { name: "Verification level card", kind: "pattern", Component: VerificationLevelCard, figma: verificationLevelCardOrigin },
 };
 
-/** Registry id for a Figma main-component node, when we hold it. */
-export const byMainNode = (node: string) => Object.entries(ui).find(([, e]) => e.figma.mainNode === node)?.[0];
+/** Registry id for a Figma main-component node (or an alias's), when we hold it. */
+export const byMainNode = (node: string) =>
+  Object.entries(ui).find(([, e]) => e.figma.mainNode === node || e.figma.aliases?.some((a) => a.mainNode === node))?.[0];
+
+/** Registry id for a Figma component-set key (or an alias's), when we hold it. */
+export const bySetKey = (key: string) =>
+  Object.entries(ui).find(([, e]) => e.figma.setKey === key || e.figma.aliases?.some((a) => a.setKey === key))?.[0];

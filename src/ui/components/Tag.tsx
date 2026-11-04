@@ -3,12 +3,14 @@ import { token, type } from "../tokens";
 import type { FigmaOrigin } from "../types";
 
 /**
- * "C-Tag/Rectangle" (Color × Type × Icon). Code Connect placed its main component in the **[Web] Revamp Library V2**
- * (node 29:736 there), not in the App library, which has its own Tag set (b0aeebaa…): the KYC screen uses a web tag.
+ * Tag (Color × Type × Icon). The KYC screen's instance ("C-Tag/Rectangle") is the [Web] Revamp Library V2 set
+ * (node 29:736 there); the App library ships its own Tag set (b0aeebaa…). They are the same component to Dekiru:
+ * one Tag, both sets as its identity (the one-library rule).
  */
 export const tagOrigin: FigmaOrigin = {
   library: "[Web] Revamp Library V2", set: "C-Tag/Rectangle", mainNode: "20286:21567", libraryNode: "29:736",
   variants: ["Color", "Type", "Icon"],
+  aliases: [{ library: "[App] Component library V2", set: "Tag", setKey: "b0aeebaa3b8bf017cc28aa148491def9571ac59c" }],
 };
 
 export interface TagProps {

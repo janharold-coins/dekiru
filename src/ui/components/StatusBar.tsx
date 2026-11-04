@@ -9,6 +9,7 @@ import type { FigmaOrigin } from "../types";
 export const statusBarOrigin: FigmaOrigin = {
   library: "unknown (not App V2, Foundation V2 or Web Revamp V2)", set: "Status Bar 状态栏", mainNode: "2:18171", libraryNode: "3823:46707",
   variants: ["Dark", "island"],
+  aliases: [{ library: "[App] Component library V2", set: "Status Bar", setKey: "07d7a4c9dc45c0e4741bf130ae78cff437613098" }],
 };
 
 export interface StatusBarProps { dark?: boolean; island?: boolean; time?: string }

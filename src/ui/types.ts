@@ -33,4 +33,10 @@ export interface FigmaOrigin {
   libraryNode?: string;
   /** Variant axes the set has, so the audit can map instance properties to props. */
   variants?: string[];
+  /**
+   * Other Figma sets that are the same component (the app and web libraries both ship a Tag; designers use either).
+   * Rule (Jan, 2026-11-04): one Dekiru component per real thing, whatever library it came from. The audit treats an
+   * instance of any alias as Known.
+   */
+  aliases?: { library: string; set: string; setKey?: string; mainNode?: string; libraryNode?: string }[];
 }
