@@ -442,6 +442,25 @@ export const studioRequests = pgTable(
 );
 
 /** Decisions on a proposal, newest wins. `revision` is the proposal's revision when decided: a newer one reopens it. */
+/**
+ * UI library: which Figma source a coded component treats as canonical, and which are retired (src/ui/registry.ts
+ * declares every source a component has been matched to; decisions made on /ui/library override their status).
+ * One row per (component, source); the newest row per pair wins.
+ */
+export const uiSourceDecisions = pgTable(
+  "ui_source_decisions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    componentId: text("component_id").notNull(), // registry id, e.g. "tag"
+    sourceKey: text("source_key").notNull(), // library|set|key (src/lib/ui-sources.ts)
+    status: text("status").notNull(), // "canonical" | "candidate" | "retired"
+    note: text("note"),
+    byId: uuid("by_id").references(() => users.id, { onDelete: "set null" }),
+    createdAt: created(),
+  },
+  (t) => [index("ui_source_decisions_component").on(t.componentId, t.createdAt)],
+);
+
 export const studioDecisions = pgTable(
   "studio_decisions",
   {

@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { canUseStudio } from "@/lib/studio";
 import { screenList } from "@/content/screens";
-import { ui, type UiKind } from "@/ui/registry";
+import { type UiKind } from "@/ui/registry";
+import { libraryWithDecisions } from "@/lib/ui-sources";
 import { tokenNames } from "@/ui/tokens";
 import { Nav } from "../Nav";
 import { PageHero } from "../PageHero";
@@ -18,11 +19,11 @@ const KIND: Record<UiKind, { title: string; blurb: string }> = {
 export default async function UiHome() {
   const user = await requireUser("/ui");
   if (!canUseStudio(user)) notFound();
-  const entries = Object.entries(ui);
+  const entries = Object.entries(await libraryWithDecisions());
   return (
     <main className="shell">
       <Nav on="ui" user={user} />
-      <PageHero title="UI (wip-alpha test)">Screens are built from Figma, one at a time; the component library grows with them. Plan: <code>docs/figma-first-plan.md</code>.</PageHero>
+      <PageHero title="UI (wip-alpha test)">Screens are built from Figma, one at a time; the component library grows with them. Plan: <code>docs/figma-first-plan.md</code>. <Link href="/ui/library">UI library →</Link></PageHero>
       <h2>Screens</h2>
       <ul className="list">
         {screenList().map((s) => (

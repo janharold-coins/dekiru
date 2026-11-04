@@ -12,9 +12,15 @@
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
-import { ui, byMainNode } from "@/ui/registry";
-import type { UiKind } from "@/ui/registry";
+import { ui as declared, type UiEntry, type UiKind } from "@/ui/registry";
+import { hasDb } from "@/db/client";
+import { libraryWithDecisions } from "@/lib/ui-sources";
 import tokens from "@/ui/tokens.json";
+
+/** The registry with /ui/library decisions applied when a database is configured; the declared statuses otherwise. */
+let ui: Record<string, UiEntry> = declared;
+const byMainNode = (node: string) =>
+  Object.entries(ui).find(([, e]) => e.figma.sources.some((s) => s.status !== "retired" && s.mainNode === node))?.[0];
 
 interface Raw {
   file: string; node: string; name: string; url?: string; captured: string;
@@ -44,9 +50,10 @@ const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(
 const props = (p?: Record<string, string>) => Object.entries(p ?? {}).filter(([k]) => !k.startsWith("VARIANT:")).map(([k, v]) => `${k}=${v}`).join(" · ");
 const insideInstance = (n: MNode) => { for (let p = n.parent; p; p = p.parent) if (p.tag === "instance") return true; return false; };
 
-function main() {
+async function main() {
   const [rawPath, ...flags] = process.argv.slice(2);
   if (!rawPath) { console.error("usage: npm run ui:audit -- docs/ui-audits/raw/<frame>.json [--write-tokens]"); process.exit(2); }
+  if (hasDb()) ui = await libraryWithDecisions();
   const raw: Raw = JSON.parse(readFileSync(rawPath, "utf8"));
   const nodes = parseMetadata(raw.metadata);
   const root = nodes[0];
@@ -164,4 +171,4 @@ function main() {
 /** Libraries we can't check against the subscription list (unknown / file-local) don't raise the flag. */
 const e2 = (lib: string) => !/unknown|file-local/i.test(lib);
 
-main();
+main().then(() => process.exit(0), (e) => { console.error(e); process.exit(1); });

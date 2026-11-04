@@ -3,13 +3,14 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { canUseStudio } from "@/lib/studio";
 import { screens } from "@/content/screens";
-import { ui } from "@/ui/registry";
+import { ui as registry } from "@/ui/registry";
+import { libraryWithDecisions } from "@/lib/ui-sources";
 import { canonical, type Node } from "@/ui/types";
 import { Nav } from "../../Nav";
 import { PageHero } from "../../PageHero";
 
 function used(node: Node, acc = new Map<string, number>()) {
-  if (ui[node.component]) acc.set(node.component, (acc.get(node.component) ?? 0) + 1);
+  if (registry[node.component]) acc.set(node.component, (acc.get(node.component) ?? 0) + 1);
   node.children?.forEach((c) => used(c, acc));
   return acc;
 }
@@ -23,6 +24,7 @@ export default async function UiScreenPage({ params }: PageProps<"/ui/[id]">) {
   if (!screen) notFound();
   const figmaUrl = `https://www.figma.com/design/${screen.figma.file}?node-id=${screen.figma.node.replace(":", "-")}`;
   const counts = used(screen.tree);
+  const ui = await libraryWithDecisions();
   return (
     <main className="shell">
       <Nav on="ui" user={user} />
