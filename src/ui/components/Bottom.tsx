@@ -11,7 +11,7 @@ import { Button } from "./Button";
  */
 export const bottomOrigin: FigmaOrigin = {
   variants: ["Status", "Type", "Keyboard", "Left icon"],
-  sources: [{ status: "canonical", library: "[App] Component library V2", set: "Bottom", mainNode: "20587:26257", libraryNode: "3436:20116", preview: "/ui/sources/bottom-app-3436-20116.png", url: "https://www.figma.com/design/praz6iby9CKDJfCBHew816/-App--Component-library-V2?node-id=3436-20116" }],
+  sources: [{ status: "canonical", library: "[App] Component library V2", set: "Bottom", mainNode: "20587:26257", libraryNode: "3436:20116", preview: "/ui-assets/sources/bottom-app-3436-20116.png", url: "https://www.figma.com/design/praz6iby9CKDJfCBHew816/-App--Component-library-V2?node-id=3436-20116" }],
 };
 
 export interface BottomProps {

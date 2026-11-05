@@ -33,7 +33,7 @@ export default async function UiScreenPage({ params }: PageProps<"/ui/[id]">) {
       <div style={{ display: "flex", gap: 32, alignItems: "flex-start", flexWrap: "wrap", padding: "16px 0" }}>
         <figure style={{ margin: 0 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={`/ui/ref/${screen.id}.png`} alt="Figma render" width={screen.device.width} height={screen.device.height} style={{ display: "block", border: "1px solid #ddd" }} />
+          <img src={`/ui-assets/ref/${screen.id}.png`} alt="Figma render" width={screen.device.width} height={screen.device.height} style={{ display: "block", border: "1px solid #ddd" }} />
           <figcaption className="muted" style={{ textAlign: "center", marginTop: 8 }}>Figma</figcaption>
         </figure>
         <figure style={{ margin: 0 }}>

@@ -2,23 +2,23 @@ import type { FigmaOrigin } from "../types";
 
 /**
  * Foundation Library V2 → "1 Color" icon set (Name × Form). One component, the icon chosen by `name`.
- * SVGs are the library's own, exported from the screen (public/ui/icons); add a file per new name met.
+ * SVGs are the library's own, exported from the screen (private/ui/icons, served by /ui-assets); add a file per new name met.
  */
 export const iconOrigin: FigmaOrigin = {
   variants: ["Name", "Form"],
-  sources: [{ status: "canonical", library: "Foundation Library V2", set: "1 Color", setKey: "36332540b928ba2ac21f1e722d25fe393db0941f", mainNode: "20074:18651", libraryNode: "1:595", preview: "/ui/sources/icon-foundation-1-595.png", url: "https://www.figma.com/design/3kFnLlMxm4UUBiBzntqZ54/Foundation-Library-V2?node-id=1-595" }],
+  sources: [{ status: "canonical", library: "Foundation Library V2", set: "1 Color", setKey: "36332540b928ba2ac21f1e722d25fe393db0941f", mainNode: "20074:18651", libraryNode: "1:595", preview: "/ui-assets/sources/icon-foundation-1-595.png", url: "https://www.figma.com/design/3kFnLlMxm4UUBiBzntqZ54/Foundation-Library-V2?node-id=1-595" }],
 };
 
 export const ICONS = {
-  Locked: "/ui/icons/locked-outline.svg",
-  ChevronDown: "/ui/icons/chevron-down.svg",
-  ChevronUp: "/ui/icons/chevron-down.svg", // the design flips the down chevron (scaleY -1)
-  Check: "/ui/icons/check.svg",
-  IdCard: "/ui/icons/id-card.svg",
-  Selfie: "/ui/icons/selfie.svg",
-  Income: "/ui/icons/income.svg",
-  Left: "/ui/icons/left.svg", // library name "Left" (back chevron)
-  Failed: "/ui/icons/failed-solid.svg", // library name "Failed", Form=Solid (red circle, white cross)
+  Locked: "/ui-assets/icons/locked-outline.svg",
+  ChevronDown: "/ui-assets/icons/chevron-down.svg",
+  ChevronUp: "/ui-assets/icons/chevron-down.svg", // the design flips the down chevron (scaleY -1)
+  Check: "/ui-assets/icons/check.svg",
+  IdCard: "/ui-assets/icons/id-card.svg",
+  Selfie: "/ui-assets/icons/selfie.svg",
+  Income: "/ui-assets/icons/income.svg",
+  Left: "/ui-assets/icons/left.svg", // library name "Left" (back chevron)
+  Failed: "/ui-assets/icons/failed-solid.svg", // library name "Failed", Form=Solid (red circle, white cross)
 } as const;
 export type IconName = keyof typeof ICONS;
 

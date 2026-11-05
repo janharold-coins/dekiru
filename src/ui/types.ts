@@ -41,7 +41,7 @@ export interface FigmaSource {
    */
   status: "canonical" | "candidate" | "retired";
   note?: string;
-  /** A render of the source from Figma (public/ui/sources/*.png), so people can see what they are deciding on. */
+  /** A render of the source from Figma (private/ui/sources/*.png, served to signed-in Studio users by /ui-assets), so people can see what they are deciding on. */
   preview?: string;
   /** Where to open it in Figma: the component/set when its node is known, else its library page. */
   url?: string;
