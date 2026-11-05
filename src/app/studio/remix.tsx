@@ -20,6 +20,7 @@ export async function proposalSlides(p: Proposal, viewerId: string | null): Prom
       labels: p.examples.map((_, i) => `Example ${i + 1} · ${p.entry.meta.name} layout`),
     };
   }
+  if (p.kind === "pattern") return { slides: [], labels: [] }; // not remixable; never opens in the remix editor
   return themeSlides(p.tokens, viewerId);
 }
 

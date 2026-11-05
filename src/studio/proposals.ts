@@ -2,6 +2,9 @@ import type { PatternEntry } from "@/deck/registry";
 import type { ThemeTokens } from "@/deck/theme";
 import type { SlideData } from "@/deck/types";
 import { ClientQuote, clientQuoteMeta } from "@/deck/patterns/ClientQuote";
+import type { Extra } from "@/ui/RenderScreen";
+import type { Node } from "@/ui/types";
+import { AccordionCard, IconRow, ListSection, ValueRow } from "./ui/AccordionCard";
 
 /**
  * Studio proposals: layouts and themes Claude built for review, not yet in the library.
@@ -36,9 +39,76 @@ interface Base {
 }
 export interface LayoutProposal extends Base { kind: "layout"; entry: PatternEntry; examples: SlideData[] }
 export interface ThemeProposal extends Base { kind: "theme"; tokens: ThemeTokens }
-export type Proposal = LayoutProposal | ThemeProposal;
+/**
+ * A UI pattern: a generic, reusable piece drawn out of something built for one screen (its origin). The review
+ * shows the origin as it is today, the origin rebuilt with the pattern (it must look the same), and other uses.
+ * Proposed code lives in ./ui/ while reviewed. On approval Claude moves it to src/ui/patterns, registers it (and
+ * its parts) in src/ui/registry.ts with the origin's Figma source, rebuilds the origin's screens with it, and
+ * retires the origin entry, without asking again. The proposal stays here, pointing at the registry id.
+ */
+export interface PatternProposal extends Base {
+  kind: "pattern";
+  /** Registry id the pattern gets on approval. */
+  entryId: string;
+  /** The pattern and its parts, by the ids the example trees use. */
+  components: Extra;
+  /** What it was drawn out of: a registry entry, the screens using it, and the Figma set. */
+  origin: { entry: string; screens: string[]; figma: { name: string; url: string } };
+  /** How the pattern works: props and parts, in plain words. */
+  description: string;
+  /** Node trees (like screens). `was`: the origin as screens draw it today, for an example that rebuilds it. */
+  examples: { id: string; label: string; was?: Node; tree: Node }[];
+}
+export type Proposal = LayoutProposal | ThemeProposal | PatternProposal;
+
+const levelBody = (requirements: [string, string][], unlocks: [string, string?][]): Node[] => [
+  { component: "list-section", props: { label: "Requirement:" }, children: requirements.map(([icon, text]) => ({ component: "icon-row", props: { icon, text } })) },
+  { component: "list-section", props: { label: "Unlocks:" }, children: unlocks.map(([label, value]) => ({ component: "value-row", props: { label, value } })) },
+];
+const body = (text: string): Node => ({ component: "Text", props: { text, style: "Web/body 14px-500", color: "Text/Subtitle (700)" } });
 
 export const proposals: Proposal[] = [
+  {
+    id: "accordion-card", kind: "pattern", name: "Accordion card", revision: 1, date: "2026-11-05", entryId: "accordion-card",
+    brief: "From the verification level card (KYC screens): an accordion card any screen can use. Open and close it by tapping the header; the body takes any content.",
+    components: { "accordion-card": AccordionCard, "list-section": ListSection, "icon-row": IconRow, "value-row": ValueRow },
+    origin: {
+      entry: "verification-level-card",
+      screens: ["kyc-levels", "kyc-failed"],
+      figma: { name: "KYC - KYB → Component 2 (file-local set)", url: "https://www.figma.com/design/sm9kOVLwixDucqoX7etLI4/KYC---KYB?node-id=21099-34179" },
+    },
+    description: "Header: optional icon, optional tag, title, optional description, and a chevron. Tap the header to open or close; `expanded` sets how it starts (the Figma frame's state). Body: any content, 16 apart, under a divider. Tones are the three the origin draws: selected (blue border, shadow), muted (grey, secondary text, dimmed tag) and error (red description). Parts for the body: List section (bold label over rows), Icon row (icon and text) and Value row (label, optional value, optional check). Every style is the origin's; none is new.",
+    exceptions: "Studio rules are for slides; this follows the Figma origin instead. A plain neutral tone (grey border, regular text) isn't in Figma, so it isn't here; it can be added when a frame draws one. Figma only draws the error tone closed; opened, it is the error header over the usual body.",
+    examples: [
+      {
+        id: "origin-active", label: "Level 1, active and open (Verification levels screen)",
+        was: { component: "verification-level-card", props: { level: "L1", status: "Active", expanded: true, tag: "Level 1", title: "Basic verification", description: "1-2 mins to kickstart your crypto and daily payments journey.", requirements: [{ icon: "IdCard", text: "Basic info" }, { icon: "Selfie", text: "Quick selfie check" }], unlocks: [{ label: "Cash in", amount: "₱10,000/day" }, { label: "Scan to pay" }, { label: "Pay bills" }, { label: "Buy load" }, { label: "Loyalty rewards & Rewards hub" }, { label: "One-click buy, sell & convert (OCBS)" }] } },
+        tree: { component: "accordion-card", props: { tone: "selected", icon: "Locked", tag: "Level 1", title: "Basic verification", description: "1-2 mins to kickstart your crypto and daily payments journey.", expanded: true },
+          children: levelBody([["IdCard", "Basic info"], ["Selfie", "Quick selfie check"]], [["Cash in", "₱10,000/day"], ["Scan to pay"], ["Pay bills"], ["Buy load"], ["Loyalty rewards & Rewards hub"], ["One-click buy, sell & convert (OCBS)"]]) },
+      },
+      {
+        id: "origin-failed", label: "Level 1, failed (Account verification screen)",
+        was: { component: "verification-level-card", props: { level: "L1", status: "Failed", expanded: false, tag: "Level 1", title: "Basic verification", description: "Your address information has been rejected due to your street being invalid.", requirements: [{ icon: "IdCard", text: "Basic info" }, { icon: "Selfie", text: "Quick selfie check" }], unlocks: [{ label: "Cash in", amount: "₱10,000/day" }, { label: "Scan to pay" }, { label: "Pay bills" }, { label: "Buy load" }, { label: "Loyalty rewards & Rewards hub" }, { label: "One-click buy, sell & convert (OCBS)" }] } },
+        tree: { component: "accordion-card", props: { tone: "error", icon: "Failed", tag: "Level 1", title: "Basic verification", description: "Your address information has been rejected due to your street being invalid." },
+          children: levelBody([["IdCard", "Basic info"], ["Selfie", "Quick selfie check"]], [["Cash in", "₱10,000/day"], ["Scan to pay"], ["Pay bills"], ["Buy load"], ["Loyalty rewards & Rewards hub"], ["One-click buy, sell & convert (OCBS)"]]) },
+      },
+      {
+        id: "origin-inactive", label: "Level 2, not yet available (Account verification screen)",
+        was: { component: "verification-level-card", props: { level: "L2", status: "Inactive", expanded: false, tag: "Level 2", title: "Identity verification", description: "3-5 mins to enjoy full withdrawal access and trade like a pro.", requirements: [{ icon: "IdCard", text: "Government-issued ID" }, { icon: "Selfie", text: "Quick selfie check" }], unlocks: [{ label: "Cash in", amount: "₱1,000,000/day" }, { label: "Cash out", amount: "₱1,000,000/day" }, { label: "Spot trading" }, { label: "Send money" }, { label: "Launchpool" }, { label: "Crypto deposit & withdrawal" }] } },
+        tree: { component: "accordion-card", props: { tone: "muted", icon: "Locked", tag: "Level 2", title: "Identity verification", description: "3-5 mins to enjoy full withdrawal access and trade like a pro." },
+          children: levelBody([["IdCard", "Government-issued ID"], ["Selfie", "Quick selfie check"]], [["Cash in", "₱1,000,000/day"], ["Cash out", "₱1,000,000/day"], ["Spot trading"], ["Send money"], ["Launchpool"], ["Crypto deposit & withdrawal"]]) },
+      },
+      {
+        id: "question", label: "A question and its answer (no icon, no tag)",
+        tree: { component: "accordion-card", props: { tone: "selected", title: "Question title", expanded: true }, children: [body("The answer, in a few lines of body text. Tap the question to close it.")] },
+      },
+      {
+        id: "summary", label: "A summary with values",
+        tree: { component: "accordion-card", props: { tone: "muted", icon: "Income", title: "Summary title", description: "One line about what is inside." },
+          children: [{ component: "list-section", props: { label: "Section label:" }, children: [{ component: "value-row", props: { label: "Label", value: "Value", check: false } }, { component: "value-row", props: { label: "Label", value: "Value", check: false } }, { component: "value-row", props: { label: "Included item" } }] }] },
+      },
+    ],
+  },
   {
     id: "client-quote", kind: "layout", name: "Client quote", revision: 3, date: "2026-11-03", // in the library, with the Golden Ratio scale it was approved with
     brief: "Example to show how the Studio works (not requested): a slide for one client testimonial: their words large, with name and role. Light background, fits the content slides.",

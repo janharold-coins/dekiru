@@ -1255,3 +1255,14 @@ select.nd-input { appearance: none; -webkit-appearance: none; padding-right: 36p
 /* UI gallery cards lift like deck covers. */
 .ui-card { transition: transform .18s ease, box-shadow .18s ease; }
 .ui-card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(17,19,24,0.16); }
+
+/* Studio: UI pattern proposals (app UI on a white phone-width surface, not a slide). */
+.studio-pattern-frame { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 24px 16px; border-radius: 12px; }
+.studio-pattern-thumb { display: block; background: #fff; overflow: hidden; }
+.studio-pattern-thumb .studio-pattern-frame { border-radius: 0; transform-origin: top center; }
+.studio-pattern-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 16px; align-items: start; }
+.studio-pattern-grid figure { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.studio-pattern-grid figcaption { font-size: 13px; color: var(--mute); }
+.studio-pattern-h { font-size: 16px; margin: 8px 0 4px; }
+.studio-pattern-h + p { margin: 0 0 12px; font-size: 13px; color: var(--mute); }
+.ui-accordion-head:focus-visible { outline: 2px solid var(--blue); outline-offset: 4px; border-radius: 4px; }

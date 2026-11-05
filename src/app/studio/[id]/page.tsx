@@ -17,6 +17,9 @@ import { discardDraftAction } from "../actions";
 import { proposalSlides, remixThread } from "../remix";
 import { RemixEditor } from "../RemixEditor";
 import { DecisionForm } from "../StudioForms";
+import { PatternFrame } from "../PatternPreview";
+import { ui } from "@/ui/registry";
+import { screens } from "@/content/screens";
 import { TuneCard, TunedPreview, TuneProvider } from "../Tuner";
 
 /** The element spacing layouts use by default (Studio rules), the Tune card's starting point. */
@@ -55,7 +58,7 @@ export default async function ProposalPage({ params, searchParams }: { params: P
       <p className="crumb"><Link href="/studio">← Studio</Link></p>
       <header className="studio-head">
         <h1>{p.name}</h1>
-        <span className="tag">{p.kind === "theme" ? "Theme" : "Layout"}</span>
+        <span className="tag">{p.kind === "theme" ? "Theme" : p.kind === "pattern" ? "UI pattern" : "Layout"}</span>
         <span className={`tag${status === "waiting" || status === "draft" ? " warn" : ""}`}>{STATUS_LABEL[status]}</span>
         {library && (library.template
           ? <Link className="tag" href={`/library/templates/${library.template}`}>In the library →</Link>
@@ -80,6 +83,31 @@ export default async function ProposalPage({ params, searchParams }: { params: P
                   {p.examples.map((s) => <div key={s.id} className="card studio-big"><ScaledSlide><RenderSlide slide={s} entry={p.entry} /></ScaledSlide></div>)}
                 </TunedPreview>
               </ThemeScope>
+            </>
+          ) : p.kind === "pattern" ? (
+            <>
+              <h2 className="studio-pattern-h">Origin: {ui[p.origin.entry]?.name ?? p.origin.entry}, rebuilt as {p.name}</h2>
+              <p>
+                Left is the origin as the screens draw it today; right is the same content in the pattern. They should look the same.
+                Used on {p.origin.screens.map((s, i) => <span key={s}>{i ? ", " : ""}<Link href={`/ui/${s}`}>{screens[s]?.title ?? s}</Link></span>)}
+                {" · "}<a href={p.origin.figma.url} target="_blank" rel="noreferrer">{p.origin.figma.name} ↗</a>. Tap a header to open or close it.
+              </p>
+              {p.examples.filter((e) => e.was).map((e) => (
+                <section key={e.id} style={{ marginBottom: 24 }}>
+                  <h3 className="studio-pattern-h" style={{ fontSize: 14 }}>{e.label}</h3>
+                  <div className="studio-pattern-grid">
+                    <figure><figcaption>Today</figcaption><PatternFrame tree={e.was} still /></figure>
+                    <figure><figcaption>As {p.name} (tap the header)</figcaption><PatternFrame tree={e.tree} extra={p.components} /></figure>
+                  </div>
+                </section>
+              ))}
+              <h2 className="studio-pattern-h">Other uses</h2>
+              <p>The same pattern with other content. Placeholder copy: real copy comes from the screen that uses it.</p>
+              <div className="studio-pattern-grid">
+                {p.examples.filter((e) => !e.was).map((e) => (
+                  <figure key={e.id}><figcaption>{e.label}</figcaption><PatternFrame tree={e.tree} extra={p.components} /></figure>
+                ))}
+              </div>
             </>
           ) : (
             <ThemeScope tokens={p.tokens}>
@@ -111,6 +139,7 @@ export default async function ProposalPage({ params, searchParams }: { params: P
                 ) : null}
               </>
             )}
+            {p.kind === "pattern" && <><b>How it works</b><p>{p.description}</p></>}
             {issues.length > 0 && <><b>Readability</b><ul className="studio-budgets">{issues.map((i, n) => <li key={n} className="hint warn">{i.message}</li>)}</ul></>}
           </section>
           {history.length > 0 && (

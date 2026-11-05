@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { ComponentType, CSSProperties, ReactNode } from "react";
 import { ui } from "./registry";
 import { token, tokenVars, type } from "./tokens";
 import type { Node, Screen } from "./types";
@@ -7,8 +7,12 @@ import type { Node, Screen } from "./types";
  * Renders a screen's node tree. Layout nodes (`Stack`, `Text`) become flex boxes and text with token styles; every
  * other node is a registry component given its props. Children of a component go in as `children`.
  */
-function RenderNode({ node }: { node: Node }) {
-  const kids: ReactNode = node.children?.map((c, i) => <RenderNode key={i} node={c} />);
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+export type Extra = Record<string, ComponentType<any>>;
+
+/** Renders one node tree. `extra`: components not in the registry yet (a Studio proposal and its parts). */
+export function RenderNode({ node, extra }: { node: Node; extra?: Extra }) {
+  const kids: ReactNode = node.children?.map((c, i) => <RenderNode key={i} node={c} extra={extra} />);
   const p = node.props ?? {};
   if (node.component === "Stack") {
     const style: CSSProperties = {
@@ -22,9 +26,8 @@ function RenderNode({ node }: { node: Node }) {
   if (node.component === "Text") {
     return <p style={{ margin: 0, ...type(p.style as string), color: token(p.color as string), textAlign: p.align as CSSProperties["textAlign"], width: "100%", wordBreak: "break-word" }} data-figma={node.figma}>{String(p.text)}</p>;
   }
-  const entry = ui[node.component];
-  if (!entry) return <div style={{ padding: 8, background: "#fee", fontSize: 12 }}>Unknown component “{node.component}”</div>;
-  const { Component } = entry;
+  const Component = extra?.[node.component] ?? ui[node.component]?.Component;
+  if (!Component) return <div style={{ padding: 8, background: "#fee", fontSize: 12 }}>Unknown component “{node.component}”</div>;
   return <Component {...p}>{kids}</Component>;
 }
 

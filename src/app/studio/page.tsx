@@ -1,3 +1,4 @@
+import { PatternFrame } from "./PatternPreview";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { hasDb } from "@/db/client";
@@ -165,6 +166,8 @@ export default async function StudioPage({ searchParams }: { searchParams: Promi
             <Link href={`/studio/${p.id}`} className="studio-card-link">
               {p.kind === "layout" ? (
                 <span className="frame"><ScaledSlide><RenderSlide slide={p.examples[0]} entry={p.entry} /></ScaledSlide></span>
+              ) : p.kind === "pattern" ? (
+                <span className="frame studio-pattern-thumb"><PatternFrame tree={p.examples[0].tree} extra={p.components} still /></span>
               ) : (
                 <ThemeScope tokens={p.tokens}>
                   <span className="frame studio-quad">
@@ -175,7 +178,7 @@ export default async function StudioPage({ searchParams }: { searchParams: Promi
               <span className="studio-card-meta">
                 <span className="studio-card-title">
                   <b>{p.name}</b>
-                  <span className="tag">{p.remixOf ? "Remix" : p.kind === "theme" ? "Theme" : "Layout"}</span>
+                  <span className="tag">{p.remixOf ? "Remix" : p.kind === "theme" ? "Theme" : p.kind === "pattern" ? "UI pattern" : "Layout"}</span>
                   <span className="mono">rev {p.revision}</span>
                 </span>
                 <span className="studio-brief">{p.brief}</span>

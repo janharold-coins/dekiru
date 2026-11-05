@@ -64,7 +64,8 @@ export async function remixSource(ref: string): Promise<RemixSource | null> {
     return t ? { ref, name: t.name, kind: "theme", what: "a library theme" } : null;
   }
   const p = proposal(id);
-  if (!p || statusOf(p, await decisionsOf(id)).status !== "approved") return null;
+  // UI patterns aren't remixed (yet): a variant is a new pattern proposal.
+  if (!p || p.kind === "pattern" || statusOf(p, await decisionsOf(id)).status !== "approved") return null;
   return { ref, name: p.name, kind: p.kind, what: `an approved ${p.kind}`, href: `/studio/${id}` };
 }
 
