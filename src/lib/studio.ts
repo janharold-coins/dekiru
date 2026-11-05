@@ -2,6 +2,7 @@ import { asc, desc, eq, inArray, isNull } from "drizzle-orm";
 import { db } from "@/db/client";
 import { studioAttachments, studioDecisions, studioRequests, users } from "@/db/schema";
 import { getTemplate } from "@/content/templates";
+import { patterns } from "@/deck/registry";
 import { proposal, proposals, type Proposal } from "@/studio/proposals";
 import type { SignedInUser } from "./auth";
 import { canEditThemes, createTheme, publishTheme, publishedThemes, saveThemeDraft } from "./themes";
@@ -256,3 +257,30 @@ export async function decide(u: SignedInUser | null, id: string, decision: Decis
 }
 
 export const isStudioDecision = (d: string): d is Decision => d === "approved" || d === "changes_requested" || d === "rejected";
+
+/**
+ * Everything waiting on Claude, for `npm run studio` and the Dekiru connector's studio_queue: open requests (with
+ * their remix prompts), prompts on drafts and sent-back proposals, and approved layouts to move into the library.
+ */
+export async function studioQueue() {
+  const [requests, decisions] = await Promise.all([openRequests(), decisionsOf()]);
+  const promptsOn = (target: string, revision: number) => decisions
+    .filter((d) => d.proposalId === target && d.revision === revision && d.decision === "changes_requested").reverse()
+    .map((d) => ({ id: d.id, note: d.note, images: d.images, by: d.by, at: d.createdAt }));
+  const rows = proposals.map((p) => ({ p, ...statusOf(p, decisions) }));
+  return {
+    requests: requests.map((r) => ({ ...r, prompts: promptsOn(`request:${r.id}`, 0) })),
+    revise: rows.filter((r) => r.building).map(({ p }) => ({ id: p.id, revision: p.revision, remixOf: p.remixOf, prompts: promptsOn(p.id, p.revision) })),
+    ship: rows.filter((r) => r.status === "approved" && r.p.kind === "layout" && !patterns[r.p.entry.meta.id]).map((r) => r.p.id),
+    waiting: rows.filter((r) => r.status === "waiting").map((r) => r.p.id),
+    drafts: rows.filter((r) => r.status === "draft" && !r.building).map((r) => r.p.id),
+  };
+}
+export type StudioQueue = Awaited<ReturnType<typeof studioQueue>>;
+
+/** One key per piece of work Claude has to do, so a watcher can tell what's new since it last looked. */
+export const workKeys = (q: StudioQueue) => [
+  ...q.requests.flatMap((r) => [`request:${r.id}`, ...r.prompts.map((x) => `prompt:${x.id}`)]),
+  ...q.revise.flatMap((r) => r.prompts.map((x) => `prompt:${x.id}`)),
+  ...q.ship.map((id) => `ship:${id}`),
+];

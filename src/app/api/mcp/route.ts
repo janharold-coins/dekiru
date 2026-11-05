@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
 import { auth, authConfigured, type Role, type SignedInUser } from "@/lib/auth";
+import { registerStudioTools } from "@/lib/mcp-studio";
 import { INSTRUCTIONS, registerTools } from "@/lib/mcp-tools";
 
 /**
@@ -16,8 +17,8 @@ async function handle(req: Request) {
   return withMcpAuth(auth(), async (request, session) => {
     const [u] = session.userId ? await db().select().from(users).where(eq(users.id, session.userId)).limit(1) : [];
     if (!u) return Response.json({ jsonrpc: "2.0", error: { code: -32001, message: "Unknown user" }, id: null }, { status: 403 });
-    const user: SignedInUser = { id: u.id, email: u.email, name: u.name, image: u.image, role: u.role as Role, reviewScopes: u.reviewScopes };
-    const handler = createMcpHandler((server) => registerTools(server, user), {
+    const user: SignedInUser = { id: u.id, email: u.email, name: u.name, image: u.image, role: u.role as Role, reviewScopes: u.reviewScopes, canUseStudio: u.canUseStudio };
+    const handler = createMcpHandler((server) => { registerTools(server, user); registerStudioTools(server, user); }, {
       serverInfo: { name: "dekiru", version: "0.1.0" },
       instructions: INSTRUCTIONS,
     });

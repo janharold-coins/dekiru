@@ -1077,6 +1077,35 @@ select.nd-input { appearance: none; -webkit-appearance: none; padding-right: 36p
 @media (max-width: 760px) { .page-hero p { white-space: normal; } }
 
 /* Studio (/studio): requests, proposals, decisions */
+/* Toast: a short confirmation at the bottom of the screen (src/app/Toast.tsx). */
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 1000; display: flex; align-items: center; gap: 12px; max-width: min(560px, calc(100vw - 32px)); padding: 12px 12px 12px 16px; border-radius: 10px; background: #17191d; color: #fff; border: 1px solid rgba(255, 255, 255, 0.12); font-size: 14px; line-height: 1.4; box-shadow: 0 8px 28px rgba(16, 24, 40, 0.24); animation: toast-in 0.18s ease-out; }
+.toast button { flex: none; width: 24px; height: 24px; border: 0; border-radius: 6px; background: transparent; color: inherit; font-size: 16px; line-height: 1; cursor: pointer; opacity: 0.7; }
+.toast button:hover { opacity: 1; background: rgba(255, 255, 255, 0.12); }
+@keyframes toast-in { from { opacity: 0; transform: translate(-50%, 8px); } }
+@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
+/* Up next (after a decision): preview two thirds, the list of what else is for review one third. */
+.studio-next { width: min(1120px, calc(100vw - 48px)); max-height: calc(100vh - 48px); padding: 0; border: 1px solid var(--line); border-radius: 14px; background: var(--panel, #fff); color: var(--ink); display: none; grid-template-columns: 2fr 1fr; overflow: hidden; }
+.studio-next[open] { display: grid; }
+.studio-next::backdrop { background: rgba(16, 20, 28, 0.45); }
+.studio-next-main { display: flex; flex-direction: column; gap: 16px; padding: 24px; min-width: 0; overflow-y: auto; }
+.studio-next-preview .frame { display: block; aspect-ratio: 16 / 9; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; }
+.studio-next-info { display: flex; flex-direction: column; gap: 8px; }
+.studio-next-info .hint { margin: 0; }
+.studio-next-actions { display: flex; gap: 8px; margin-top: 8px; }
+.studio-next-list { border-left: 1px solid var(--line); padding: 24px 16px; overflow-y: auto; min-width: 0; }
+.studio-next-list h2 { margin: 0 0 12px 8px; font-size: 15px; }
+.studio-next-list ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.studio-next-list li { position: relative; display: flex; align-items: center; gap: 12px; padding: 8px; border: 1px solid transparent; border-radius: 8px; }
+.studio-next-list li:hover { background: color-mix(in srgb, var(--blue) 6%, transparent); }
+.studio-next-list li.on { border-color: var(--blue); background: color-mix(in srgb, var(--blue) 10%, transparent); }
+.studio-next-thumb { pointer-events: none; }
+.studio-next-pick { position: absolute; inset: 0; width: 100%; padding: 0; border: 0; border-radius: 8px; background: none; cursor: pointer; }
+.studio-next-pick:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.studio-next-thumb { flex: none; width: 112px; }
+.studio-next-thumb .frame { display: block; aspect-ratio: 16 / 9; overflow: hidden; border: 1px solid var(--line); border-radius: 4px; }
+.studio-next-name { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 13px; }
+.studio-next-name b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 760px) { .studio-next { grid-template-columns: 1fr; } .studio-next-list { border-left: 0; border-top: 1px solid var(--line); } }
 /* The top section (title + request box) sits on drifting blurred colour, edge to edge, fading into the page. */
 .studio-top { position: relative; isolation: isolate; margin: -56px calc(50% - 50vw) 28px; padding: 56px calc(50vw - 50%) 40px; overflow: hidden; }
 /* The image's bottom sits on "Studio"'s baseline; "DEKIRU" is 5.59 of the logo's 27 units above that, so shift it down by as much. */
@@ -1187,6 +1216,26 @@ select.nd-input { appearance: none; -webkit-appearance: none; padding-right: 36p
 .studio-history li:last-child { border-bottom: 0; }
 .studio-decide-buttons { display: flex; gap: 8px; }
 .studio-decide.dragging { border-color: var(--blue); box-shadow: 0 0 0 2px var(--blue-bg); }
+/* Request changes: the note, its images and the button, set apart from Approve and Reject above. */
+.studio-decide-changes { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; padding-top: 14px; border-top: 1px solid var(--line); }
+.studio-decide-changes label { font-size: 13px; font-weight: 600; }
+.studio-decide-changes .hint { margin: 0; }
+.studio-decide-changes > .btn { align-self: flex-start; }
+/* Once decided, the decision itself replaces the buttons. */
+.studio-verdict { display: flex; align-items: center; justify-content: center; height: 40px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: default; user-select: none; }
+.studio-verdict.approved { background: color-mix(in srgb, #16a34a 14%, transparent); color: #15803d; border: 1px solid color-mix(in srgb, #16a34a 35%, transparent); }
+.studio-verdict.rejected { background: color-mix(in srgb, #dc2626 12%, transparent); color: #b91c1c; border: 1px solid color-mix(in srgb, #dc2626 35%, transparent); }
+:root[data-theme="dark"] .studio-verdict.approved { color: #4ade80; }
+:root[data-theme="dark"] .studio-verdict.rejected { color: #f87171; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .studio-verdict.approved { color: #4ade80; } :root:not([data-theme="light"]) .studio-verdict.rejected { color: #f87171; } }
+.studio-verdict-note { margin: 0; white-space: pre-wrap; }
+/* Brief: a collapsible card at the bottom of the side column. */
+.studio-brief-card > summary { cursor: pointer; font-weight: 700; list-style: none; display: flex; align-items: center; justify-content: space-between; }
+.studio-brief-card > summary::-webkit-details-marker { display: none; }
+.studio-brief-card > summary::after { content: ""; width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); margin: 0 4px 4px 0; opacity: 0.6; transition: transform 0.15s; }
+.studio-brief-card[open] > summary::after { transform: rotate(-135deg); margin-bottom: -4px; }
+.studio-brief-card[open] > summary { margin-bottom: 4px; }
+@media (prefers-reduced-motion: reduce) { .studio-brief-card > summary::after { transition: none; } }
 .studio-thumbs { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .studio-thumbs li, .studio-thumbs a { position: relative; display: block; }
 .studio-thumbs img { display: block; width: 72px; height: 56px; object-fit: cover; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); }

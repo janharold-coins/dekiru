@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { useActionState, useRef, useState, useTransition } from "react";
+import { useActionState, useCallback, useEffect, useRef, useState, useTransition, type ReactNode } from "react";
+import { Toast } from "../Toast";
 import { decideAction, dismissAction, requestAction, type Result } from "./actions";
 import { useTuning } from "./Tuner";
 
@@ -126,45 +127,119 @@ export function ImagePicker({ imgs }: { imgs: ReturnType<typeof useImages> }) {
 }
 
 /**
- * Approve, request changes or reject the proposal's current revision. Images can be pasted into the note,
- * dropped on the box or picked with "Add image"; they're shrunk here and sent with the decision.
+ * The decision on the proposal's current revision. Approve and Reject sit at the top and send no note (Approve
+ * carries the Tune card's picks, which Claude builds in). The note box is for Request changes: what Claude should
+ * change, with images pasted into it, dropped on it or picked with "Add image" (shrunk here before sending).
  */
-export function DecisionForm({ id, revision }: { id: string; revision: number }) {
+export function DecisionForm({ id, revision, next = [], decided }: {
+  id: string; revision: number; next?: NextItem[];
+  /** Approved or rejected: the card shows that decision instead of the buttons and the note box. */
+  decided?: { decision: "approved" | "rejected"; by: string | null; at: string; note?: string | null };
+}) {
   const imgs = useImages();
-  const formRef = useRef<HTMLFormElement>(null);
+  const [note, setNote] = useState("");
   const tuning = useTuning()?.summary ?? null;
+  const [toast, setToast] = useState<string | null>(null);
+  const [upNext, setUpNext] = useState(false);
   const [state, action, pending] = useActionState(async (prev: Result, form: FormData) => {
-    imgs.append(form);
-    if (tuning) form.set("tuning", tuning);
+    const changes = form.get("decision") === "changes_requested";
+    // The note and images only go with Request changes; Approve and Reject leave them in the box.
+    if (changes) imgs.append(form); else form.delete("note");
+    if (tuning && form.get("decision") !== "rejected") form.set("tuning", tuning);
     const r = await decideAction(id, prev, form);
     if (r.ok) {
-      imgs.clear();
-      formRef.current?.reset();
+      if (changes) { imgs.clear(); setNote(""); }
+      // The decision is confirmed in a toast; what else is for review opens straight after.
+      setToast(next.length ? r.ok : `${r.ok} Nothing else is waiting for review.`);
+      setUpNext(next.length > 0);
     }
     return r;
   }, {});
+  const hideToast = useCallback(() => setToast(null), []);
+  const drafted = Boolean(note.trim() || imgs.images.length);
+
+  if (decided) {
+    return (
+      <section className="card studio-decide">
+        <b>Decision on revision {revision}</b>
+        <span className={`studio-verdict ${decided.decision}`} role="status">{decided.decision === "approved" ? "✓ Approved" : "✕ Rejected"}</span>
+        <span className="hint">{[decided.by, new Date(decided.at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })].filter(Boolean).join(" · ")}</span>
+        {decided.note && <p className="hint studio-verdict-note">{decided.note}</p>}
+        {toast && <Toast message={toast} onDone={hideToast} />}
+        {upNext && <UpNext items={next} onClose={() => setUpNext(false)} toast={toast && <Toast message={toast} onDone={hideToast} />} />}
+      </section>
+    );
+  }
 
   return (
-    <form
-      ref={formRef}
-      action={action}
-      className={`studio-decide card${imgs.dragging ? " dragging" : ""}`}
-      {...imgs.drop}
-    >
+    <form action={action} className={`studio-decide card${imgs.dragging ? " dragging" : ""}`} {...imgs.drop}>
       <b>Your decision on revision {revision}</b>
-      <textarea
-        name="note" rows={3} maxLength={2000}
-        placeholder="Note for Claude: what to move, resize, recolour… Paste or drop screenshots here."
-        onPaste={imgs.paste}
-      />
-      <ImagePicker imgs={imgs} />
-      {tuning && <p className="hint studio-tuning-note">Sent with it — Tune: {tuning}</p>}
       <div className="studio-decide-buttons">
         <button className="btn primary" name="decision" value="approved" disabled={pending}>Approve</button>
-        <button className="btn" name="decision" value="changes_requested" disabled={pending}>Request changes</button>
         <button className="btn danger" name="decision" value="rejected" disabled={pending}>Reject</button>
       </div>
-      {(imgs.problem || state.error || state.ok) && <p className={`hint${imgs.problem || state.error ? " warn" : ""}`}>{imgs.problem ?? state.error ?? state.ok}</p>}
+      {tuning && <p className="hint studio-tuning-note">Sent with Approve or Request changes — Tune: {tuning}</p>}
+      <div className="studio-decide-changes">
+        <label htmlFor="studio-note">Or ask Claude for changes</label>
+        <textarea
+          id="studio-note" name="note" rows={3} maxLength={2000} value={note} onChange={(e) => setNote(e.target.value)}
+          placeholder="What to move, resize, recolour… Paste or drop screenshots here."
+          onPaste={imgs.paste}
+        />
+        <ImagePicker imgs={imgs} />
+        {drafted && <p className="hint">Only sent with Request changes. Approve or Reject leaves it here.</p>}
+        <button className="btn" name="decision" value="changes_requested" disabled={pending || !drafted}
+          title={drafted ? undefined : "Write what should change, or add an image"}>Request changes</button>
+      </div>
+      {(imgs.problem || state.error) && <p className="hint warn">{imgs.problem ?? state.error}</p>}
+      {/* While the modal is open the toast goes inside it: a modal dialog covers everything else on the page. */}
+      {toast && !upNext && <Toast message={toast} onDone={hideToast} />}
+      {upNext && <UpNext items={next} onClose={() => setUpNext(false)} toast={toast && <Toast message={toast} onDone={hideToast} />} />}
     </form>
+  );
+}
+
+/** Another proposal waiting for review, with its thumbnail rendered on the server. */
+export interface NextItem { id: string; name: string; kind: string; brief: string; thumb: ReactNode }
+
+/**
+ * After a decision: what else is for review, as a modal. The selected item's preview takes two thirds;
+ * the list of the others takes the rest. Review it opens that proposal.
+ */
+function UpNext({ items, onClose, toast }: { items: NextItem[]; onClose: () => void; toast?: ReactNode }) {
+  const ref = useRef<HTMLDialogElement>(null);
+  const [at, setAt] = useState(0);
+  useEffect(() => { const d = ref.current; if (d && !d.open) d.showModal(); }, []);
+  const item = items[at];
+  return (
+    <dialog ref={ref} className="studio-next" aria-labelledby="studio-next-title"
+      onCancel={(e) => { e.preventDefault(); onClose(); }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="studio-next-main">
+        <div className="studio-next-preview">{item.thumb}</div>
+        <div className="studio-next-info">
+          <span className="studio-card-title"><b>{item.name}</b><span className="tag">{item.kind}</span></span>
+          <p className="hint">{item.brief}</p>
+          <div className="studio-next-actions">
+            <Link href={`/studio/${item.id}`} className="btn primary" onClick={onClose}>Review it</Link>
+            <button type="button" className="btn" onClick={onClose}>Not now</button>
+          </div>
+        </div>
+      </div>
+      <aside className="studio-next-list">
+        <h2 id="studio-next-title">Next for review <span className="mono">· {items.length}</span></h2>
+        <ul>
+          {items.map((n, i) => (
+            <li key={n.id} className={i === at ? "on" : ""}>
+              {/* A row with a button laid over it: a UI pattern's thumbnail has buttons of its own, which can't sit inside one. */}
+              <span className="studio-next-thumb" aria-hidden>{n.thumb}</span>
+              <span className="studio-next-name"><b>{n.name}</b><span className="hint">{n.kind}</span></span>
+              <button type="button" className="studio-next-pick" aria-label={`Preview ${n.name}`} aria-current={i === at ? "true" : undefined} onClick={() => setAt(i)} />
+            </li>
+          ))}
+        </ul>
+      </aside>
+      {toast}
+    </dialog>
   );
 }

@@ -41,8 +41,8 @@ export async function decideAction(id: string, _prev: Result, form: FormData): P
     if (themeId) revalidatePath("/library/themes");
     return {
       ok: decision === "approved"
-        ? themeId ? "Approved and added to Library → Themes." : "Approved. Ask Claude to add it to the library."
-        : decision === "changes_requested" ? "Sent back. Ask Claude to revise it; the new revision shows up here." : "Rejected.",
+        ? themeId ? "Approved and added to Library → Themes." : "Approved. It joins the library on Claude's next Studio check."
+        : decision === "changes_requested" ? "Sent back to Claude with your note. The new revision shows up in Drafts." : "Rejected.",
     };
   } catch (e) {
     return { error: (e as Error).message };

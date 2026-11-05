@@ -10,12 +10,13 @@ import { requireUser } from "@/lib/auth";
 import { canUseStudio, decisionsOf, remixSource, requestById, STATUS_LABEL, statusOf } from "@/lib/studio";
 import { pickTheme, publishedThemes } from "@/lib/themes";
 import { templates } from "@/content/templates";
-import { proposal } from "@/studio/proposals";
+import { proposal, proposals } from "@/studio/proposals";
 import { Nav } from "../../Nav";
 import { layoutSamples } from "../../library/themes/samples";
 import { discardDraftAction } from "../actions";
 import { proposalSlides, remixThread } from "../remix";
 import { RemixEditor } from "../RemixEditor";
+import { kindLabel, ProposalThumb, quadOf } from "../ProposalThumb";
 import { DecisionForm } from "../StudioForms";
 import { PatternFrame } from "../PatternPreview";
 import { ui } from "@/ui/registry";
@@ -34,7 +35,7 @@ export default async function ProposalPage({ params, searchParams }: { params: P
   const p = proposal(id);
   if (!p || !canUseStudio(user) || !hasDb()) notFound();
   const [history, themes, from] = await Promise.all([decisionsOf(id), publishedThemes(), p.remixOf ? remixSource(p.remixOf) : null]);
-  const { status, building } = statusOf(p, history);
+  const { status, building, latest } = statusOf(p, history);
   // A remix draft opens in the remix editor until it's sent for review.
   if (p.remixOf && status === "draft") {
     const [req, from, canvas] = await Promise.all([p.request ? requestById(p.request) : null, remixSource(p.remixOf), proposalSlides(p, user?.id ?? null)]);
@@ -46,7 +47,11 @@ export default async function ProposalPage({ params, searchParams }: { params: P
     );
   }
   const look = pickTheme(themes, theme);
-  const samples = p.kind === "theme" ? await layoutSamples(user?.id ?? null) : [];
+  const [samples, all] = await Promise.all([layoutSamples(user?.id ?? null), decisionsOf()]);
+  // What else is for review: shown in a modal once a decision is made here.
+  const quad = quadOf(samples);
+  const next = proposals.filter((o) => o.id !== p.id && statusOf(o, all).status === "waiting")
+    .map((o) => ({ id: o.id, name: o.name, kind: kindLabel(o), brief: o.brief, thumb: <ProposalThumb p={o} quad={quad} /> }));
   const issues = p.kind === "theme" ? checkTheme(normalizeTokens(p.tokens)) : [];
   // Approved layouts go into the library (Claude moves them on its next check; see proposals.ts).
   const listed = p.kind === "layout" && !!patterns[p.entry.meta.id];
@@ -118,30 +123,10 @@ export default async function ProposalPage({ params, searchParams }: { params: P
           )}
         </div>
         <aside className="studio-side">
-          <DecisionForm id={p.id} revision={p.revision} />
-          {p.kind === "layout" && <TuneCard defaultGap={TUNE_GAP} />}
-          <section className="card studio-box">
-            <b>Brief</b>
-            <p>{p.brief}</p>
-            {p.changes && <><b>Changed in rev {p.revision}</b><p>{p.changes}</p></>}
-            <b>Studio rules</b>
-            <p>{p.exceptions ? <>Exceptions: {p.exceptions}</> : "Follows all of them."} <Link href="/studio/rules" className="studio-rules-link">Read the rules</Link></p>
-            {p.kind === "layout" && (
-              <>
-                <b>How it works</b>
-                <p>{p.entry.meta.description}</p>
-                {p.entry.meta.budgets?.length ? (
-                  <ul className="studio-budgets">
-                    {p.entry.meta.budgets.map((b) => (
-                      <li key={b.slot}><span className="mono">{b.slot}</span> {[b.maxChars && `${b.maxChars} chars`, b.maxLines && `${b.maxLines} lines`, b.maxItems && `${b.maxItems} items`].filter(Boolean).join(" · ")}</li>
-                    ))}
-                  </ul>
-                ) : null}
-              </>
-            )}
-            {p.kind === "pattern" && <><b>How it works</b><p>{p.description}</p></>}
-            {issues.length > 0 && <><b>Readability</b><ul className="studio-budgets">{issues.map((i, n) => <li key={n} className="hint warn">{i.message}</li>)}</ul></>}
-          </section>
+          <DecisionForm id={p.id} revision={p.revision} next={next}
+            decided={(status === "approved" || status === "rejected") && latest ? { decision: status, by: latest.by, at: latest.createdAt.toISOString(), note: latest.note } : undefined} />
+          {/* Tune picks go with a decision, so the card goes once one is made. */}
+          {p.kind === "layout" && status !== "approved" && status !== "rejected" && <TuneCard defaultGap={TUNE_GAP} />}
           {history.length > 0 && (
             <section className="card studio-box">
               <b>History</b>
@@ -164,6 +149,29 @@ export default async function ProposalPage({ params, searchParams }: { params: P
               </ul>
             </section>
           )}
+          {/* Long on most proposals, so it starts closed at the bottom of the column. */}
+          <details className="card studio-box studio-brief-card">
+            <summary>Brief</summary>
+            <p>{p.brief}</p>
+            {p.changes && <><b>Changed in rev {p.revision}</b><p>{p.changes}</p></>}
+            <b>Studio rules</b>
+            <p>{p.exceptions ? <>Exceptions: {p.exceptions}</> : "Follows all of them."} <Link href="/studio/rules" className="studio-rules-link">Read the rules</Link></p>
+            {p.kind === "layout" && (
+              <>
+                <b>How it works</b>
+                <p>{p.entry.meta.description}</p>
+                {p.entry.meta.budgets?.length ? (
+                  <ul className="studio-budgets">
+                    {p.entry.meta.budgets.map((b) => (
+                      <li key={b.slot}><span className="mono">{b.slot}</span> {[b.maxChars && `${b.maxChars} chars`, b.maxLines && `${b.maxLines} lines`, b.maxItems && `${b.maxItems} items`].filter(Boolean).join(" · ")}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </>
+            )}
+            {p.kind === "pattern" && <><b>How it works</b><p>{p.description}</p></>}
+            {issues.length > 0 && <><b>Readability</b><ul className="studio-budgets">{issues.map((i, n) => <li key={n} className="hint warn">{i.message}</li>)}</ul></>}
+          </details>
         </aside>
       </div>
       </TuneProvider>

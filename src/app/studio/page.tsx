@@ -1,4 +1,4 @@
-import { PatternFrame } from "./PatternPreview";
+import { kindLabel, ProposalThumb, quadOf } from "./ProposalThumb";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { hasDb } from "@/db/client";
@@ -45,9 +45,7 @@ export default async function StudioPage({ searchParams }: { searchParams: Promi
   const requests = all.filter((r) => !r.remix);
   const unbuilt = await Promise.all(all.filter((r) => r.remix).map(async (r) => ({ r, from: await remixSource(r.remix!) })));
   const ordered = [...templates].sort((a, b) => patternOrder.indexOf(a.slide.pattern) - patternOrder.indexOf(b.slide.pattern));
-  // A theme card shows one slide per background role and a content slide, as a 2×2 the size of a layout card.
-  const pick = (...ids: string[]) => ids.map((id) => samples.find((s) => s.pattern === id)).find(Boolean);
-  const quad = [pick("cover"), pick("key-numbers", "agenda"), pick("section"), pick("closing", "cta-contact")].filter((s) => s != null);
+  const quad = quadOf(samples);
   const rows = proposals.map((p) => ({ p, ...statusOf(p, decisions) }));
   const count = (s: Status) => rows.filter((r) => r.status === s).length;
   // Approved layouts Claude hasn't moved into the library yet show first in the Library tab.
@@ -164,21 +162,11 @@ export default async function StudioPage({ searchParams }: { searchParams: Promi
           {shown.map(({ p, latest }) => (
             <div key={p.id} className="card studio-card">
             <Link href={`/studio/${p.id}`} className="studio-card-link">
-              {p.kind === "layout" ? (
-                <span className="frame"><ScaledSlide><RenderSlide slide={p.examples[0]} entry={p.entry} /></ScaledSlide></span>
-              ) : p.kind === "pattern" ? (
-                <span className="frame studio-pattern-thumb"><PatternFrame tree={p.examples[0].tree} extra={p.components} still /></span>
-              ) : (
-                <ThemeScope tokens={p.tokens}>
-                  <span className="frame studio-quad">
-                    {quad.map((s) => <span key={s.id}><ScaledSlide><RenderSlide slide={s} /></ScaledSlide></span>)}
-                  </span>
-                </ThemeScope>
-              )}
+              <ProposalThumb p={p} quad={quad} />
               <span className="studio-card-meta">
                 <span className="studio-card-title">
                   <b>{p.name}</b>
-                  <span className="tag">{p.remixOf ? "Remix" : p.kind === "theme" ? "Theme" : p.kind === "pattern" ? "UI pattern" : "Layout"}</span>
+                  <span className="tag">{kindLabel(p)}</span>
                   <span className="mono">rev {p.revision}</span>
                 </span>
                 <span className="studio-brief">{p.brief}</span>
