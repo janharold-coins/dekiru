@@ -6,6 +6,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, use
 import { RenderSlide } from "@/deck/RenderSlide";
 import { PreviewChecks } from "@/deck/frame/PreviewChecks";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
+import { PlaceLayer } from "./PlaceLayer";
 import { checkOverflow } from "@/deck/overflow";
 import { availableLangs, deckTranslationStatus, LANGUAGES, TARGET_LANGS, localize, overlayFromEntries, textEntries, translationState, withTranslation, type Lang, type TargetLang } from "@/deck/i18n";
 import { fieldLabel } from "@/deck/fields";
@@ -384,6 +385,20 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
     return () => window.removeEventListener("keydown", onKey);
   }, [cm.pinMode, cm.activeId, tab, selected, patchCm, focusComposer]);
 
+  /**
+   * Drag-to-place (PlaceLayer): writes a placed item's x / y back into the slide's props ("callouts.2" → callouts[2]).
+   * Positions aren't text, so they're edited in English only, on slides the person can edit.
+   */
+  const canPlace = Boolean(selected) && !readOnly && lang === "en" && tab !== "comments" && !(selected?.from && !unlocked.has(selected.slide.id));
+  const placeAt = (path: string, x: number, y: number) => {
+    if (!selected) return;
+    const [key, index] = path.split(".");
+    const props = selected.slide.props as Record<string, unknown>;
+    const list = props[key];
+    if (!Array.isArray(list) || !list[Number(index)]) return;
+    editProps(selected.slide.id, { ...props, [key]: list.map((it, i) => (i === Number(index) ? { ...it, x, y } : it)) });
+  };
+
   /** "Send for review": freezes the draft as the version reviewers see (review v2) and opens the review for the preview language. */
   const publishNow = async () => {
     setPublishing(true);
@@ -447,7 +462,8 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
           onSelect={setSelectedId} onMove={moveListed} onRemove={remove} onKey={onNavKey} lang={lang}
         />
         <Canvas selected={selected} number={selected ? (selected.slide.hidden ? "Hidden" : pad2(presentNumber(selectedIndex))) : ""} lang={lang}
-          overlay={tab === "comments" && selected ? <CommentOverlay slideId={selected.slide.id} state={cm} onState={patchCm} onPlaced={focusComposer} /> : null} />
+          overlay={tab === "comments" && selected ? <CommentOverlay slideId={selected.slide.id} state={cm} onState={patchCm} onPlaced={focusComposer} /> : null}
+          onPlace={selected && canPlace ? placeAt : undefined} />
         <ContentPanel
           key={selected?.slide.id}
           deckId={deck.id}
@@ -836,7 +852,11 @@ function Navigator({ open, onToggle, deckId, deckKind, slides, selectedId, readO
 
 const ZOOMS = [0.25, 0.33, 0.42, 0.5, 0.67, 0.75, 1];
 
-export function Canvas({ selected, number, lang, overlay }: { selected: EditorSlide | null; number: string; lang: Lang; overlay: React.ReactNode }) {
+export function Canvas({ selected, number, lang, overlay, onPlace }: {
+  selected: EditorSlide | null; number: string; lang: Lang; overlay: React.ReactNode;
+  /** Drag-to-place markers (see PlaceLayer); off when not given. */
+  onPlace?: (path: string, x: number, y: number) => void;
+}) {
   const box = useRef<HTMLDivElement>(null);
   const [fit, setFit] = useState(0.42);
   const [zoom, setZoom] = useState<number | "fit">("fit");
@@ -867,7 +887,7 @@ export function Canvas({ selected, number, lang, overlay }: { selected: EditorSl
             <div className="ed-slide" style={{ width: SLIDE_W * scale, height: SLIDE_H * scale }}>
               <div style={{ transform: `scale(${scale})`, transformOrigin: "0 0", width: SLIDE_W, height: SLIDE_H }}>
                 {/* Preview-only: flags images that don't fit their slot. Never shown when presenting. */}
-                <PreviewChecks key={`${selected.slide.id}/${lang}`}><RenderSlide slide={selected.slide} lang={lang} /></PreviewChecks>
+                <PlaceLayer key={selected.slide.id} onPlace={onPlace}><PreviewChecks key={`${selected.slide.id}/${lang}`}><RenderSlide slide={selected.slide} lang={lang} /></PreviewChecks></PlaceLayer>
               </div>
               {overlay}
             </div>

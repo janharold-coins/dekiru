@@ -110,7 +110,12 @@ function ListField({ pattern, path, name, items, onChange }: { pattern: string; 
   const { fixed, max } = listLimits(pattern, name, items);
   const setAt = (i: number, v: unknown) => onChange(items.map((x, j) => (j === i ? v : x)));
   const remove = (i: number) => onChange(items.filter((_, j) => j !== i));
-  const add = () => onChange([...items, structuredClone(items[items.length - 1])]);
+  const add = () => {
+    const copy = structuredClone(items[items.length - 1]) as Record<string, unknown>;
+    // A dragged item (x / y in %) starts beside the one it was copied from, not on top of it.
+    if (copy && typeof copy.x === "number" && typeof copy.y === "number") { copy.x = Math.min(95, copy.x + 5); copy.y = Math.min(95, copy.y + 5); }
+    onChange([...items, copy]);
+  };
   return (
     <fieldset className="sf-group">
       <legend>{fieldLabel(name)}</legend>

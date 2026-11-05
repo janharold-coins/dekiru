@@ -32,7 +32,8 @@ function hasText(v: unknown): boolean {
 /** Can this list take more or fewer items? Not when items are positioned by hand. */
 export function listLimits(pattern: string, key: string, items: unknown[]) {
   const placed = items.some((it) => it && typeof it === "object" && POSITION_KEYS.some((k) => k in (it as object)));
-  if (placed || key === "titleRuns") return { fixed: true, max: items.length };
+  const draggable = patterns[pattern]?.meta.placeable?.includes(key);
+  if ((placed && !draggable) || key === "titleRuns") return { fixed: true, max: items.length };
   const budget = (patterns[pattern]?.meta.budgets ?? []).find((b) => b.maxItems != null && b.slot.split(" ")[0].split(".").pop() === key);
   return { fixed: false, max: budget?.maxItems ?? 12 };
 }
@@ -45,8 +46,10 @@ const LABELS: Record<string, string> = {
   parentTitle: "Parent section", leftText: "Earlier milestone", bracketGroup: "Year range", callout: "Callout",
   lead: "Lead-in", lines: "Lines", subtext: "Small print", text: "Text",
   topRight: "Top right (optional)", bottomRight: "Bottom right (optional)",
+  dos: "Do items", donts: "Don't items", doLabel: "Do heading", dontLabel: "Don't heading", sub: "Sub-point (optional)",
 };
 const SINGULAR: Record<string, string> = {
+  bars: "Bar", bullets: "Bullet", dos: "Item", donts: "Item", options: "Option", callouts: "Callout", rows: "Row", columns: "Column", cells: "Cell",
   what: "Point", keyApis: "API line", lines: "Line", titleRuns: "Part", statCards: "Stat card", primaryStats: "Figure",
   secondaryStats: "Figure", chips: "Rate", statuses: "Status",
 };

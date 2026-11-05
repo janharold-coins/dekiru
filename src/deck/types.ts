@@ -60,4 +60,9 @@ export interface PatternMeta {
   shape?: "sequence" | "set" | "hierarchy" | "comparison" | "statement" | "chrome";
   defaultChrome: Chrome;
   budgets?: SlotBudget[];
+  /**
+   * Lists whose items are placed by dragging them on the editor canvas (x / y in % of a frame; see PlaceLayer).
+   * Their items can be added and removed in the form even though they carry positions.
+   */
+  placeable?: string[];
 }

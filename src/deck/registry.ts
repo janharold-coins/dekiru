@@ -1,11 +1,15 @@
 import type { ComponentType } from "react";
 import type { PatternMeta } from "./types";
 import { Agenda, agendaMeta } from "./patterns/Agenda";
+import { Bullets, bulletsMeta } from "./patterns/Bullets";
 import { CardGrid, cardGridMeta } from "./patterns/CardGrid";
 import { ClientQuote, clientQuoteMeta } from "./patterns/ClientQuote";
 import { Closing, closingMeta } from "./patterns/Closing";
+import { ColumnChart, columnChartMeta } from "./patterns/ColumnChart";
 import { Cover, coverMeta } from "./patterns/Cover";
 import { CtaContact, ctaMeta } from "./patterns/CtaContact";
+import { DataTable, dataTableMeta } from "./patterns/DataTable";
+import { DoDont, doDontMeta } from "./patterns/DoDont";
 import { FeatureCards, FeatureCardsTop, featureCardsMeta } from "./patterns/FeatureCards";
 import { KeyNumbers, keyNumbersMeta } from "./patterns/KeyNumbers";
 import { LogoWall, logoWallMeta } from "./patterns/LogoWall";
@@ -13,6 +17,8 @@ import { ProductDetail, productDetailMeta } from "./patterns/ProductDetail";
 import { ProductFlow, productFlowMeta } from "./patterns/ProductFlow";
 import { ProductHero, productHeroMeta } from "./patterns/ProductHero";
 import { ProductIndex, productIndexMeta } from "./patterns/ProductIndex";
+import { Quiz, quizMeta } from "./patterns/Quiz";
+import { ScreenshotWalkthrough, screenshotWalkthroughMeta } from "./patterns/ScreenshotWalkthrough";
 import { Section, sectionMeta } from "./patterns/Section";
 import { StatementHighlights, statementMeta } from "./patterns/StatementHighlights";
 import { Timeline, timelineMeta } from "./patterns/Timeline";
@@ -33,6 +39,12 @@ export const patterns: Record<string, PatternEntry> = {
   "logo-wall": { meta: logoWallMeta, Component: LogoWall },
   "statement-highlights": { meta: statementMeta, Component: StatementHighlights },
   "client-quote": { meta: clientQuoteMeta, Component: ClientQuote },
+  "column-chart": { meta: columnChartMeta, Component: ColumnChart },
+  bullets: { meta: bulletsMeta, Component: Bullets },
+  "do-dont": { meta: doDontMeta, Component: DoDont },
+  quiz: { meta: quizMeta, Component: Quiz },
+  "data-table": { meta: dataTableMeta, Component: DataTable },
+  "screenshot-walkthrough": { meta: screenshotWalkthroughMeta, Component: ScreenshotWalkthrough },
   "product-index": { meta: productIndexMeta, Component: ProductIndex },
   "product-hero": { meta: productHeroMeta, Component: ProductHero },
   "product-detail": { meta: productDetailMeta, Component: ProductDetail },

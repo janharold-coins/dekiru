@@ -49,9 +49,23 @@ Sizes come from this scale only (`TYPE` in `src/studio/grid.ts`). Every line hei
 - Use `type("h2", 600, "#204680")` from `src/studio/grid.ts`. It wraps the deck's `t()`, so theme text flipping and translated-font line heights keep working.
 - **Wrapping is automatic.** `type()` sets it per step. Headings (`display` to `h3`) use `balance`, so their lines come out about the same length instead of a long line over a short one. Running text (`lead` to `micro`) uses `pretty`, so a paragraph never ends on one stranded word. Don't set `text-wrap` by hand. An explicit `\n` in the content still breaks the line where it is, and the wrap applies within each part.
 - **Tune card.** On a layout proposal's review page, the reviewer can preview the Perfect Fifth (×1.5) or Golden Ratio (×1.618) scale, built from body text at 32. They can also preview other element spacing, and a baseline or descender bottom edge. Their picks come with the decision as a "Tune:" line. Build what the line says into the layout as its new default, and if it asks for a different scale, use those sizes for that layout.
-- Weights: 400, 500, 600 and 700 only. Families: Manrope for text; Everett for numerals and ghost numbers, as in the approved slides.
+- Weights: 400, 500, 600 and 700 only. **One family: Manrope, for text and for numbers and figures** (values, table figures, number badges, numbered lists). Don't use Everett. `type()` ignores an `"everett"` family, so a slip still renders in Manrope. Don't turn on tabular figures (`tabular-nums`): Cns Manrope's tabular digits are broken (they overlap). Right-align number columns instead.
 - Never shrink text to make it fit (the deck rule). Over budget means shorter words or a different layout.
 - Steps are adjacent sizes. Don't pair two sizes more than four steps apart in one block unless it's a number and its label.
+
+## 4. Containers: balanced, never tight
+
+Applies to anything that holds text in a box or a cell: cards, table rows and cells, chips and tags, callout boxes, option cards.
+
+- **Same space on every side, measured to the letters.** Trim text inside a container to cap height and baseline (`textBox: "trim-both cap alphabetic"`) and centre it, so the space above the capitals matches the space below the baseline. Padding is one value on all sides unless a side meets a rule or an edge on purpose.
+- **Minimums, not targets:**
+  - Cards and boxes: 24 inner padding on every side (32 for cards that hold a heading).
+  - Table rows: at least 64 tall for body text (about 20 above and below the letters), cells 24 in from their sides.
+  - Rows in comparison and list layouts with hairlines: 24 above and below the text.
+  - Chips and tags: 8 above and below, 16 at the sides.
+  - Between stacked cards or boxes: 16 at least; between list items: 24 at least.
+- **If it doesn't fit, cut, don't squeeze.** When the longest example only fits by going under these minimums, lower the budget (`maxItems`, `maxChars`) or change the layout. Never shrink padding or gaps below the minimums to make content fit.
+- Check the fullest example against these by eye too: if a box still looks cramped at the minimum, give it the next step up.
 
 ## Changes
 
@@ -60,3 +74,5 @@ Sizes come from this scale only (`TYPE` in `src/studio/grid.ts`). Every line hei
 - 2026-11-03: Spacing is balanced (equal space above and below an element) and measured between visible edges: `type()` trims text to cap height and baseline; marks and icons are exact shapes (`<QuoteMark>`).
 - 2026-11-03: Text is trimmed to its descender line, not the baseline, so descenders keep their room (reviewer found baseline trim too tight). Tune card added: type scale, element spacing and text edge, previewed live and sent with the decision.
 - 2026-11-04: Rule changes are asked for in Rule prompts on the rules page (the Studio's request form no longer has a Rule change option).
+- 2026-11-05: No Everett: numbers and figures use Manrope like the rest (no tabular figures: Cns Manrope's are broken). `type()` now ignores an Everett family, so every Studio-built layout (in review and in the library) switched at once.
+- 2026-11-05: New rule 4, containers: text in cards, table rows, chips and boxes is centred by its letters with one padding on all sides, never under the minimums (cards 24, table rows 64, chips 8 / 16, list items 24 apart). If content doesn't fit, cut the budget or change the layout. Applies to proposals when they're next built or revised.

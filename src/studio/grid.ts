@@ -1,5 +1,5 @@
 import { createElement, type CSSProperties, type ReactNode } from "react";
-import { t } from "@/deck/tokens";
+import { noWrap, t } from "@/deck/tokens";
 
 /** Studio layout helpers: the 8-point grid, the content band and the type scale (rules: STUDIO.md). */
 
@@ -48,7 +48,7 @@ export function type(step: TypeStep, weight: 400 | 500 | 600 | 700, color?: stri
   const s = { ...TYPE[step], ...sizes[step] };
   const size = `var(--st-${step}-size, ${s.size}px)`;
   return {
-    ...t(s.size, s.line / s.size, +(s.size * s.track).toFixed(2), weight, color, family),
+    ...t(s.size, s.line / s.size, +(s.size * s.track).toFixed(2), weight, color, family === "everett" ? undefined : family), // rule 3: Manrope only, numbers included
     fontSize: size,
     lineHeight: `calc(var(--st-${step}-line, ${s.line}px) * var(--dk-lh, 1))`,
     letterSpacing: `calc(${size} * ${s.track})`,
@@ -83,4 +83,14 @@ export function Band({ gap = g(4), align = "center", style, children }: {
       display: "flex", flexDirection: "column", justifyContent: align === "center" ? "center" : `flex-${align}`, gap, ...style,
     },
   }, children);
+}
+
+/**
+ * A small source note in the footer row: right-aligned to the safe edge (x 1840), on the confidentiality line's
+ * baseline (a zero-width strut set exactly like the footer). Outside the band, so it never meets the content.
+ */
+export function SourceNote({ children }: { children: ReactNode }) {
+  return createElement("div", { style: { position: "absolute", right: 1920 - SAFE.right, top: 938, display: "flex", alignItems: "baseline", maxWidth: g(120) } },
+    createElement("span", { "aria-hidden": true, style: { ...t(24, "normal", 0, 400), width: 0, overflow: "hidden" } }, "\u200b"),
+    createElement("span", { style: { ...t(20, "normal", 0, 400, "#757575"), ...noWrap } }, children));
 }
