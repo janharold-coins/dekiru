@@ -1251,3 +1251,7 @@ select.nd-input { appearance: none; -webkit-appearance: none; padding-right: 36p
 .tpl-over { color: var(--warn); }
 .tpl-limits { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .tpl-limits li { font-size: 11px; color: var(--ed-mute); padding: 3px 8px; border: 1px solid var(--ed-line); border-radius: 999px; background: var(--ed-side); }
+
+/* UI gallery cards lift like deck covers. */
+.ui-card { transition: transform .18s ease, box-shadow .18s ease; }
+.ui-card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(17,19,24,0.16); }
