@@ -1315,3 +1315,12 @@ select.nd-input { appearance: none; -webkit-appearance: none; padding-right: 36p
 .studio-pattern-h { font-size: 16px; margin: 8px 0 4px; }
 .studio-pattern-h + p { margin: 0 0 12px; font-size: 13px; color: var(--mute); }
 .ui-accordion-head:focus-visible { outline: 2px solid var(--blue); outline-offset: 4px; border-radius: 4px; }
+
+/* My decks sub-tabs: Owned by you / Shared to you (segmented, like the grid/list toggle). */
+.home-subtabs { display: inline-flex; align-self: flex-start; padding: 3px; gap: 2px; border: 1px solid var(--app-line); border-radius: 8px; background: var(--panel); }
+.home-subtabs button { height: 30px; display: inline-flex; align-items: center; gap: 8px; padding: 0 10px 0 12px; border: 0; border-radius: 5px; background: none; font: inherit; font-size: 13px; font-weight: 500; color: var(--app-mute); cursor: pointer; white-space: nowrap; }
+.home-subtabs button:hover { color: var(--app-ink); background: var(--soft-2); }
+.home-subtabs button.on { background: var(--app-blue-bg); color: var(--app-blue); font-weight: 600; }
+.home-subtabs button.on .home-count { background: var(--panel); color: var(--app-blue); }
+.home-subtabs button:focus-visible { outline: 2px solid var(--app-blue); outline-offset: 1px; }
+.home-subtabs .home-count { padding: 2px 6px; font-size: 11px; }

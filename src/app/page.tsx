@@ -11,7 +11,7 @@ const fmt = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", y
 /** Decks home (Figma "Dekiru" 23:496): company decks and the person's own, with search and sort. */
 export default async function Home({ searchParams }: PageProps<"/">) {
   const user = await requireUser("/");
-  const { tab, owner, tag } = await searchParams;
+  const { tab, sub, owner, tag } = await searchParams;
   const canEditMasters = user?.role === "admin" || user?.role === "manager";
   // Admins and managers also get everyone's decks (Employee decks tab, view only).
   const decks = await listDecks({ viewerId: user?.id ?? null, includeArchived: true, everyone: canEditMasters });
@@ -69,6 +69,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
         myDepartment={user?.departmentId ? decks.flatMap((d) => d.tags).find((t) => t.id === user.departmentId)?.name : undefined}
         review={forReview.map((x) => toCard(x.deck, x.review))}
         reviewer={reviewer}
+        initialSub={sub === "shared" ? "shared" : "owned"}
         initialTab={tab === "mine" ? "mine" : tab === "review" ? "review" : tab === "employees" && canEditMasters ? "employees" : "company"}
       />
     </div>

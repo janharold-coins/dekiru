@@ -44,6 +44,8 @@ export interface HomeDeck {
 }
 
 type Tab = "company" | "mine" | "employees" | "review";
+/** My decks is split into decks you own and decks shared with you. */
+export type MineSub = "owned" | "shared";
 type Sort = "updated" | "name";
 type View = "grid" | "list";
 const VIEW_KEY = "dekiru.decks.view";
@@ -68,11 +70,13 @@ const NOTE: Record<Tab, string> = {
   review: "Decks waiting for your approval. Check each slide, then approve or request changes.",
 };
 
-export function HomeDecks({ company, mine, employees, review = [], reviewer = false, initialTab, initialOwner = "", initialTag = "", myDepartment }: {
+export function HomeDecks({ company, mine, employees, review = [], reviewer = false, initialTab, initialSub = "owned", initialOwner = "", initialTag = "", myDepartment }: {
   company: HomeDeck[]; mine: HomeDeck[];
   /** Everyone else's decks — admins and managers only (undefined hides the tab). */
   employees?: HomeDeck[];
   review?: HomeDeck[]; reviewer?: boolean; initialTab: Tab;
+  /** My decks sub-tab (?sub=shared). */
+  initialSub?: MineSub;
   /** Employee decks filtered to one person (?owner=, linked from People). */
   initialOwner?: string;
   /** Show only decks with this tag (?tag=). */
@@ -81,6 +85,7 @@ export function HomeDecks({ company, mine, employees, review = [], reviewer = fa
   myDepartment?: string;
 }) {
   const [tab, setTab] = useState<Tab>(initialTab);
+  const [sub, setSub] = useState<MineSub>(initialSub);
   const [owner, setOwner] = useState(initialOwner);
   const [tag, setTag] = useState(initialTag);
   const [query, setQuery] = useState("");
@@ -92,6 +97,8 @@ export function HomeDecks({ company, mine, employees, review = [], reviewer = fa
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
   const myDecks = useMemo(() => mine.map((d) => (d.id in archivedNow ? { ...d, archived: archivedNow[d.id] } : d)), [mine, archivedNow]);
+  const owned = useMemo(() => myDecks.filter((d) => !d.shared), [myDecks]);
+  const sharedWithMe = useMemo(() => myDecks.filter((d) => d.shared), [myDecks]);
   // People who made employee decks, for the Author filter.
   const people = useMemo(() => {
     const m = new Map<string, string>();
@@ -101,7 +108,7 @@ export function HomeDecks({ company, mine, employees, review = [], reviewer = fa
   const ownerOn = people.some((p) => p.id === owner) ? owner : "";
   const theirs = useMemo(() => (employees ?? []).filter((d) => !ownerOn || d.ownerId === ownerOn), [employees, ownerOn]);
   const archivable = tab === "mine" || tab === "employees";
-  const pool = tab === "company" ? company : tab === "review" ? review : tab === "mine" ? myDecks : theirs;
+  const pool = tab === "company" ? company : tab === "review" ? review : tab === "mine" ? (sub === "shared" ? sharedWithMe : owned) : theirs;
   // Tags used in this collection, the person's department first; a tag no deck here carries isn't offered.
   const tagsHere = useMemo(() => {
     const names = [...new Set(pool.flatMap((d) => d.tags))].sort((a, b) => a.localeCompare(b));
@@ -130,9 +137,10 @@ export function HomeDecks({ company, mine, employees, review = [], reviewer = fa
   };
 
   // Keep the tab (and person filter) in the address so Back and reload return to it.
-  const syncUrl = (t: Tab, o: string, g: string) => {
+  const syncUrl = (t: Tab, o: string, g: string, m: MineSub = sub) => {
     const url = new URL(window.location.href);
     if (t === "company") url.searchParams.delete("tab"); else url.searchParams.set("tab", t);
+    if (t === "mine" && m === "shared") url.searchParams.set("sub", "shared"); else url.searchParams.delete("sub");
     if (t === "employees" && o) url.searchParams.set("owner", o); else url.searchParams.delete("owner");
     if (g) url.searchParams.set("tag", g); else url.searchParams.delete("tag");
     window.history.replaceState(null, "", url);
@@ -140,6 +148,9 @@ export function HomeDecks({ company, mine, employees, review = [], reviewer = fa
   const choose = (t: Tab) => { setTab(t); syncUrl(t, ownerOn, tag); };
   const pickOwner = (o: string) => { setOwner(o); syncUrl(tab, o, tag); };
   const pickTag = (g: string) => { setTag(g); syncUrl(tab, ownerOn, g); };
+  const pickSub = (m: MineSub) => { setSub(m); syncUrl(tab, ownerOn, tag, m); };
+  // Name of what's on screen, for empty states ("Nothing in Shared to you matches …").
+  const here = tab === "mine" ? SUB_NAME[sub] : TAB_NAME[tab];
 
   return (
     <main className="home-main">
@@ -210,7 +221,17 @@ export function HomeDecks({ company, mine, employees, review = [], reviewer = fa
         </div>
       </div>
 
-      <section className="home-collection" role="tabpanel" aria-label={TAB_NAME[tab]}>
+      <section className="home-collection" role="tabpanel" aria-label={here}>
+        {tab === "mine" && (
+          <div className="home-subtabs" role="tablist" aria-label="My decks">
+            {(["owned", "shared"] as const).map((m) => (
+              <button key={m} type="button" role="tab" aria-selected={sub === m} className={sub === m ? "on" : ""} onClick={() => pickSub(m)}>
+                {SUB_NAME[m]}
+                <span className="home-count">{(m === "shared" ? sharedWithMe : owned).filter((d) => !d.archived).length}</span>
+              </button>
+            ))}
+          </div>
+        )}
         {error && <p className="home-error" role="alert">{error}</p>}
 
         {shown.length ? (
@@ -225,12 +246,12 @@ export function HomeDecks({ company, mine, employees, review = [], reviewer = fa
           )
         ) : tagOn && !query.trim() && !archivedCount ? (
           <EmptyState art="search" title={`No ${tagOn} decks here`}
-            body={`Nothing in ${TAB_NAME[tab]} is tagged ${tagOn}${tab === "employees" && ownerOn ? " by this author" : ""}.`}>
+            body={`Nothing in ${here} is tagged ${tagOn}${tab === "employees" && ownerOn ? " by this author" : ""}.`}>
             <button type="button" className="home-empty-btn" onClick={() => pickTag("")}>Show all tags</button>
           </EmptyState>
         ) : query.trim() ? (
           <EmptyState art="search" title="No decks match your search"
-            body={<>Nothing in {TAB_NAME[tab]} matches “{query.trim()}”. Try a deck name, a tag, an ID like dk-1a2b3c4d{tab === "employees" ? " or a person" : ""}.</>}>
+            body={<>Nothing in {here} matches “{query.trim()}”. Try a deck name, a tag, an ID like dk-1a2b3c4d{tab === "employees" ? " or a person" : ""}.</>}>
             <button type="button" className="home-empty-btn" onClick={() => setQuery("")}>Clear search</button>
           </EmptyState>
         ) : tab === "employees" && archivedCount ? (
@@ -242,6 +263,13 @@ export function HomeDecks({ company, mine, employees, review = [], reviewer = fa
           <EmptyState art="people" title={ownerOn ? "This author has no decks" : "No decks from others yet"}
             body={ownerOn ? "They haven't made or copied a deck yet." : "When people in Coins.ph make or copy a deck, it shows up here for you to open, present and copy."}>
             {ownerOn && <button type="button" className="home-empty-btn" onClick={() => pickOwner("")}>Show all authors</button>}
+          </EmptyState>
+        ) : tab === "mine" && sub === "shared" ? (
+          <EmptyState art="people" title={archivedCount ? "All of these decks are archived" : "Nothing shared with you yet"}
+            body={archivedCount ? `${archivedCount} archived deck${archivedCount === 1 ? " is" : "s are"} hidden.` : "When someone shares a deck with you, it shows up here to open, present or copy."}>
+            {archivedCount > 0
+              ? <button type="button" className="home-empty-btn" onClick={() => setShowArchived(true)}>Show archived decks</button>
+              : <button type="button" className="home-empty-btn" onClick={() => pickSub("owned")}>See decks you own</button>}
           </EmptyState>
         ) : tab === "review" ? (
           <EmptyState art="review" title="You're all caught up"
@@ -270,6 +298,7 @@ export function HomeDecks({ company, mine, employees, review = [], reviewer = fa
 }
 
 const TAB_NAME: Record<Tab, string> = { company: "Company-wide", mine: "My decks", employees: "Others", review: "For review" };
+const SUB_NAME: Record<MineSub, string> = { owned: "Owned by you", shared: "Shared to you" };
 
 /** Grid / list switch beside Sort by. */
 function ViewToggle({ view, onChange }: { view: View; onChange: (v: View) => void }) {
