@@ -127,6 +127,20 @@
       "when": 1793785888200,
       "tag": "0017_ui_source_decisions",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1794214998847,
+      "tag": "0018_presets",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1794290689636,
+      "tag": "0019_studio_tickets",
+      "breakpoints": true
     }
   ]
 }

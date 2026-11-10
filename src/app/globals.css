@@ -39,8 +39,8 @@
    The two blocks hold the same values. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0f1115; --panel: #171a1f; --ink: #eceef2; --ink-2: #e3e6eb; --ink-3: #c4c9d2; --mute: #9aa3b2; --faint: #6f7785;
-    --line: #2a2f37; --line-strong: #3a414b; --soft: #1b1e24; --soft-2: #22262d;
+    --bg: #0d0f13; --panel: #181b21; --ink: #f4f6f9; --ink-2: #eaedf1; --ink-3: #d0d5dd; --mute: #aeb6c3; --faint: #858d9b;
+    --line: #313740; --line-strong: #46505c; --soft: #1d2027; --soft-2: #262a32;
     --blue: #4c8bff; --blue-hover: #6a9dff; --blue-bg: #17274a; --blue-line: #2b4677;
     --accent: #8b80f0; --accent-ink: #b3abff; --accent-bg: #221f3d; --accent-line: #3b3670;
     --ok: #4ade80; --ok-bg: #12291b; --ok-line: #1f4a30;
@@ -50,8 +50,8 @@
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0f1115; --panel: #171a1f; --ink: #eceef2; --ink-2: #e3e6eb; --ink-3: #c4c9d2; --mute: #9aa3b2; --faint: #6f7785;
-  --line: #2a2f37; --line-strong: #3a414b; --soft: #1b1e24; --soft-2: #22262d;
+  --bg: #0d0f13; --panel: #181b21; --ink: #f4f6f9; --ink-2: #eaedf1; --ink-3: #d0d5dd; --mute: #aeb6c3; --faint: #858d9b;
+  --line: #313740; --line-strong: #46505c; --soft: #1d2027; --soft-2: #262a32;
   --blue: #4c8bff; --blue-hover: #6a9dff; --blue-bg: #17274a; --blue-line: #2b4677;
   --accent: #8b80f0; --accent-ink: #b3abff; --accent-bg: #221f3d; --accent-line: #3b3670;
   --ok: #4ade80; --ok-bg: #12291b; --ok-line: #1f4a30;
@@ -651,7 +651,7 @@ html { overflow-x: clip; }
 .app-bell-list li a:hover { background: var(--panel); }
 .app-bell-list li.unread .app-bell-text { font-weight: 600; }
 .app-bell-kind { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; background: var(--faint); }
-.app-bell-kind.review_sent { background: var(--accent); } .app-bell-kind.approved { background: var(--ok); } .app-bell-kind.changes_requested { background: #f59e0b; } .app-bell-kind.master_changed { background: #0ea5e9; } .app-bell-kind.shared { background: #8b5cf6; }
+.app-bell-kind.review_sent { background: var(--accent); } .app-bell-kind.approved { background: var(--ok); } .app-bell-kind.changes_requested { background: #f59e0b; } .app-bell-kind.master_changed { background: #0ea5e9; } .app-bell-kind.shared { background: #8b5cf6; } .app-bell-kind.studio { background: var(--blue); }
 .app-bell-when { font-size: 11px; color: var(--mute); white-space: nowrap; }
 .app-bell-empty { margin: 0; padding: 16px; font-size: 13px; color: var(--mute); }
 .app-avatar { width: 38px; height: 38px; border-radius: 100px; background: var(--app-blue-bg); color: var(--app-blue); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex: none; }
@@ -1084,16 +1084,20 @@ select.nd-input { appearance: none; -webkit-appearance: none; padding-right: 36p
 @keyframes toast-in { from { opacity: 0; transform: translate(-50%, 8px); } }
 @media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
 /* Up next (after a decision): preview two thirds, the list of what else is for review one third. */
-.studio-next { width: min(1120px, calc(100vw - 48px)); max-height: calc(100vh - 48px); padding: 0; border: 1px solid var(--line); border-radius: 14px; background: var(--panel, #fff); color: var(--ink); display: none; grid-template-columns: 2fr 1fr; overflow: hidden; }
+.studio-next { width: min(1120px, calc(100vw - 48px)); max-height: calc(100vh - 48px); padding: 0; border: 1px solid var(--line); border-radius: 14px; background: var(--panel, #fff); color: var(--ink); display: none; grid-template-columns: 2fr 1fr; grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "head head" "main list" "foot foot"; overflow: hidden; }
+/* Title across the top, the preview and the list in the middle, Review it and Go back to Studio in a bar at the bottom. */
+.studio-next-head { grid-area: head; display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 18px 24px; border-bottom: 1px solid var(--line); }
+.studio-next-head h2 { margin: 0; font-size: 17px; }
+.studio-next-head .hint { margin: 0; font-size: 12px; }
 .studio-next[open] { display: grid; }
 .studio-next::backdrop { background: rgba(16, 20, 28, 0.45); }
-.studio-next-main { display: flex; flex-direction: column; gap: 16px; padding: 24px; min-width: 0; overflow-y: auto; }
+.studio-next-main { grid-area: main; display: flex; flex-direction: column; gap: 16px; padding: 24px; min-width: 0; overflow-y: auto; }
 .studio-next-preview .frame { display: block; aspect-ratio: 16 / 9; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; }
 .studio-next-info { display: flex; flex-direction: column; gap: 8px; }
 .studio-next-info .hint { margin: 0; }
-.studio-next-actions { display: flex; gap: 8px; margin-top: 8px; }
-.studio-next-list { border-left: 1px solid var(--line); padding: 24px 16px; overflow-y: auto; min-width: 0; }
-.studio-next-list h2 { margin: 0 0 12px 8px; font-size: 15px; }
+.studio-next-actions { grid-area: foot; display: flex; justify-content: flex-end; gap: 8px; padding: 14px 24px; border-top: 1px solid var(--line); background: var(--bg); }
+.studio-kbd { font: inherit; font-size: 12px; opacity: 0.75; }
+.studio-next-list { grid-area: list; border-left: 1px solid var(--line); padding: 24px 16px; overflow-y: auto; min-width: 0; }
 .studio-next-list ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .studio-next-list li { position: relative; display: flex; align-items: center; gap: 12px; padding: 8px; border: 1px solid transparent; border-radius: 8px; }
 .studio-next-list li:hover { background: color-mix(in srgb, var(--blue) 6%, transparent); }
@@ -1105,7 +1109,7 @@ select.nd-input { appearance: none; -webkit-appearance: none; padding-right: 36p
 .studio-next-thumb .frame { display: block; aspect-ratio: 16 / 9; overflow: hidden; border: 1px solid var(--line); border-radius: 4px; }
 .studio-next-name { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 13px; }
 .studio-next-name b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-@media (max-width: 760px) { .studio-next { grid-template-columns: 1fr; } .studio-next-list { border-left: 0; border-top: 1px solid var(--line); } }
+@media (max-width: 760px) { .studio-next { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr) auto auto; grid-template-areas: "head" "main" "list" "foot"; } .studio-next-list { border-left: 0; border-top: 1px solid var(--line); } }
 /* The top section (title + request box) sits on drifting blurred colour, edge to edge, fading into the page. */
 .studio-top { position: relative; isolation: isolate; margin: -56px calc(50% - 50vw) 28px; padding: 56px calc(50vw - 50%) 40px; overflow: hidden; }
 /* The image's bottom sits on "Studio"'s baseline; "DEKIRU" is 5.59 of the logo's 27 units above that, so shift it down by as much. */
@@ -1124,6 +1128,15 @@ select.nd-input { appearance: none; -webkit-appearance: none; padding-right: 36p
 @keyframes studio-drift-c { to { transform: translate(-12vw, 24%) scale(1.1); } }
 @keyframes studio-drift-d { to { transform: translate(-16vw, -14%) scale(1.2); } }
 @media (prefers-reduced-motion: reduce) { .studio-glow i { animation: none; } }
+/* Dark theme: the pastel glow is much louder on a dark base, so keep it a faint wash behind the text. */
+:root[data-theme="dark"] .studio-glow { background: var(--bg); -webkit-mask-image: linear-gradient(#000 40%, transparent); mask-image: linear-gradient(#000 40%, transparent); }
+:root[data-theme="dark"] .studio-glow i { opacity: 0.16; filter: blur(120px); }
+:root[data-theme="dark"] .studio-top .studio-ask { background: color-mix(in srgb, var(--panel) 94%, transparent); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .studio-glow { background: var(--bg); -webkit-mask-image: linear-gradient(#000 40%, transparent); mask-image: linear-gradient(#000 40%, transparent); }
+  :root:not([data-theme="light"]) .studio-glow i { opacity: 0.16; filter: blur(120px); }
+  :root:not([data-theme="light"]) .studio-top .studio-ask { background: color-mix(in srgb, var(--panel) 94%, transparent); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35); }
+}
 .studio-ask { max-width: 1080px; margin: 0 auto 28px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
 .studio-ask-head { display: flex; align-items: center; gap: 16px; justify-content: space-between; flex-wrap: wrap; }
 .studio-kind { display: flex; gap: 16px; font-size: 14px; flex-wrap: wrap; }
@@ -1164,7 +1177,10 @@ select.nd-input { appearance: none; -webkit-appearance: none; padding-right: 36p
 .studio-subtabs a span { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; opacity: 0.8; }
 /* Remix sits over the thumbnail's top-right corner. */
 .studio-card { position: relative; }
-.studio-remix-btn { position: absolute; top: 12px; right: 12px; z-index: 1; height: 32px; padding: 0 14px; box-shadow: 0 2px 8px rgba(16, 24, 40, 0.18); }
+.studio-remix-btn { position: absolute; top: 12px; right: 12px; z-index: 1; height: 28px; padding: 0 10px; gap: 6px; font-size: 11px; font-weight: 400; box-shadow: 0 2px 8px rgba(16, 24, 40, 0.18); }
+/* Library cards: Revise and Remix side by side in the same corner. */
+.studio-card-actions { position: absolute; top: 12px; right: 12px; z-index: 1; display: flex; gap: 6px; }
+.studio-card-actions .btn { height: 28px; padding: 0 10px; gap: 6px; font-size: 11px; font-weight: 400; box-shadow: 0 2px 8px rgba(16, 24, 40, 0.18); }
 /* Remix editor (Figma "Dekiru" 254:216): the deck editor's frame, with remix prompts in the panel. */
 .studio-remix .ed-work { min-height: 0; }
 /* `.ed button { color: inherit }` would turn primary buttons' text dark. */
@@ -1202,6 +1218,30 @@ select.nd-input { appearance: none; -webkit-appearance: none; padding-right: 36p
 .studio-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 16px 0 20px; }
 .studio-head h1 { margin: 0; font-size: 24px; }
 .studio-detail { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; align-items: start; }
+/* Studio tickets (Requests tab, ticket page) and the off-hours banner. */
+.studio-offhours { margin: 0 0 16px; padding: 10px 14px; border-radius: 8px; background: var(--warn-bg); border: 1px solid var(--warn-line); color: var(--ink); font-size: 14px; }
+.studio-offhours b { color: var(--warn); }
+.studio-tickets { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.studio-ticket { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; color: inherit; text-decoration: none; }
+.studio-ticket:hover { border-color: var(--line-strong); }
+.studio-ticket-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.studio-ticket-head .mono { margin-left: auto; color: var(--mute); font-size: 13px; }
+.studio-ticket p { margin: 0; white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.studio-ticket-last { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.tag.quiet { background: var(--soft-2); color: var(--mute); }
+.studio-viewonly { margin: 0 0 12px; }
+.studio-frame-empty { display: flex; align-items: center; justify-content: center; background: var(--soft-2); color: var(--mute); font-size: 13px; font-weight: 600; }
+.studio-ticket-page { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; align-items: start; }
+.studio-ticket-main { display: flex; flex-direction: column; gap: 16px; }
+.studio-ticket-prompt { margin: 0; white-space: pre-wrap; color: var(--ink) !important; }
+.studio-thread li p { margin: 4px 0 0; white-space: pre-wrap; color: var(--ink); }
+.studio-ticket-refs { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; margin-top: 8px; }
+.studio-ticket-ref { display: flex; flex-direction: column; gap: 6px; padding: 6px; color: inherit; font-size: 13px; font-weight: 600; text-decoration: none; }
+.studio-ticket-ref .frame { display: block; aspect-ratio: 16 / 9; overflow: hidden; border: 1px solid var(--line); border-radius: 4px; }
+.studio-ticket-act textarea { width: 100%; font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); resize: vertical; }
+@media (max-width: 1100px) { .studio-ticket-page { grid-template-columns: 1fr; } }
+@media (max-width: 760px) { .studio-ticket-head .mono { margin-left: 0; width: 100%; } }
+
 .studio-previews { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .studio-themes { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .studio-big + .studio-big { margin-top: 16px; }
@@ -1242,6 +1282,16 @@ select.nd-input { appearance: none; -webkit-appearance: none; padding-right: 36p
 .studio-thumbs button { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-size: 13px; line-height: 1; cursor: pointer; display: grid; place-items: center; padding: 0; }
 .studio-add-image { display: inline-flex; gap: 8px; align-items: baseline; font-size: 13px; font-weight: 600; color: var(--blue); cursor: pointer; }
 .studio-decide-buttons .btn { flex: 1 1 auto; padding-inline: 12px; }
+/* Revision 2+: Approve fills the row, Reject is plain red text beside it. */
+.studio-decide-buttons.later { align-items: center; }
+.studio-reject-text { flex: none; background: none; border: 0; padding: 9px 8px; font: inherit; font-size: 14px; font-weight: 600; color: var(--bad); cursor: pointer; border-radius: 8px; }
+.studio-reject-text:hover:not(:disabled) { text-decoration: underline; }
+.studio-reject-text:disabled { color: var(--mute); cursor: default; }
+/* The change asked for last, to check this revision against. */
+.studio-last-ask { display: flex; flex-direction: column; gap: 2px; font-size: 13px; padding: 10px 12px; border-radius: 8px; background: var(--bg); border: 1px solid var(--line); }
+.studio-last-ask-head { font-weight: 600; }
+.studio-last-ask p { margin: 4px 0 0; color: var(--mute); white-space: pre-wrap; }
+.studio-last-ask .studio-thumbs { margin-top: 6px; }
 @media (max-width: 900px) {
   .studio-detail { grid-template-columns: 1fr; }
   .studio-side { position: static; }

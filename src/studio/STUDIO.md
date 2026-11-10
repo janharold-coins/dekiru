@@ -4,6 +4,13 @@
 
 This page shows at **Studio → Studio rules** (`/studio/rules`). To change a rule, write it in **Rule prompts** beside the rules on that page, or ask in chat. Claude edits this file, adds a line under **Changes** below, and closes the request with `npm run studio -- close <id>`. Changes to the shared helpers in `src/studio/grid.ts` (such as how text wraps) reach every proposal at once. Other changes apply when a proposal is next revised.
 
+**Check before building.** Anyone can send a request, so every new layout or theme request (and every remix or revision) starts as a ticket that Claude checks first. `npm run studio` lists them under *New tickets to check*, with the library and the open tickets to compare against. Reply to each one, in plain words for the requester:
+- **It already exists:** `npm run studio -- reply <id> --refs template:<id>,theme:<id> "message"`. Say which template or theme does the job and how to use it. The requester answers *That works* (closed) or *Still need it* (goes to a reviewer).
+- **It duplicates an open ticket:** `npm run studio -- merge <id> <other id> "message"`.
+- **Nothing fits:** `npm run studio -- build <id> "message"`. Say briefly what's new about it. A reviewer approves it before it's built; a reviewer's own ticket goes straight to the build list.
+
+Only build what's under *Approved requests to build*. After building, run `npm run studio` again: it records the build on its ticket and notifies the requester and reviewers. The same steps are on the Dekiru connector (`studio_queue`, `studio_reply`).
+
 **When the rules give way**, in this order:
 1. **The request says otherwise.** For example, "pin the quote to the top" or "use 56px for the title".
 2. **A Figma layout is given.** Match the frame; Figma is the source.
@@ -49,7 +56,7 @@ Sizes come from this scale only (`TYPE` in `src/studio/grid.ts`). Every line hei
 - Use `type("h2", 600, "#204680")` from `src/studio/grid.ts`. It wraps the deck's `t()`, so theme text flipping and translated-font line heights keep working.
 - **Wrapping is automatic.** `type()` sets it per step. Headings (`display` to `h3`) use `balance`, so their lines come out about the same length instead of a long line over a short one. Running text (`lead` to `micro`) uses `pretty`, so a paragraph never ends on one stranded word. Don't set `text-wrap` by hand. An explicit `\n` in the content still breaks the line where it is, and the wrap applies within each part.
 - **Tune card.** On a layout proposal's review page, the reviewer can preview the Perfect Fifth (×1.5) or Golden Ratio (×1.618) scale, built from body text at 32. They can also preview other element spacing, and a baseline or descender bottom edge. Their picks come with the decision as a "Tune:" line. Build what the line says into the layout as its new default, and if it asks for a different scale, use those sizes for that layout.
-- Weights: 400, 500, 600 and 700 only. **One family: Manrope, for text and for numbers and figures** (values, table figures, number badges, numbered lists). Don't use Everett. `type()` ignores an `"everett"` family, so a slip still renders in Manrope. Don't turn on tabular figures (`tabular-nums`): Cns Manrope's tabular digits are broken (they overlap). Right-align number columns instead.
+- Weights: 400, 500, 600 and 700 only. **One family: Manrope, for text and for numbers and figures** (values, table figures, number badges, numbered lists). Don't use Everett (it no longer exists in the code). Never set `fontFamily` directly: `type()` gives each style a font role, title for display–h3 and body for the rest; pass `"numeral"` as its fourth argument for numbers set as figures (hero values, step and list numbers). The roles read `--dk-font-title` / `-body` / `-numeral`, which typography presets will set; unset, all are Cns Manrope. Don't turn on tabular figures (`tabular-nums`): Cns Manrope's tabular digits are broken (they overlap). Right-align number columns instead.
 - Never shrink text to make it fit (the deck rule). Over budget means shorter words or a different layout.
 - Steps are adjacent sizes. Don't pair two sizes more than four steps apart in one block unless it's a number and its label.
 
@@ -76,3 +83,4 @@ Applies to anything that holds text in a box or a cell: cards, table rows and ce
 - 2026-11-04: Rule changes are asked for in Rule prompts on the rules page (the Studio's request form no longer has a Rule change option).
 - 2026-11-05: No Everett: numbers and figures use Manrope like the rest (no tabular figures: Cns Manrope's are broken). `type()` now ignores an Everett family, so every Studio-built layout (in review and in the library) switched at once.
 - 2026-11-05: New rule 4, containers: text in cards, table rows, chips and boxes is centred by its letters with one padding on all sides, never under the minimums (cards 24, table rows 64, chips 8 / 16, list items 24 apart). If content doesn't fit, cut the budget or change the layout. Applies to proposals when they're next built or revised.
+- 2026-11-10: Requests are tickets open to everyone. Claude checks each one first (reply with an existing template or theme, merge a duplicate, or say a build is needed) and builds only what a reviewer approved. Rejecting a build needs a reason. See *Check before building* at the top.

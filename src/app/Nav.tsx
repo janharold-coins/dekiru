@@ -32,8 +32,8 @@ export async function Nav({ on, user }: { on?: "decks" | "library" | "people" | 
         </Link>
         <nav className="app-nav" aria-label="Main">
           {item("/", "Decks", "decks")}
-          {item("/library", "Library", "library")}
-          {canUseStudio(user) && item("/studio", "Studio", "studio")}
+          {/* Library is hidden from the nav (2026-11-10): its pages stay, opened from the editor's "Add slide" and from Studio. */}
+          {item("/studio", "Studio", "studio")}
           {canUseStudio(user) && item("/ui", "UI (wip-alpha test)", "ui")}
           {user?.role === "admin" && item("/people", "People", "people")}
         </nav>

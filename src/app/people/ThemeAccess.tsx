@@ -7,9 +7,9 @@ export function ThemeAccess(p: { userId: string; allowed: boolean; admin: boolea
   return <AccessSwitch {...p} label="Can edit themes" act={setThemeAccessAction} />;
 }
 
-/** "Can use Studio" switch: request and approve new layouts and themes. Admins always can. */
+/** "Studio reviewer" switch: approve requests and decide on builds (everyone can request). Admins always are. */
 export function StudioAccess(p: { userId: string; allowed: boolean; admin: boolean }) {
-  return <AccessSwitch {...p} label="Can use Studio" act={setStudioAccessAction} />;
+  return <AccessSwitch {...p} label="Studio reviewer" act={setStudioAccessAction} />;
 }
 
 function AccessSwitch({ userId, allowed, admin, label, act }: {

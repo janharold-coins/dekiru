@@ -1,11 +1,17 @@
 /**
  * What the Studio is waiting on Claude for (run it when asked to "check the Studio"):
  *   npm run studio
- * Lists open requests (build each as a proposal in src/studio/proposals.ts, with `request` set to its id;
- * a remix becomes a new proposal with `remixOf` set, built from the request and all its remix prompts),
+ * First lists new tickets to CHECK before anything is built (compare each with the library and open tickets, then reply):
+ *   npm run studio -- reply <id> --refs template:cover,theme:coins "message"   existing templates/themes cover it
+ *   npm run studio -- merge <id> <into id> "message"                           a duplicate of another ticket
+ *   npm run studio -- build <id> "message"                                     nothing fits: a build is needed
+ * Then lists approved requests to build (build each as a proposal in src/studio/proposals.ts, with `request` set to its id;
+ * a remix becomes a new proposal with `remixOf` set, built from the request and all its remix prompts; a revision
+ * is built the same way with `revises: true` too, and replaces the original once approved),
  * prompts on drafts and proposals sent back with changes (revise, bump `revision`, fill `changes`), and approved layouts
  * still to move into the library (move them straight away: approval means it ships, see src/studio/proposals.ts). Every proposal follows src/studio/STUDIO.md (rule-change requests edit it).
  *   npm run studio -- close <request id>    closes a request answered without a proposal (a rule change)
+ * Each run also records new builds on their tickets and notifies the requester and reviewers (syncBuilt).
  *   npm run studio -- watch [--until 19:00] waits (checking every 10s) until there's work it hasn't reported yet, prints
  *                                           it and exits. Run in the background: when it exits, Claude's session wakes up
  *                                           to do the work, then starts it again ("watch the Studio"). With --until (local
@@ -16,7 +22,7 @@
 import { hasDb, MISSING_DB_HELP } from "@/db/client";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { attachment, closeRequest, studioQueue, workKeys, type StudioQueue } from "@/lib/studio";
+import { attachment, claudeReply, closeRequest, studioQueue, workKeys, type StudioQueue } from "@/lib/studio";
 
 const SEEN = process.env.STUDIO_SEEN ?? ".studio/watch-seen.json"; // what watch has already reported
 const EVERY_MS = 10_000;
@@ -36,15 +42,27 @@ async function report(q: StudioQueue) {
       }
     }
   };
-  console.log(`\nOpen requests (${q.requests.length})`);
+  console.log(`\nNew tickets to check (${q.check.length}): reply, merge or build (see the top of scripts/studio.ts)`);
+  for (const t of q.check) {
+    const remix = t.remix ? `  ${t.revise ? "revision" : "remix"} of ${t.remix}` : "";
+    console.log(`  [${t.kind}] ${t.id}  ${t.email ?? "—"}  ${t.createdAt.toISOString().slice(0, 10)}${remix}\n    ${t.prompt.replace(/\n/g, "\n    ")}`);
+    await prompts(t.prompts, `ticket-${t.id.slice(0, 8)}`);
+  }
+  if (q.check.length) {
+    console.log(`\n  Library to compare with: ${q.library.templates.length} templates, ${q.library.themes.length} themes, ${q.library.approved.length} approved proposals (src/content/templates.ts, src/studio/proposals.ts)`);
+    for (const t of q.library.tickets) console.log(`  open ticket ${t.id} [${t.status}] ${t.prompt.split("\n")[0].slice(0, 100)}`);
+  }
+  console.log(`\nApproved requests to build (${q.requests.length})`);
   for (const r of q.requests) {
-    const remix = r.remix ? `  remix of ${r.remix} (build a new proposal with remixOf: "${r.remix}")` : "";
+    const remix = !r.remix ? ""
+      : r.revise ? `  revision of ${r.remix} (build a new proposal with remixOf: "${r.remix}", revises: true; once approved it replaces ${r.remix})`
+      : `  remix of ${r.remix} (build a new proposal with remixOf: "${r.remix}")`;
     console.log(`  [${r.kind}] ${r.id}  ${r.email ?? "—"}  ${r.createdAt.toISOString().slice(0, 10)}${remix}\n    ${r.prompt.replace(/\n/g, "\n    ")}`);
     await prompts(r.prompts, `request-${r.id.slice(0, 8)}`);
   }
   console.log(`\nPrompts to build (${q.revise.length}): drafts and proposals sent back with changes`);
   for (const r of q.revise) {
-    console.log(`  ${r.id} rev ${r.revision}${r.remixOf ? ` (remix of ${r.remixOf}; stays a draft until they send it for review)` : ""}`);
+    console.log(`  ${r.id} rev ${r.revision}${r.remixOf ? ` (${r.revises ? "revision" : "remix"} of ${r.remixOf}; stays a draft until they send it for review)` : ""}`);
     await prompts(r.prompts, `${r.id}-rev${r.revision}`);
   }
   console.log(`\nApproved layouts to move into the library now (${q.ship.length}), with the Tune line from their approval`);
@@ -97,6 +115,15 @@ async function main() {
   if (!hasDb()) { console.error(`\n${MISSING_DB_HELP}\n`); process.exit(1); }
   const [cmd, id, ...rest] = process.argv.slice(2);
   if (cmd === "close" && id) { await closeRequest(id); console.log(`Closed ${id}`); return; }
+  if (cmd === "reply" && id) {
+    const at = rest.indexOf("--refs");
+    if (at < 0) throw new Error('reply wants --refs template:<id>,theme:<id> and a message.');
+    const refs = rest[at + 1].split(",").map((r) => r.trim()).filter(Boolean);
+    await claudeReply(id, "recommend", rest.filter((_, i) => i !== at && i !== at + 1).join(" "), { refs });
+    console.log(`Replied to ${id} (recommended ${refs.join(", ")})`); return;
+  }
+  if (cmd === "merge" && id) { const [into, ...msg] = rest; await claudeReply(id, "merge", msg.join(" "), { into }); console.log(`Merged ${id} into ${into}`); return; }
+  if (cmd === "build" && id) { await claudeReply(id, "build", rest.join(" ")); console.log(`${id}: build needed`); return; }
   if (cmd === "watch") {
     const args = [id, ...rest];
     const at = args[args.indexOf("--until") + 1];

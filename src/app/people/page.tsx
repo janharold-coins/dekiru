@@ -26,7 +26,7 @@ export default async function PeoplePage() {
   return (
     <main className="shell">
       <Nav on="people" user={user} />
-      <PageHero title="People">Everyone who has signed in, with their department, role, theme and Studio access, and what they may review.</PageHero>
+      <PageHero title="People">Everyone who has signed in, with their department, role, theme access, whether they review Studio requests, and what decks they may review.</PageHero>
       <dl className="roles-key">
         {ROLES.map((r) => <div key={r}><dt>{r[0].toUpperCase() + r.slice(1)}</dt><dd>{ROLE_HELP[r]}</dd></div>)}
       </dl>

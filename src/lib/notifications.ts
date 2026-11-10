@@ -5,6 +5,7 @@
  *   changes_requested  → the person who sent it
  *   master_changed     → owners and editors of decks that follow a slide of this master, once its revision is approved
  *   shared             → the person a deck was shared with
+ *   studio             → Studio tickets: the requester at each step, reviewers when a decision is needed (src/lib/studio.ts)
  * Delivery is the bell in the header; Slack and email can hang off `notify` later.
  */
 import { and, desc, eq, inArray, isNull, like, sql } from "drizzle-orm";
@@ -13,7 +14,7 @@ import { deckMembers, deckVersions, decks, notifications, users } from "@/db/sch
 import { LANGUAGES, type Lang } from "@/deck/i18n";
 import type { SignedInUser } from "./auth";
 
-export type NotificationKind = "review_sent" | "approved" | "changes_requested" | "master_changed" | "shared";
+export type NotificationKind = "review_sent" | "approved" | "changes_requested" | "master_changed" | "shared" | "studio";
 
 export interface Notification {
   id: string; kind: NotificationKind; text: string; href: string; readAt: Date | null; createdAt: Date; deckId: string | null;

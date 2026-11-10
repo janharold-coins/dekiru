@@ -2,7 +2,9 @@ import { RenderSlide } from "@/deck/RenderSlide";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
 import { ThemeScope } from "@/deck/ThemeScope";
 import type { SlideData } from "@/deck/types";
-import type { Proposal } from "@/studio/proposals";
+import { proposal, type Proposal } from "@/studio/proposals";
+import { getTemplate } from "@/content/templates";
+import type { ThemeInfo } from "@/lib/themes";
 import { PatternFrame } from "./PatternPreview";
 
 /** A theme card shows one slide per background role and a content slide, as a 2×2 the size of a layout card. */
@@ -25,3 +27,19 @@ export function ProposalThumb({ p, quad }: { p: Proposal; quad: SlideData[] }) {
 }
 
 export const kindLabel = (p: Proposal) => (p.remixOf ? "Remix" : p.kind === "theme" ? "Theme" : p.kind === "pattern" ? "UI pattern" : "Layout");
+
+/** What an unbuilt remix starts from, as a card thumbnail: the template, the theme (2×2) or the approved proposal. */
+export function SourceThumb({ of, quad, themes }: { of: string; quad: SlideData[]; themes: ThemeInfo[] }) {
+  const [type, id] = of.includes(":") ? of.split(":", 2) : ["proposal", of];
+  const tokens = type === "theme" ? themes.find((t) => t.id === id)?.tokens : type === "proposal" ? (proposal(id)?.kind === "theme" ? (proposal(id) as { tokens: ThemeInfo["tokens"] }).tokens : undefined) : undefined;
+  if (tokens) {
+    return (
+      <ThemeScope tokens={tokens}>
+        <span className="frame studio-quad">{quad.map((s) => <span key={s.id}><ScaledSlide><RenderSlide slide={s} /></ScaledSlide></span>)}</span>
+      </ThemeScope>
+    );
+  }
+  const p = type === "proposal" ? proposal(id) : undefined;
+  const slide = type === "template" ? getTemplate(id)?.slide : p?.kind === "layout" ? p.examples[0] : undefined;
+  return <span className="frame">{slide && <ScaledSlide><RenderSlide slide={slide} entry={p?.kind === "layout" ? p.entry : undefined} /></ScaledSlide>}</span>;
+}
