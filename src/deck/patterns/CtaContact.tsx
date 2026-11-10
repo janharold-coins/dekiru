@@ -23,7 +23,7 @@ export function CtaContact({ title, subtitle, contacts, figma }: CtaContactProps
   const lines = title.split("\n").length;
   return (
     <>
-      <TitleCage text={title} left={151} top={310} fontSize={120} bleedX={-168} textStyle={t(120, 1.15, -3.6, 500, "#fff")} layout={figma?.cage} />
+      <TitleCage text={title} left={151} top={310} fontSize={120} bleedX={-168} textStyle={t(120, 1.15, -3.6, 500, "#fff", "title")} layout={figma?.cage} />
       <p style={{ position: "absolute", left: 151, top: 310 + lines * 138 + 53, margin: 0, ...t(48, 1.4, -1.44, 400, "#fff"), ...noWrap }}>{subtitle}</p>
       {contacts.length === 2 ? (
         contacts.map((c, i) => (

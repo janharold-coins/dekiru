@@ -17,6 +17,7 @@ import {
 } from "drizzle-orm/pg-core";
 import type { SeedSlide } from "@/content/resolve";
 import type { ThemeTokens } from "@/deck/theme";
+import type { PresetKind, PresetTokens } from "@/deck/presets";
 import type { SlideData } from "@/deck/types";
 
 export const role = pgEnum("role", ["admin", "manager", "member"]);
@@ -195,6 +196,41 @@ export const themeVersions = pgTable(
   (t) => [
     uniqueIndex("theme_versions_theme_number").on(t.themeId, t.number),
     uniqueIndex("theme_versions_one_draft").on(t.themeId).where(sql`${t.status} = 'draft'`),
+  ],
+);
+
+/**
+ * A preset is a partial theme: typography (fonts) or colours (text and accent inks), applied on top of a deck's
+ * theme without changing it (see src/deck/presets.ts). Versioned like themes: edits land in one draft,
+ * publishing makes a new version, and decks using the preset follow its newest published version.
+ */
+export const presets = pgTable("presets", {
+  id: text("id").primaryKey(),
+  kind: text("kind").$type<PresetKind>().notNull(), // "typography" | "colors"
+  name: text("name").notNull(),
+  createdBy: uuid("created_by").references(() => users.id),
+  archivedAt: timestamp("archived_at", { withTimezone: true }),
+  createdAt: created(),
+  updatedAt: updated(),
+});
+
+export const presetVersions = pgTable(
+  "preset_versions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    presetId: text("preset_id").notNull().references(() => presets.id, { onDelete: "cascade" }),
+    number: integer("number").notNull(),
+    status: versionStatus("status").notNull().default("draft"),
+    tokens: jsonb("tokens").$type<PresetTokens>().notNull(),
+    note: text("note"),
+    createdBy: uuid("created_by").references(() => users.id),
+    createdAt: created(),
+    publishedBy: uuid("published_by").references(() => users.id),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("preset_versions_preset_number").on(t.presetId, t.number),
+    uniqueIndex("preset_versions_one_draft").on(t.presetId).where(sql`${t.status} = 'draft'`),
   ],
 );
 
@@ -387,7 +423,7 @@ export const notifications = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-    kind: text("kind").notNull(), // "review_sent" | "approved" | "changes_requested" | "master_changed" | "shared"
+    kind: text("kind").notNull(), // "review_sent" | "approved" | "changes_requested" | "master_changed" | "shared" | "studio"
     deckId: text("deck_id").references(() => decks.id, { onDelete: "cascade", onUpdate: "cascade" }),
     lang: text("lang"),
     text: text("text").notNull(),
@@ -424,21 +460,47 @@ export const deckComments = pgTable(
 );
 
 /**
- * Studio (src/lib/studio.ts): people with Studio access ask for a new layout or theme; Claude builds it as a
- * proposal in code (src/studio/proposals.ts) and the requester approves, asks for changes or rejects it.
- * A request is open until a proposal answers it.
+ * Studio (src/lib/studio.ts): anyone asks for a new layout or theme as a ticket. Claude checks it against what
+ * exists (points to a template, merges a duplicate, or says a build is needed), a Studio reviewer approves it,
+ * Claude builds it as a proposal in code (src/studio/proposals.ts) and a reviewer decides on the build.
+ * `status` (TicketStatus): new → answered → needs_approval → approved, or closed as resolved / merged /
+ * withdrawn / rejected (rule changes: approved → done). Once a proposal answers it, the proposal's status leads.
  */
 export const studioRequests = pgTable(
   "studio_requests",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    kind: text("kind").notNull(), // "layout" | "theme"
+    kind: text("kind").notNull(), // "layout" | "theme" | "rule"
     prompt: text("prompt").notNull(),
     authorId: uuid("author_id").references(() => users.id, { onDelete: "set null" }),
-    closedAt: timestamp("closed_at", { withTimezone: true }), // dismissed by the author, or answered
+    status: text("status").notNull().default("new"),
+    /** Merged into this ticket (a duplicate). */
+    mergedInto: uuid("merged_into"),
+    /** The author was a Studio reviewer when asking: a built remix starts as their draft instead of going to review. */
+    draftLoop: boolean("draft_loop").notNull().default(false),
+    closedAt: timestamp("closed_at", { withTimezone: true }), // resolved, merged, withdrawn, rejected or done
     createdAt: created(),
   },
   (t) => [index("studio_requests_open").on(t.closedAt, t.createdAt)],
+);
+
+/**
+ * A ticket's thread: Claude's replies, the requester's answer, reviewers' decisions. `by` null = Claude.
+ * kind: "reply" (Claude: refs = recommended templates/themes) | "merged" | "build_needed" | "works" | "still_need"
+ * | "approved" | "rejected" | "withdrawn" | "built".
+ */
+export const studioEvents = pgTable(
+  "studio_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    requestId: uuid("request_id").notNull().references(() => studioRequests.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    note: text("note"),
+    refs: jsonb("refs").$type<string[]>().notNull().default([]),
+    byId: uuid("by_id").references(() => users.id, { onDelete: "set null" }),
+    createdAt: created(),
+  },
+  (t) => [index("studio_events_request").on(t.requestId, t.createdAt)],
 );
 
 /** Decisions on a proposal, newest wins. `revision` is the proposal's revision when decided: a newer one reopens it. */

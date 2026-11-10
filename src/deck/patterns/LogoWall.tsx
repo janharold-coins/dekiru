@@ -24,7 +24,7 @@ const SLOTS = [
 export function LogoWall({ title, body, groups }: LogoWallProps) {
   return (
     <>
-      <h1 style={{ position: "absolute", left: 79, top: 225, margin: 0, ...t(72, 1.15, -2.16, 600, "#204680") }}>{title}</h1>
+      <h1 style={{ position: "absolute", left: 79, top: 225, margin: 0, ...t(72, 1.15, -2.16, 600, "#204680", "title") }}>{title}</h1>
       <p style={{ position: "absolute", left: 79, top: 332, width: 497, margin: 0, ...t(36, 1.4, -1.08, 600) }}>{body}</p>
       <div
         style={{

@@ -40,6 +40,7 @@ function CheckCircle() {
     createElement("path", { d: "M12 20.5l5.5 5.5L28.5 14", fill: "none", stroke: "#ffffff", strokeWidth: 3.5, strokeLinecap: "round", strokeLinejoin: "round" }));
 }
 
+/** Approved in the Studio 2026-11-09 (revision 2). Built to the Studio rules (src/studio/STUDIO.md). */
 export function Objectives({ eyebrow, title, objectives }: ObjectivesProps) {
   return (
     <>

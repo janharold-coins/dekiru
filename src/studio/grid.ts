@@ -1,5 +1,5 @@
 import { createElement, type CSSProperties, type ReactNode } from "react";
-import { noWrap, t } from "@/deck/tokens";
+import { noWrap, t, type FontRole } from "@/deck/tokens";
 
 /** Studio layout helpers: the 8-point grid, the content band and the type scale (rules: STUDIO.md). */
 
@@ -29,6 +29,11 @@ export const TYPE: Record<TypeStep, { size: number; line: number; track: number;
   micro: { size: 20, line: 32, track: 0, wrap: "pretty" },
 };
 
+/** Default font role per step (see FontRole in src/deck/tokens.ts). */
+const ROLE_OF_STEP: Record<TypeStep, FontRole> = {
+  display: "title", h1: "title", h2: "title", h3: "title", lead: "body", body: "body", caption: "body", micro: "body",
+};
+
 /**
  * Text style for one step of the scale. Wraps the deck's t(), so theme text flipping and translated line heights
  * still apply. The wrap is set as `text-wrap-style` (not the `text-wrap` shorthand), so a `whiteSpace` spread
@@ -43,12 +48,13 @@ export const TYPE: Record<TypeStep, { size: number; line: number; track: number;
  * so the Studio's Tune card can preview another scale live; without them the values above apply. A layout
  * approved with another scale passes it as `sizes` (scaleSizes("golden") from ./scales).
  */
-export function type(step: TypeStep, weight: 400 | 500 | 600 | 700, color?: string, family?: Parameters<typeof t>[5],
+export function type(step: TypeStep, weight: 400 | 500 | 600 | 700, color?: string, family?: FontRole,
   sizes: Record<TypeStep, { size: number; line: number }> = TYPE): CSSProperties {
   const s = { ...TYPE[step], ...sizes[step] };
   const size = `var(--st-${step}-size, ${s.size}px)`;
   return {
-    ...t(s.size, s.line / s.size, +(s.size * s.track).toFixed(2), weight, color, family === "everett" ? undefined : family), // rule 3: Manrope only, numbers included
+    // Font role: headings (display–h3) are titles, the rest body; numbers set as figures pass "numeral".
+    ...t(s.size, s.line / s.size, +(s.size * s.track).toFixed(2), weight, color, family ?? ROLE_OF_STEP[step]),
     fontSize: size,
     lineHeight: `calc(var(--st-${step}-line, ${s.line}px) * var(--dk-lh, 1))`,
     letterSpacing: `calc(${size} * ${s.track})`,
@@ -87,10 +93,11 @@ export function Band({ gap = g(4), align = "center", style, children }: {
 
 /**
  * A small source note in the footer row: right-aligned to the safe edge (x 1840), on the confidentiality line's
- * baseline (a zero-width strut set exactly like the footer). Outside the band, so it never meets the content.
+ * baseline (a zero-width strut set exactly like the footer), following the theme's footer nudge. Outside the band,
+ * so it never meets the content.
  */
 export function SourceNote({ children }: { children: ReactNode }) {
-  return createElement("div", { style: { position: "absolute", right: 1920 - SAFE.right, top: 938, display: "flex", alignItems: "baseline", maxWidth: g(120) } },
+  return createElement("div", { style: { position: "absolute", right: 1920 - SAFE.right, top: 938, transform: "translateY(var(--dk-footer-shift, 0px))", display: "flex", alignItems: "baseline", maxWidth: g(120) } },
     createElement("span", { "aria-hidden": true, style: { ...t(24, "normal", 0, 400), width: 0, overflow: "hidden" } }, "\u200b"),
     createElement("span", { style: { ...t(20, "normal", 0, 400, "#757575"), ...noWrap } }, children));
 }

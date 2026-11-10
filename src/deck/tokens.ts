@@ -26,27 +26,42 @@ export const backgrounds = {
 export type BackgroundVariant = keyof typeof backgrounds;
 
 /**
- * Font stacks. "Cns Manrope" / "TWK Everett" are used when installed locally; otherwise the loaded web fallbacks.
+ * Font stacks. Slide text, numbers and figures included, is set in "Cns Manrope" (served from public/fonts,
+ * see the @font-face rules in globals.css); Google Manrope is only the fallback while it loads.
  * `--dk-script` is the script font for translated slides (Noto Sans SC / Thai, set per `lang` in globals.css):
  * it comes after the design font, so Latin letters and numbers keep the design font and only the glyphs
- * Manrope lacks fall through to it.
+ * Cns Manrope lacks fall through to it.
+ *
+ * Font roles: every piece of slide text is a title (slide titles and headings), body (everything else) or
+ * numeral (numbers set as figures: section and agenda numbers, key numbers, prices, years, step numbers).
+ * Each role reads a CSS variable (`--dk-font-title` / `-body` / `-numeral`) that a typography preset can set
+ * on the deck's wrapper; unset, all three are Cns Manrope, the approved look.
  */
+const DESIGN_FONT = "'Cns Manrope', var(--font-manrope), Manrope";
+const AFTER = "var(--dk-script, system-ui), system-ui, sans-serif";
+
+export type FontRole = "title" | "body" | "numeral";
+export const FONT_VAR: Record<FontRole, string> = { title: "--dk-font-title", body: "--dk-font-body", numeral: "--dk-font-numeral" };
+
 export const font = {
-  manrope: "'Cns Manrope', var(--font-manrope), Manrope, var(--dk-script, system-ui), system-ui, sans-serif",
-  everett: "'TWK Everett', var(--font-numeral), 'Inter', var(--dk-script, system-ui), system-ui, sans-serif",
+  title: `var(${FONT_VAR.title}, ${DESIGN_FONT}), ${AFTER}`,
+  body: `var(${FONT_VAR.body}, ${DESIGN_FONT}), ${AFTER}`,
+  numeral: `var(${FONT_VAR.numeral}, ${DESIGN_FONT}), ${AFTER}`,
+  /** Only inside the ALMOND logo (LogoItem); not themeable. */
   encode: "'Encode Sans Semi Expanded', var(--font-manrope), var(--dk-script, system-ui), sans-serif",
 } as const;
 
-type Family = keyof typeof font;
-
-/** Typography helper: size px, line-height multiplier (or "normal"), tracking px, weight, color. */
+/**
+ * Typography helper: size px, line-height multiplier (or "normal"), tracking px, weight, color, font role.
+ * Pass `undefined` as the colour to keep the default when only the role is needed.
+ */
 export function t(
   size: number,
   lineHeight: number | "normal",
   tracking: number,
   weight: number,
   col: string = color.black,
-  family: Family = "manrope",
+  family: FontRole = "body",
 ): CSSProperties {
   return {
     fontFamily: font[family],

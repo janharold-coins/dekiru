@@ -13,6 +13,6 @@ export const closingMeta: PatternMeta = {
 
 export function Closing({ title, figma }: ClosingProps) {
   return (
-    <TitleCage text={title} left={253} top={421} fontSize={240} bleedX={-385} stroke={2} extend={400} textStyle={t(240, 1.15, -7.2, 400, "#fff")} layout={figma?.cage} />
+    <TitleCage text={title} left={253} top={421} fontSize={240} bleedX={-385} stroke={2} extend={400} textStyle={t(240, 1.15, -7.2, 400, "#fff", "title")} layout={figma?.cage} />
   );
 }

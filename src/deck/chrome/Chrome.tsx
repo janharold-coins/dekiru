@@ -29,7 +29,9 @@ const ALT_SRC: Record<LogoVariant, string> = {
 
 export function Logo({ variant }: { variant: LogoVariant }) {
   const l = LOGOS[variant];
-  const box = { ...abs, left: l.left, top: l.top, width: l.w, height: l.h };
+  // The theme can nudge the small logo (not the cover's large one) up or down.
+  const shift = variant === "white-lg" ? {} : { transform: `translateY(var(${VAR.logoShift}, 0px))` };
+  const box = { ...abs, left: l.left, top: l.top, width: l.w, height: l.h, ...shift };
   return (
     <>
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -52,6 +54,8 @@ export function Footer({ position, onDark }: { position: FooterPosition; onDark:
       style={{
         ...abs,
         ...FOOTER_POS[position],
+        // The theme can nudge the bottom-left line up or down (not the cover's).
+        ...(position === "bottom-left" ? { transform: `translateY(var(${VAR.footerShift}, 0px))` } : {}),
         margin: 0,
         whiteSpace: "nowrap",
         ...t(24, "normal", 2.4, 400, onDark ? "#ffffff" : "#000000"),

@@ -42,7 +42,7 @@ export function FeatureCards({ title, cards, decoration }: FeatureCardsProps) {
   return (
     <>
       {decoration === "coins" && <Coin {...COINS.bottom} />}
-      <h1 style={{ position: "absolute", left: 0, width: 1920, top: 213, margin: 0, textAlign: "center", ...t(48, 1.4, -1.44, 700), ...noWrap }}>{title}</h1>
+      <h1 style={{ position: "absolute", left: 0, width: 1920, top: 213, margin: 0, textAlign: "center", ...t(48, 1.4, -1.44, 700, undefined, "title"), ...noWrap }}>{title}</h1>
       {decoration === "coins" && COINS.back.map((c) => <Coin key={c.file} {...c} />)}
       {cards.map((c, i) => (
         <div
@@ -53,8 +53,8 @@ export function FeatureCards({ title, cards, decoration }: FeatureCardsProps) {
             backgroundImage: "linear-gradient(123.1447deg, #ffffff 50%, #fbfbfb 94.311%)", filter: "drop-shadow(0 0 6px rgba(0,0,0,0.12))",
           }}
         >
-          <span style={{ position: "absolute", right: 19, top: 7, ...t(24, 1.4, -0.24, 500, "#efa023", "everett") }}>{c.number}</span>
-          <span style={{ minHeight: 134.4, ...t(32, 1.4, -0.8, 500), ...keepBreaks }}>{c.title}</span>
+          <span style={{ position: "absolute", right: 19, top: 7, ...t(24, 1.4, -0.24, 500, "#efa023", "numeral") }}>{c.number}</span>
+          <span style={{ minHeight: 134.4, ...t(32, 1.4, -0.8, 500, undefined, "title"), ...keepBreaks }}>{c.title}</span>
           <span style={{ ...t(20, 1.4, -0.2, 500, "#3d3d3d"), ...keepBreaks }}>{c.body}</span>
         </div>
       ))}

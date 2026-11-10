@@ -44,6 +44,7 @@ function sizing(n: number): { photo: number; name: TypeStep; role: TypeStep; not
   return { photo: g(16), name: "lead", role: "body", note: "caption", width: across(3) };
 }
 
+/** Approved in the Studio 2026-11-09 (revision 2). Built to the Studio rules (src/studio/STUDIO.md). */
 export function TeamIntro({ title, people }: TeamIntroProps) {
   const list = people.slice(0, 6);
   const s = sizing(list.length);

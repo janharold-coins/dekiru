@@ -19,7 +19,7 @@ export function CardGrid({ eyebrow, title, subtitle, body, cards }: CardGridProp
   return (
     <>
       {eyebrow && <span style={{ position: "absolute", left: 1550, top: 145, ...t(28, 1.15, -0.84, 700, "#757575"), ...noWrap }}>{eyebrow}</span>}
-      <h1 style={{ position: "absolute", left: 79, top: 323, margin: 0, ...t(48, 1.4, -1.44, 700), ...noWrap }}>{title}</h1>
+      <h1 style={{ position: "absolute", left: 79, top: 323, margin: 0, ...t(48, 1.4, -1.44, 700, undefined, "title"), ...noWrap }}>{title}</h1>
       <p style={{ position: "absolute", left: 79, top: 398, width: 439, margin: 0, ...t(48, 1.4, -1.44, 400) }}>{subtitle}</p>
       <p style={{ position: "absolute", left: 79, top: 592, width: 426, margin: 0, ...t(28, 1.6, -0.42, 500, "#363636") }}>{body}</p>
       <div style={{ position: "absolute", left: 719, top: 266, width: 1112, display: "flex", flexWrap: "wrap", gap: 24, filter: "drop-shadow(0 0 6px rgba(0,0,0,0.08))" }}>

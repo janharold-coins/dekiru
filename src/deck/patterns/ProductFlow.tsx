@@ -32,8 +32,8 @@ export function ProductFlow({ eyebrow, titleBold, titleRegular, steps }: Product
     <>
       <span style={{ position: "absolute", left: 0, width: 1920, top: 239, textAlign: "center", ...t(28, 1.15, -0.84, 700, "#757575") }}>{eyebrow}</span>
       <div style={{ position: "absolute", left: "50%", top: 282, transform: "translateX(-50%)", display: "flex", gap: 24, ...noWrap }}>
-        <span style={t(48, 1.4, -1.44, 700)}>{titleBold}</span>
-        <span style={t(48, 1.4, -1.44, 400)}>{titleRegular}</span>
+        <span style={t(48, 1.4, -1.44, 700, undefined, "title")}>{titleBold}</span>
+        <span style={t(48, 1.4, -1.44, 400, undefined, "title")}>{titleRegular}</span>
       </div>
       <div style={{ position: "absolute", left: 0, top: 422, width: 1920, display: "flex", gap: 16, alignItems: "center", justifyContent: "center" }}>
         {steps.map((s, i) => (
@@ -46,8 +46,8 @@ export function ProductFlow({ eyebrow, titleBold, titleRegular, steps }: Product
                 backgroundImage: "linear-gradient(138.75deg, #FFFFFF 50%, #FBFBFB 94.311%)",
               }}
             >
-              <span style={{ position: "absolute", right: 19, top: 7, ...t(24, 1.4, -0.24, 500, "#efa023", "everett") }}>{s.n}</span>
-              <span style={{ minHeight: 89.6, ...t(32, 1.4, -0.8, i === steps.length - 1 ? 700 : 500), ...keepBreaks }}>{s.title}</span>
+              <span style={{ position: "absolute", right: 19, top: 7, ...t(24, 1.4, -0.24, 500, "#efa023", "numeral") }}>{s.n}</span>
+              <span style={{ minHeight: 89.6, ...t(32, 1.4, -0.8, i === steps.length - 1 ? 700 : 500, undefined, "title"), ...keepBreaks }}>{s.title}</span>
               <span style={{ ...t(20, 1.4, -0.2, 500, "#757575"), ...keepBreaks }}>{s.caption}</span>
             </div>
           </div>

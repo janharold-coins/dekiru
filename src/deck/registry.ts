@@ -22,6 +22,23 @@ import { ScreenshotWalkthrough, screenshotWalkthroughMeta } from "./patterns/Scr
 import { Section, sectionMeta } from "./patterns/Section";
 import { StatementHighlights, statementMeta } from "./patterns/StatementHighlights";
 import { Timeline, timelineMeta } from "./patterns/Timeline";
+import { ProsCons, prosConsMeta } from "./patterns/ProsCons";
+import { Raci, raciMeta } from "./patterns/Raci";
+import { StatusUpdate, statusUpdateMeta } from "./patterns/StatusUpdate";
+import { Glossary, glossaryMeta } from "./patterns/Glossary";
+import { Takeaways, takeawaysMeta } from "./patterns/Takeaways";
+import { Objectives, objectivesMeta } from "./patterns/Objectives";
+import { TeamIntro, teamIntroMeta } from "./patterns/TeamIntro";
+import { Roadmap, roadmapMeta } from "./patterns/Roadmap";
+import { Comparison, comparisonMeta } from "./patterns/Comparison";
+import { Matrix, matrixMeta } from "./patterns/Matrix";
+import { Scenario, scenarioMeta } from "./patterns/Scenario";
+import { Faq, faqMeta } from "./patterns/Faq";
+import { BeforeAfter, beforeAfterMeta } from "./patterns/BeforeAfter";
+import { Persona, personaMeta } from "./patterns/Persona";
+import { HeroNumber, heroNumberMeta } from "./patterns/HeroNumber";
+import { Funnel, funnelMeta } from "./patterns/Funnel";
+import { Checklist, checklistMeta } from "./patterns/Checklist";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export interface PatternEntry {
@@ -45,6 +62,23 @@ export const patterns: Record<string, PatternEntry> = {
   quiz: { meta: quizMeta, Component: Quiz },
   "data-table": { meta: dataTableMeta, Component: DataTable },
   "screenshot-walkthrough": { meta: screenshotWalkthroughMeta, Component: ScreenshotWalkthrough },
+  "pros-cons": { meta: prosConsMeta, Component: ProsCons },
+  raci: { meta: raciMeta, Component: Raci },
+  "status-update": { meta: statusUpdateMeta, Component: StatusUpdate },
+  glossary: { meta: glossaryMeta, Component: Glossary },
+  takeaways: { meta: takeawaysMeta, Component: Takeaways },
+  objectives: { meta: objectivesMeta, Component: Objectives },
+  "team-intro": { meta: teamIntroMeta, Component: TeamIntro },
+  roadmap: { meta: roadmapMeta, Component: Roadmap },
+  comparison: { meta: comparisonMeta, Component: Comparison },
+  matrix: { meta: matrixMeta, Component: Matrix },
+  scenario: { meta: scenarioMeta, Component: Scenario },
+  faq: { meta: faqMeta, Component: Faq },
+  "before-after": { meta: beforeAfterMeta, Component: BeforeAfter },
+  persona: { meta: personaMeta, Component: Persona },
+  "hero-number": { meta: heroNumberMeta, Component: HeroNumber },
+  funnel: { meta: funnelMeta, Component: Funnel },
+  checklist: { meta: checklistMeta, Component: Checklist },
   "product-index": { meta: productIndexMeta, Component: ProductIndex },
   "product-hero": { meta: productHeroMeta, Component: ProductHero },
   "product-detail": { meta: productDetailMeta, Component: ProductDetail },

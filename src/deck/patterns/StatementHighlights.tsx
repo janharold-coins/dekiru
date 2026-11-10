@@ -18,7 +18,7 @@ export const statementMeta: PatternMeta = {
 export function StatementHighlights({ title, body, highlights }: StatementHighlightsProps) {
   return (
     <>
-      <h1 style={{ position: "absolute", left: 136, top: 190, width: 1649, margin: 0, textAlign: "center", ...t(90, 1.15, -3.6, 600, "#204680"), ...keepBreaks }}>{title}</h1>
+      <h1 style={{ position: "absolute", left: 136, top: 190, width: 1649, margin: 0, textAlign: "center", ...t(90, 1.15, -3.6, 600, "#204680", "title"), ...keepBreaks }}>{title}</h1>
       <p style={{ position: "absolute", left: 207, top: 432, width: 1506, margin: 0, textAlign: "center", ...t(32, 1.6, -0.32, 600) }}>{body}</p>
       <div
         style={{
@@ -30,7 +30,7 @@ export function StatementHighlights({ title, body, highlights }: StatementHighli
       >
         {highlights.map((h, i) => (
           <div key={i} style={{ display: "flex", flexDirection: "column", gap: 8, justifyContent: "center", flexShrink: 0 }}>
-            <span style={{ ...t(40, 1.4, -1.2, 600, "#fff"), ...noWrap }}>{h.title}</span>
+            <span style={{ ...t(40, 1.4, -1.2, 600, "#fff", "title"), ...noWrap }}>{h.title}</span>
             <span style={{ ...t(28, 1.2, -0.28, 600, "#fff"), ...(h.description.includes("\n") ? { whiteSpace: "pre" } : { width: 336 }) }}>{h.description}</span>
           </div>
         ))}

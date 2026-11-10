@@ -47,6 +47,7 @@ const MIDDLE = { display: "flex", alignItems: "center" } as const;
  * One grid, so every row lines up across the columns however its points wrap. The highlighted column is a card
  * laid behind its cells (tint and accent border), spanning the header to the last row.
  */
+/** Approved in the Studio 2026-11-09 (revision 2). Built to the Studio rules (src/studio/STUDIO.md). */
 export function Comparison({ eyebrow, title, columns, rows, highlightColumn, highlightLabel }: ComparisonProps) {
   const cols = columns.slice(0, 3);
   const list = rows.slice(0, 5);

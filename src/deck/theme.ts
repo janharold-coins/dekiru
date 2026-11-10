@@ -41,6 +41,11 @@ export interface ThemeTokens {
     strength: number; // 0 = off … 1 = as approved … 1.5
   };
   accent: [string, string, string]; // bottom rule on light slides, left to right
+  /**
+   * Optional nudges to the slide chrome, in slide px (negative is up): the small logo and the bottom-left
+   * confidentiality line, on every slide but the cover (which has its own large logo and footer place).
+   */
+  chrome?: { logoShift?: number; footerShift?: number };
 }
 
 /** What each role is for, and the background tone slides on it were designed for. */
@@ -70,6 +75,8 @@ export const VAR = {
   bg: (role: BackgroundRole) => `--dk-bg-${role}`,
   strength: "--dk-glow-strength",
   accent: (i: number) => `--dk-accent-${i}`,
+  logoShift: "--dk-logo-shift",
+  footerShift: "--dk-footer-shift",
 } as const;
 
 /** Fills in anything missing (older or partial token sets) from the default. */
@@ -85,6 +92,8 @@ export function normalizeTokens(t: Partial<ThemeTokens> | null | undefined): The
     backgrounds: { dark: bg("dark"), "dark-navy": bg("dark-navy"), light: bg("light") },
     glow: { ...d.glow, ...t?.glow },
     accent: (t?.accent?.length === 3 ? t.accent : d.accent) as ThemeTokens["accent"],
+    ...(t?.chrome && (t.chrome.logoShift || t.chrome.footerShift)
+      ? { chrome: { logoShift: Number(t.chrome.logoShift) || 0, footerShift: Number(t.chrome.footerShift) || 0 } } : {}),
   };
 }
 
@@ -99,6 +108,8 @@ export function themeStyle(tokens: Partial<ThemeTokens> | null | undefined): CSS
     for (const [k, v] of Object.entries(textPalette(t.backgrounds[r.id], r.id))) vars[`--dk-${r.id}-${k}`] = v;
   }
   t.accent.forEach((c, i) => { vars[VAR.accent(i)] = c; });
+  if (t.chrome?.logoShift) vars[VAR.logoShift] = `${t.chrome.logoShift}px`;
+  if (t.chrome?.footerShift) vars[VAR.footerShift] = `${t.chrome.footerShift}px`;
   return vars as CSSProperties;
 }
 
@@ -170,10 +181,49 @@ const LEVEL_OF: Record<string, FlipLevel> = {
   "#efa023": "accent",
 };
 
-/** A colour for something on the slide background: as designed, unless the theme switched the text tone. */
+/* ---------- ink: the named text colours a colour preset can change ---------- */
+
+/**
+ * The designed text and accent colours, by name. Each reads a CSS variable (`--dk-ink-<name>`) that a colour
+ * preset can set on the deck's wrapper; unset, the designed colour shows, so the approved look is unchanged.
+ * White text is not an ink: it belongs to the dark backgrounds and follows the theme's text tone instead.
+ * Status colours (red, green, amber), chip colours and chart shades stay fixed: they carry meaning.
+ */
+export type InkRole = "title" | "text" | "muted" | "accent" | "brand";
+
+export const INKS: { id: InkRole; name: string; use: string; designed: string }[] = [
+  { id: "title", name: "Title", use: "Slide titles on light slides", designed: "#204680" },
+  { id: "text", name: "Text", use: "Body text on light slides", designed: "#17191d" },
+  { id: "muted", name: "Muted text", use: "Eyebrows, captions, descriptions", designed: "#545454" },
+  { id: "accent", name: "Accent", use: "Highlights, numbers, bullets, quote marks", designed: "#fa7312" },
+  { id: "brand", name: "Brand", use: "Key figures and markers in blue", designed: "#1f7aff" },
+];
+
+export const INK_VAR = (r: InkRole) => `--dk-ink-${r}`;
+
+/** Designed colours → the ink they are. */
+const INK_OF: Record<string, InkRole> = {
+  "#204680": "title",
+  "#000": "text", "#000000": "text", "#17191d": "text",
+  "#545454": "muted", "#606060": "muted", "#757575": "muted", "#363636": "muted", "#3d3d3d": "muted",
+  "#5b6572": "muted", "#898989": "muted", "#474747": "muted", "#6482a5": "muted",
+  "#fa7312": "accent", "#efa023": "accent",
+  "#1f7aff": "brand",
+};
+
+/**
+ * A colour for something on the slide background. In order:
+ *   1. the theme's switched text tone, when the background role calls for it (--dk-flip-*);
+ *   2. the colour preset's ink, when one is applied (--dk-ink-*);
+ *   3. the designed colour.
+ * Rules and borders never take an ink, even when drawn in a text colour.
+ */
 export function onBg(designed: string, level?: FlipLevel): string {
-  const l = level ?? LEVEL_OF[designed.toLowerCase()];
-  return l ? `var(--dk-flip-${l}, ${designed})` : designed;
+  const hex = designed.toLowerCase();
+  const l = level ?? LEVEL_OF[hex];
+  const ink = level === "rule" || level === "border" ? undefined : INK_OF[hex];
+  const base = ink ? `var(${INK_VAR(ink)}, ${designed})` : designed;
+  return l ? `var(--dk-flip-${l}, ${base})` : base;
 }
 
 /* ---------- glow ---------- */

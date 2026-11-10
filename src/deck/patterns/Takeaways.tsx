@@ -50,6 +50,7 @@ function spacing(rows: number, withDetail: boolean, withEyebrow: boolean) {
   return { pad: Math.max(g(1), Math.min(g(2), fit(g(6), g(2)))), gap: g(6), pair: g(2) };
 }
 
+/** Approved in the Studio 2026-11-09 (revision 2). Built to the Studio rules (src/studio/STUDIO.md). */
 export function Takeaways({ eyebrow, title, takeaways }: TakeawaysProps) {
   const list = takeaways.slice(0, 5);
   const { pad, gap: gapPx, pair: pairPx } = spacing(list.length, list.some((t) => t.detail), Boolean(eyebrow));
@@ -62,7 +63,7 @@ export function Takeaways({ eyebrow, title, takeaways }: TakeawaysProps) {
       <ol style={{ margin: 0, padding: 0, listStyle: "none" }}>
         {list.map((t, i) => (
           <li key={i} style={{ display: "flex", alignItems: "flex-start", padding: `${pad}px 0`, borderTop: `1px solid ${onBg("rgba(0,0,0,0.12)", "rule")}`, ...(i === list.length - 1 ? { borderBottom: `1px solid ${onBg("rgba(0,0,0,0.12)", "rule")}` } : {}) }}>
-            <span style={{ width: NUM, flex: "none", ...type("lead", 600, undefined, undefined, SIZES), color: onBg("#fa7312", "accent"), ...noWrap }}>{String(i + 1).padStart(2, "0")}</span>
+            <span style={{ width: NUM, flex: "none", ...type("lead", 600, undefined, "numeral", SIZES), color: onBg("#fa7312", "accent"), ...noWrap }}>{String(i + 1).padStart(2, "0")}</span>
             <div style={{ display: "flex", flexDirection: "column", gap: g(1), minWidth: 0 }}>
               <span style={{ ...type("lead", 700, undefined, undefined, SIZES), ...keepBreaks }}>{t.text}</span>
               {t.detail && <span style={{ ...type("caption", 400, "#545454", undefined, SIZES), ...keepBreaks }}>{t.detail}</span>}

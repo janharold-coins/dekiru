@@ -40,7 +40,7 @@ function Head({ eyebrow, title, tagline, description }: ProductDetailProps) {
     <div style={{ width: 733, display: "flex", flexDirection: "column", gap: 11 }}>
       <span style={t(28, 1.15, -0.84, 700, "#545454")}>{eyebrow}</span>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <span style={t(60, 1.15, -1.8, 700)}>{title}</span>
+        <span style={t(60, 1.15, -1.8, 700, undefined, "title")}>{title}</span>
         <span style={{ ...t(40, 1.4, -1.2, 400), ...keepBreaks }}>{tagline}</span>
         <span style={{ ...t(28, 1.4, -0.42, 500, "#606060"), ...keepBreaks }}>{description}</span>
       </div>
@@ -51,7 +51,7 @@ function Head({ eyebrow, title, tagline, description }: ProductDetailProps) {
 function Who({ whoLabel, who, figma }: ProductDetailProps) {
   return (
     <div style={{ width: figma?.whoWidth ?? 751, display: "flex", flexDirection: "column", gap: 8 }}>
-      <span style={t(36, 1.4, -1.08, 700)}>{whoLabel}</span>
+      <span style={t(36, 1.4, -1.08, 700, undefined, "title")}>{whoLabel}</span>
       <span style={{ ...t(40, 1.6, -1.2, 400), ...keepBreaks }}>{who}</span>
     </div>
   );
@@ -90,7 +90,7 @@ export function ProductDetail(p: ProductDetailProps) {
         )}
       </div>
       <div style={{ position: "absolute", right: 77, bottom: pricingBottom, display: "flex", gap: 36, alignItems: "center", justifyContent: "flex-end", whiteSpace: "nowrap" }}>
-        <span style={t(36, 1.4, 1.08, 700)}>{p.pricingLabel}</span>
+        <span style={t(36, 1.4, 1.08, 700, undefined, "title")}>{p.pricingLabel}</span>
         {pricing.chips && pricing.chips.length > 0 && (
           <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
             {pricing.chips.map((c, i) => <PriceChip key={i} c={c} />)}
@@ -118,7 +118,7 @@ function ProductDetailTiers(p: ProductDetailProps) {
         <Bullets items={p.what} lineHeight={1.5} />
       </div>
       <div style={{ position: "absolute", left: 79, top: 735, display: "flex", flexDirection: "column", gap: 12, alignItems: "flex-start" }}>
-        <span style={t(36, 1.4, 1.08, 700)}>{p.pricingLabel}</span>
+        <span style={t(36, 1.4, 1.08, 700, undefined, "title")}>{p.pricingLabel}</span>
         <div style={{ display: "flex", gap: 48, alignItems: "flex-start" }}>
           {tiers.map((tier, i) => <TierChip key={i} tier={tier} index={i} count={tiers.length} />)}
         </div>

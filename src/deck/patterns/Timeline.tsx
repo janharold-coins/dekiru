@@ -26,13 +26,13 @@ const DESC_X = YEAR_X + 233; // year box + 170 gap
 const CAPTION_DY: Record<string, number> = { "2026": 67, "2025": 68, "2015": 75 };
 
 export function Timeline({ title, subtitle, items, flags = [] }: TimelineProps) {
-  const year = (it: TimelineItem) => t(24, "normal", 0, 400, it.yearColor ?? "#17191d", "everett");
+  const year = (it: TimelineItem) => t(24, "normal", 0, 400, it.yearColor ?? "#17191d", "numeral");
   const right = t(24, "normal", 0, 500);
   const left = t(24, "normal", 0, 700);
   const bracket = items.filter((i) => i.bracketGroup);
   return (
     <>
-      <h1 style={{ position: "absolute", left: 79, top: 440, margin: 0, ...t(72, 1.15, -2.16, 600, "#204680"), ...noWrap }}>{title}</h1>
+      <h1 style={{ position: "absolute", left: 79, top: 440, margin: 0, ...t(72, 1.15, -2.16, 600, "#204680", "title"), ...noWrap }}>{title}</h1>
       <p style={{ position: "absolute", left: 79, top: 540, width: 578, margin: 0, ...t(48, 1.4, -1.44, 600) }}>{subtitle}</p>
 
       {/* flag track: three stacked pills */}
@@ -90,7 +90,7 @@ export function Timeline({ title, subtitle, items, flags = [] }: TimelineProps) 
         ) : null,
       )}
       {items.map((it, i) => (
-        <div key={`m${i}`} style={{ position: "absolute", left: 1236, top: it.markerY, width: 13, height: 13, borderRadius: "50%", background: "#1f7aff" }} />
+        <div key={`m${i}`} style={{ position: "absolute", left: 1236, top: it.markerY, width: 13, height: 13, borderRadius: "50%", background: onBg("#1f7aff") }} />
       ))}
 
       <div style={{ position: "absolute", left: 1299, top: 429, width: 48, height: 667, borderRadius: "24px 24px 0 0", boxShadow: "0 -2px 8px rgba(0,0,0,0.15)", background: "linear-gradient(to bottom, #fff 33.137%, rgba(243,243,243,0) 97.133%)" }} />

@@ -44,14 +44,14 @@ function SectionL1({ number, title, subtitle, figma = {} }: SectionProps) {
   const subtitleTop = titleTop + titleLines * TITLE_LH + GAP;
   return (
     <>
-      <span style={{ position: "absolute", left: 103, top: titleTop, ...t(120, 1.15, -3.6, 400, "#fff", "everett"), opacity: 0.2, ...noWrap }}>{number}</span>
+      <span style={{ position: "absolute", left: 103, top: titleTop, ...t(120, 1.15, -3.6, 400, "#fff", "numeral"), opacity: 0.2, ...noWrap }}>{number}</span>
       <TitleCage
         text={title}
         left={279}
         top={titleTop}
         fontSize={120}
         bleedX={-40}
-        textStyle={t(120, 1.15, -3.6, figma.titleWeight ?? 500, "#fff")}
+        textStyle={t(120, 1.15, -3.6, figma.titleWeight ?? 500, "#fff", "title")}
       />
       {subLines > 0 && (
         <p style={{ position: "absolute", left: 279, top: subtitleTop, margin: 0, ...t(64, subLh, figma.subtitleTracking ?? -1.92, 400, "#fff"), ...noWrap }}>{subtitle}</p>
@@ -69,9 +69,9 @@ function SectionL2({ number, parentTitle, title, subtitle }: SectionProps) {
       <div aria-hidden>
         {h(265.5)}{h(292)}{h(311)}{v(159.5)}{v(728)}
       </div>
-      <span style={{ position: "absolute", left: 71.5, top: 252.5, ...t(60, 1.15, -1.8, 400, "#fff", "everett"), opacity: 0.2, ...noWrap }}>{number}</span>
+      <span style={{ position: "absolute", left: 71.5, top: 252.5, ...t(60, 1.15, -1.8, 400, "#fff", "numeral"), opacity: 0.2, ...noWrap }}>{number}</span>
       <span style={{ position: "absolute", left: 159.5, top: 252.5, ...t(60, 1.15, -1.8, 400, "#fff"), opacity: 0.6, ...noWrap }}>{parentTitle}</span>
-      <h1 style={{ position: "absolute", left: 150, top: 472, margin: 0, ...t(120, 1.15, -3.6, 600, "#fff"), ...noWrap }}>{title}</h1>
+      <h1 style={{ position: "absolute", left: 150, top: 472, margin: 0, ...t(120, 1.15, -3.6, 600, "#fff", "title"), ...noWrap }}>{title}</h1>
       <p style={{ position: "absolute", left: 150, top: 622, margin: 0, ...t(48, 1.4, -0.72, 400, "#fff"), ...noWrap }}>{subtitle}</p>
     </>
   );

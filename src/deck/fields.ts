@@ -52,6 +52,7 @@ const SINGULAR: Record<string, string> = {
   bars: "Bar", bullets: "Bullet", dos: "Item", donts: "Item", options: "Option", callouts: "Callout", rows: "Row", columns: "Column", cells: "Cell",
   what: "Point", keyApis: "API line", lines: "Line", titleRuns: "Part", statCards: "Stat card", primaryStats: "Figure",
   secondaryStats: "Figure", chips: "Rate", statuses: "Status",
+  takeaways: "Takeaway", objectives: "Objective", people: "Person", items: "Item", pairs: "Question", response: "Point",
 };
 
 export function fieldLabel(key: string) {

@@ -5,7 +5,7 @@ import { onBg, OWN_SURFACE } from "../theme";
 export function SectionHeader({ label }: { label: string }) {
   return (
     <div style={{ display: "flex", gap: 36, alignItems: "center", paddingLeft: 24, height: 50 }}>
-      <span style={{ ...t(36, 1.4, -1.08, 700), whiteSpace: "nowrap" }}>{label}</span>
+      <span style={{ ...t(36, 1.4, -1.08, 700, undefined, "title"), whiteSpace: "nowrap" }}>{label}</span>
       <span style={{ width: 48, height: 4, background: onBg("rgba(0,0,0,0.2)", "rule"), marginTop: -4 }} />
     </div>
   );
@@ -48,8 +48,8 @@ export function PriceChip({ c }: { c: Chip }) {
     <div style={{ ...OWN_SURFACE, background: "#fff", boxShadow: "inset 0 0 0 2px #bcbcbc", borderRadius: 8, padding: 24, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
       <span style={t(24, 1.4, -0.72, 400)}>{c.label}</span>
       <span style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={t(40, 1.4, 0, 700, "#000", "everett")}>{c.value}</span>
-        {c.unit && <span style={t(20, 1.4, -0.6, 700, "#000", "everett")}>{c.unit}</span>}
+        <span style={t(40, 1.4, 0, 700, "#000", "numeral")}>{c.value}</span>
+        {c.unit && <span style={t(20, 1.4, -0.6, 700, "#000", "numeral")}>{c.unit}</span>}
       </span>
     </div>
   );
@@ -80,8 +80,8 @@ export function TierChip({ tier, index, count }: { tier: Tier; index: number; co
           <span style={{ fontWeight: 700 }}>{tier.tier}</span>
         </div>
         <div style={{ display: "flex", alignItems: "center" }}>
-          <span style={t(40, 1.4, 0, 700, ink, "everett")}>{tier.value}</span>
-          {tier.unit && <span style={t(20, 1.4, -0.6, 700, ink, "everett")}>{tier.unit}</span>}
+          <span style={t(40, 1.4, 0, 700, ink, "numeral")}>{tier.value}</span>
+          {tier.unit && <span style={t(20, 1.4, -0.6, 700, ink, "numeral")}>{tier.unit}</span>}
         </div>
         <div style={{ letterSpacing: -0.72, color: ink }}>
           <div style={t(24, 1.4, -0.72, 600, ink)}>

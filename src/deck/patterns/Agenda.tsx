@@ -25,14 +25,14 @@ export function Agenda({ title, items }: AgendaProps) {
   return (
     <>
       <div style={{ position: "absolute", left: 79, width: 720, top: BAND_TOP, height: BAND_BOTTOM - BAND_TOP, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-        <h1 style={{ margin: 0, ...t(120, 1.15, -3.6, 500), ...noWrap }}>{title}</h1>
+        <h1 style={{ margin: 0, ...t(120, 1.15, -3.6, 500, undefined, "title"), ...noWrap }}>{title}</h1>
       </div>
       <div style={{ position: "absolute", left: 825, top: 0, height: 1080, width: 1010, display: "flex", flexDirection: "column", justifyContent: "center" }}>
         {items.map((it, i) => (
           <div key={i} style={{ position: "relative", width: 1010, height: pitch, flex: "none" }}>
-            <span style={{ position: "absolute", left: 24, top: inner - 47, ...t(120, 1.15, -3.6, 200, "#000", "everett"), opacity: 0.4 }}>{pad(i + 1)}</span>
+            <span style={{ position: "absolute", left: 24, top: inner - 47, ...t(120, 1.15, -3.6, 200, "#000", "numeral"), opacity: 0.4 }}>{pad(i + 1)}</span>
             <div style={{ position: "absolute", left: 244.7, top: inner, display: "flex", flexDirection: "column", gap: 18 }}>
-              <span style={{ ...t(72, 1.15, -2.16, 500), ...noWrap }}>{it.title}</span>
+              <span style={{ ...t(72, 1.15, -2.16, 500, undefined, "title"), ...noWrap }}>{it.title}</span>
               <span style={{ ...t(40, 1.4, -0.4, 500), width: 622 }}>{it.description}</span>
             </div>
           </div>

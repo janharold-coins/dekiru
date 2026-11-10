@@ -47,7 +47,7 @@ function Badge({ n, size, ring }: { n: number; size: number; ring?: boolean }) {
       flex: "none", width: size, height: size, borderRadius: "50%", background: ACCENT, display: "grid", placeItems: "center",
       boxSizing: "border-box", border: ring ? `${g(0.5)}px solid #ffffff` : undefined, boxShadow: ring ? "0 4px 16px rgba(0,0,0,0.24)" : undefined,
     }}>
-      <span style={{ ...type("caption", 700, "#ffffff"), color: "#ffffff", textBox: "trim-both cap alphabetic", ...noWrap }}>{n}</span>
+      <span style={{ ...type("caption", 700, "#ffffff", "numeral"), color: "#ffffff", textBox: "trim-both cap alphabetic", ...noWrap }}>{n}</span>
     </span>
   );
 }

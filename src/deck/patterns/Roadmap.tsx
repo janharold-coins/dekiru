@@ -59,6 +59,7 @@ function Chip({ status }: { status: string }) {
   );
 }
 
+/** Approved in the Studio 2026-11-09 (revision 2). Built to the Studio rules (src/studio/STUDIO.md). */
 export function Roadmap({ title, context, columns }: RoadmapProps) {
   const cols = columns.slice(0, 4);
   return (

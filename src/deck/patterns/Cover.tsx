@@ -31,7 +31,7 @@ export function Cover({ title, subtitle, topRight, bottomRight }: CoverProps) {
   return (
     <>
       <div style={{ position: "absolute", left: 128, right: 128, top: BAND_TOP, height: BAND_BOTTOM - BAND_TOP, display: "flex", flexDirection: "column", justifyContent: "center", gap: 32 }}>
-        <h1 style={{ margin: 0, ...t(120, 1.15, -3.6, 500, "#fff"), ...noWrap }}>{title}</h1>
+        <h1 style={{ margin: 0, ...t(120, 1.15, -3.6, 500, "#fff", "title"), ...noWrap }}>{title}</h1>
         {subtitle && <p style={{ margin: 0, ...t(48, 1.15, -1.44, 400, "#fff"), ...noWrap }}>{subtitle}</p>}
       </div>
       {topRight && (

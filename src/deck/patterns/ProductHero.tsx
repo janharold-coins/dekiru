@@ -33,7 +33,7 @@ export function ProductHero({ eyebrow, title, tagline, image }: ProductHeroProps
       <div style={{ position: "absolute", left: 79, top: 540, transform: "translateY(-50%)", maxWidth: 751, display: "flex", flexDirection: "column", gap: 11 }}>
         <span style={t(28, 1.15, -0.84, 700, "#545454")}>{eyebrow}</span>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <span style={t(60, 1.15, -1.8, 700)}>{title}</span>
+          <span style={t(60, 1.15, -1.8, 700, undefined, "title")}>{title}</span>
           <span style={{ ...t(40, 1.4, -1.2, 400), ...keepBreaks }}>{tagline}</span>
         </div>
       </div>
