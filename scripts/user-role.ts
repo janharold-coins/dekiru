@@ -6,9 +6,10 @@
 import { eq } from "drizzle-orm";
 import { db, hasDb, MISSING_DB_HELP } from "@/db/client";
 import { role, users } from "@/db/schema";
+import { loadEnv } from "./env";
 
 async function main() {
-  try { process.loadEnvFile(".env.local"); } catch { /* env may come from the shell */ }
+  loadEnv(); // local Postgres in development, Neon in production (scripts/env.ts)
   if (!hasDb()) { console.error(`\n${MISSING_DB_HELP}\n`); process.exit(1); }
   const [email, next] = process.argv.slice(2);
   if (email && next) {

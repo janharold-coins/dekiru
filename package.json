@@ -4,13 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "tsx scripts/prepare-db.ts && next dev",
-    "build": "tsx scripts/prepare-db.ts && next build",
+    "build": "NODE_ENV=production tsx scripts/prepare-db.ts && next build",
     "start": "next start",
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/prepare-db.ts",
     "db:seed": "tsx scripts/db-seed.ts",
     "db:studio": "drizzle-kit studio",
+    "db:backup": "tsx scripts/db-backup.ts",
+    "db:restore-local": "tsx scripts/db-restore-local.ts",
     "user:role": "tsx scripts/user-role.ts",
     "studio": "tsx scripts/studio.ts",
     "ui:audit": "tsx scripts/ui-audit.ts"

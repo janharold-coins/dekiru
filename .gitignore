@@ -48,3 +48,6 @@ next-env.d.ts
 
 # Studio images saved by `npm run studio` for Claude
 /.studio/
+
+# database backups (people's data, names and emails): never commit
+/backups/

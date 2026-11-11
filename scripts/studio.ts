@@ -23,6 +23,7 @@ import { hasDb, MISSING_DB_HELP } from "@/db/client";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { attachment, claudeReply, closeRequest, studioQueue, workKeys, type StudioQueue } from "@/lib/studio";
+import { loadEnv } from "./env";
 
 const SEEN = process.env.STUDIO_SEEN ?? ".studio/watch-seen.json"; // what watch has already reported
 const EVERY_MS = 10_000;
@@ -111,7 +112,7 @@ async function watch(until: Date | null) {
 }
 
 async function main() {
-  try { process.loadEnvFile(".env.local"); } catch { /* env may come from the shell */ }
+  loadEnv(); // local Postgres in development, Neon in production (scripts/env.ts)
   if (!hasDb()) { console.error(`\n${MISSING_DB_HELP}\n`); process.exit(1); }
   const [cmd, id, ...rest] = process.argv.slice(2);
   if (cmd === "close" && id) { await closeRequest(id); console.log(`Closed ${id}`); return; }

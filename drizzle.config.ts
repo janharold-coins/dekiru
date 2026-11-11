@@ -1,7 +1,8 @@
 import { defineConfig } from "drizzle-kit";
+import { loadEnv } from "./scripts/env";
 
-// Reads DATABASE_URL from .env.local (pull it from Vercel with `vercel env pull .env.local`).
-try { process.loadEnvFile(".env.local"); } catch { /* fine: env may come from the shell */ }
+// Reads DATABASE_URL like the app: .env.development.local (local Postgres), then .env.local (Neon, from `vercel env pull`).
+loadEnv(); // local Postgres in development, Neon with DEKIRU_DB=neon (scripts/env.ts)
 
 // sslmode=require → verify-full: same checks pg does today, without its deprecation warning.
 const url = (process.env.DATABASE_URL || process.env.POSTGRES_URL || "").replace(/sslmode=(require|prefer|verify-ca)\b/, "sslmode=verify-full");

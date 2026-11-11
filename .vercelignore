@@ -1,0 +1,3 @@
+# Never upload with a deploy
+backups/
+.env*.local
