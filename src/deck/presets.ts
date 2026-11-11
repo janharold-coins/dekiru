@@ -1,5 +1,5 @@
 /**
- * Presets: partial themes. A theme sets a deck's whole look (backgrounds first, see ./theme.ts); a preset sets
+ * Design token sets ("presets" in the code; "design tokens" in the app): partial themes. A theme sets a deck's whole look (backgrounds first, see ./theme.ts); a preset sets
  * one part of it and sits on top of whatever theme the deck uses, without changing that theme.
  *
  *   typography — the fonts: one font for everything, or a title font paired with a body font
@@ -10,9 +10,8 @@
  * falls back to the approved look.
  */
 import type { CSSProperties } from "react";
-import { DEFAULT_FONT, FONTS, fontById, type FontId } from "./fonts";
-import { INKS, INK_VAR, type InkRole } from "./theme";
-import { FONT_VAR } from "./tokens";
+import { DEFAULT_FONT, FONT_VAR, FONTS, fontById, type FontId } from "./fonts";
+import { INKS, INK_MIN_CONTRAST, INK_VAR, contrastRatio, type InkRole } from "./ink";
 
 export type PresetKind = "typography" | "colors";
 
@@ -38,7 +37,8 @@ export interface ColorTokens {
 export type PresetTokens = TypographyTokens | ColorTokens;
 
 export const DEFAULT_TYPOGRAPHY: TypographyTokens = { title: DEFAULT_FONT, body: DEFAULT_FONT, numeral: "title" };
-export const DEFAULT_COLORS: ColorTokens = { ink: {} };
+/** The approved colours, every ink set: new colour presets start here, so the editor shows what each one is. */
+export const DEFAULT_COLORS: ColorTokens = { ink: Object.fromEntries(INKS.map((i) => [i.id, i.designed])) };
 
 const HEX = /^#[0-9a-f]{6}$/i;
 const INK_IDS = INKS.map((i) => i.id);
@@ -75,10 +75,47 @@ export function checkPreset(kind: PresetKind, t: unknown): string[] {
     const ink = ((t ?? {}) as { ink?: Record<string, unknown> }).ink ?? {};
     for (const [k, v] of Object.entries(ink)) {
       const name = INKS.find((i) => i.id === k)?.name;
-      if (!name) out.push(`"${k}" isn't a colour a preset can change.`);
+      if (!name) out.push(`"${k}" isn't a colour a design token set can change.`);
       else if (v != null && v !== "" && !(typeof v === "string" && HEX.test(v.trim()))) out.push(`${name}: "${String(v)}" isn't a 6-digit hex colour.`);
     }
   }
+  return out;
+}
+
+/** A light background to check colours against: a theme's "Light" role (both ends of its gradient). */
+export interface LightBackground { theme: string; from: string; to: string }
+
+/**
+ * Things to know before publishing (warnings, not errors). Colours: inks that would be hard to read on a
+ * theme's light background (inks show on light slides; dark slides keep white text). Typography: fonts
+ * without the thin or heavy weights the layouts use, so the browser imitates them.
+ */
+export function presetIssues(kind: PresetKind, t: PresetTokens, backgrounds: LightBackground[]): string[] {
+  const out: string[] = [];
+  if (kind === "colors") {
+    const v = normalizeColors(t as ColorTokens);
+    for (const ink of INKS) {
+      const c = v.ink[ink.id];
+      if (!c) continue;
+      const need = INK_MIN_CONTRAST[ink.id];
+      const worst = backgrounds
+        .map((b) => ({ b, ratio: Math.min(contrastRatio(c, b.from), contrastRatio(c, b.to)) }))
+        .sort((x, y) => x.ratio - y.ratio)[0];
+      if (worst && worst.ratio < need) {
+        out.push(`${ink.name} is hard to read on ${worst.b.theme}'s light background (contrast ${(Math.floor(worst.ratio * 10) / 10).toFixed(1)}:1, needs ${need}:1).`);
+      }
+    }
+    return out;
+  }
+  // Weights the layouts use by role: numbers go as thin as 200 (agenda, product index); titles 400–700;
+  // body text 400–800 (key-number eyebrows are 800).
+  const v = normalizeTypography(t as TypographyTokens);
+  const numeral = fontById(v.numeral === "body" ? v.body : v.title)!;
+  const title = fontById(v.title)!;
+  const body = fontById(v.body)!;
+  if (numeral.weights[0] > 200) out.push(`${numeral.name} has no weights below ${numeral.weights[0]}: the thin agenda and product numbers show at ${numeral.weights[0]}.`);
+  if (title.weights[1] < 700) out.push(`${title.name} has no weights above ${title.weights[1]}: bold titles are imitated by the browser.`);
+  if (body.weights[1] < 800) out.push(`${body.name} has no weights above ${body.weights[1]}: the boldest labels (key-number eyebrows) are imitated by the browser.`);
   return out;
 }
 
@@ -102,7 +139,10 @@ export function presetVars(kind: PresetKind, t: PresetTokens): Record<string, st
   return out;
 }
 
-/** The presets a deck applies, by kind (none = the theme's own look for that part). */
+/** What a deck version stores: which preset of each kind it uses, by id (absent = none). */
+export type DeckPresets = Partial<Record<PresetKind, string>>;
+
+/** The presets a deck applies, resolved to their tokens (none = the theme's own look for that part). */
 export type AppliedPresets = Partial<{ typography: TypographyTokens; colors: ColorTokens }>;
 
 /** Style for a wrapper element: every slide inside takes these presets on top of its theme. */

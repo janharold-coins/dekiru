@@ -5,6 +5,7 @@ import { deckFor } from "@/lib/access";
 import { requireUser } from "@/lib/auth";
 import { listVersions } from "@/lib/editing";
 import { pickTheme, publishedThemes } from "@/lib/themes";
+import { presetNames, publishedPresets } from "@/lib/presets";
 import { Nav } from "../../../Nav";
 import { RestoreButton } from "../DeckActions";
 import { when } from "../Report";
@@ -17,7 +18,7 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
   const user = await requireUser(`/decks/${id}/history`);
   const found = hasDb() ? await deckFor(id, user) : null;
   if (!found) notFound();
-  const [versions, themes, events] = await Promise.all([listVersions(user, id), publishedThemes(), reviewHistory(id)]);
+  const [versions, themes, events, presetList] = await Promise.all([listVersions(user, id), publishedThemes(), reviewHistory(id), publishedPresets()]);
   const live = versions.find((v) => v.status === "published")?.number;
   return (
     <main className="shell">
@@ -37,7 +38,7 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
               <td>{(v.status === "published" ? v.publishedBy ?? v.createdBy : v.createdBy) ?? <span className="mono">system</span>}</td>
               <td>{when(v.publishedAt ?? v.createdAt)}</td>
               <td>{v.slideCount}</td>
-              <td>{pickTheme(themes, v.themeId).name}</td>
+              <td>{pickTheme(themes, v.themeId).name}{presetNames(v.presets, presetList) && <span className="muted"> + {presetNames(v.presets, presetList)}</span>}</td>
               <td style={{ whiteSpace: "nowrap" }}>
                 <Link className="ul" href={`/decks/${id}/history/${v.number}`}>View</Link>
                 {found.canEdit && v.status === "published" && v.number !== live && <> · <RestoreButton deckId={id} number={v.number} /></>}

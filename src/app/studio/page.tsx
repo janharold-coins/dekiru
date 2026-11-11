@@ -8,6 +8,15 @@ import { ThemeScope } from "@/deck/ThemeScope";
 import { requireUser } from "@/lib/auth";
 import { canUseStudio, decisionsOf, eventsOf, KIND_LABEL, remixSource, statusOf, TICKET_LABEL, tickets, type RequestKind, type Ticket, type TicketStatus } from "@/lib/studio";
 import { publishedThemes } from "@/lib/themes";
+import { presetUsage, publishedPresets, type PresetInfo } from "@/lib/presets";
+import { listDecks } from "@/lib/decks";
+import { fontById } from "@/deck/fonts";
+import { normalizeTypography, type TypographyTokens } from "@/deck/presets";
+import { TokenSetCard, type PreviewDeck } from "./tokens/TokenSetCard";
+import { DEFAULT_THEME_ID } from "@/deck/theme";
+import { PRESET_KINDS } from "@/deck/presets";
+import { NewPreset } from "./tokens/NewPreset";
+import { PresetSummary } from "./tokens/PresetSummary";
 import { templates } from "@/content/templates";
 import { patternOrder, patterns } from "@/deck/registry";
 import { proposals } from "@/studio/proposals";
@@ -17,14 +26,18 @@ import { PageHero } from "../PageHero";
 import { layoutSamples } from "../library/themes/samples";
 import { RequestForm } from "./StudioForms";
 
-type Tab = "requests" | "progress" | "review" | "rejected" | "slides";
-/** Slides (templates and themes) opens first, on the left; the request tabs sit on the right. Graphics, Web pages and UI join Slides on the left later. */
-const TABS: { key: Tab; label: string }[] = [
-  { key: "slides", label: "Slides" }, { key: "requests", label: "Requests" }, { key: "progress", label: "In progress" },
+type Tab = "requests" | "progress" | "review" | "rejected" | "slides" | "tokens";
+/**
+ * Slides (templates and themes) opens first, on the left; the request tabs sit on the right. Graphics, Web pages and UI
+ * join Slides on the left later. Design tokens (typography and colour sets) sit beside them: they're meant for every
+ * medium, not just slides. Studio reviewers only.
+ */
+const TABS: { key: Tab; label: string; reviewers?: true }[] = [
+  { key: "slides", label: "Slides" }, { key: "tokens", label: "Design tokens", reviewers: true }, { key: "requests", label: "Requests" }, { key: "progress", label: "In progress" },
   { key: "review", label: "For review" }, { key: "rejected", label: "Rejected" },
 ];
 /** Old links: ?show=waiting was For review, draft / changes_requested were Drafts (now In progress). */
-const OLD: Record<string, Tab> = { waiting: "review", draft: "progress", changes_requested: "progress", library: "slides" };
+const OLD: Record<string, Tab> = { waiting: "review", draft: "progress", changes_requested: "progress", library: "slides", presets: "tokens" };
 type ReqSub = "mine" | "others" | "closed";
 const OPEN: TicketStatus[] = ["new", "answered", "needs_approval"];
 
@@ -51,11 +64,27 @@ export default async function StudioPage({ searchParams }: { searchParams: Promi
   const reviewer = canUseStudio(user);
   const admin = !user || user.role === "admin";
   const { show, sub, ask, lib } = await searchParams;
-  const on: Tab = OLD[show ?? ""] ?? (TABS.some((t) => t.key === show) ? (show as Tab) : "slides");
+  const tabs = TABS.filter((t) => !t.reviewers || reviewer);
+  // ?show=slides&lib=presets was the earlier home of design tokens.
+  const asked = show === "slides" && lib === "presets" ? "tokens" : OLD[show ?? ""] ?? show;
+  const on: Tab = tabs.some((t) => t.key === asked) ? (asked as Tab) : "slides";
   const reqSub: ReqSub = sub === "mine" || sub === "others" || sub === "closed" ? sub : reviewer ? "others" : "mine";
   const rejSub: "requests" | "builds" = sub === "builds" ? "builds" : "requests";
   const libTab: "templates" | "themes" = lib === "themes" ? "themes" : "templates";
-  const [all, decisions, samples, themes] = await Promise.all([tickets(), decisionsOf(), layoutSamples(user?.id ?? null), publishedThemes()]);
+  const [all, decisions, samples, themes, presetList] = await Promise.all([
+    tickets(), decisionsOf(), layoutSamples(user?.id ?? null), publishedThemes(), reviewer ? publishedPresets() : Promise.resolve([]),
+  ]);
+  // Design tokens tab: the decks a set can be previewed on (ones the viewer can open), and how many decks use each set.
+  const [tokenDecks, tokenUsage] = on === "tokens"
+    ? await Promise.all([listDecks({ viewerId: user?.id ?? null }), presetUsage()])
+    : [[], {} as Record<string, number>];
+  const previewDecks = (p: PresetInfo): PreviewDeck[] => {
+    const using = tokenDecks.filter((d) => d.presets[p.kind] === p.id && d.kind !== "master");
+    const masters = tokenDecks.filter((d) => d.kind === "master");
+    return [...using, ...masters].map((d) => ({
+      id: d.id, title: d.title, master: d.kind === "master", tokens: d.theme.tokens, slides: d.slides.filter((s) => !s.hidden),
+    }));
+  };
   const me = user?.id ?? null;
   // Withdrawn tickets: only their author and admins see them.
   const visible = all.filter((t) => t.status !== "withdrawn" || admin || t.authorId === me);
@@ -83,6 +112,7 @@ export default async function StudioPage({ searchParams }: { searchParams: Promi
     review: waiting.length,
     rejected: lists.rejectedRequests.length + rejectedBuilds.length,
     slides: joining.length + templates.length + themes.length,
+    tokens: presetList.length,
   };
   // The last thing said on each open ticket, for its card.
   const events = await eventsOf([...open, ...lists.closed, ...lists.rejectedRequests].map((t) => t.id));
@@ -153,7 +183,7 @@ export default async function StudioPage({ searchParams }: { searchParams: Promi
       </section>
       <div className="page-head studio-tabs">
         <nav className="tabs" aria-label="Studio">
-          {TABS.map((t) => (
+          {tabs.map((t) => (
             <Link key={t.key} href={href(t.key)} className={`${t.key === "requests" ? "studio-tab-review" : ""}${on === t.key ? " on" : ""}`}
               aria-current={on === t.key ? "page" : undefined}>{t.label}<span>{counts[t.key]}</span></Link>
           ))}
@@ -267,6 +297,26 @@ export default async function StudioPage({ searchParams }: { searchParams: Promi
           )}
         </>
       )}
+      {on === "tokens" && (
+        <>
+          <p className="hint studio-tokens-intro">
+            Named fonts and colours every layout reads. A set gives them new values: decks apply one from their Theme page,
+            on top of their theme, and the theme itself doesn&apos;t change. On the right, the set on a real deck.
+            Only Studio reviewers see this tab.
+          </p>
+          {PRESET_KINDS.map((kind) => (
+            <section key={kind.id} className="studio-tokens">
+              <h2 className="section-h">{kind.name}</h2>
+              <p className="hint">{kind.use}.</p>
+              <NewPreset kind={kind.id} label={kind.id === "typography" ? "New typography set" : "New colour set"} placeholder={kind.id === "typography" ? "e.g. Editorial serif" : "e.g. Partner teal"} />
+              {presetList.filter((p) => p.kind === kind.id).map((p) => (
+                <TokenSetCard key={p.id} id={p.id} kind={p.kind} name={p.name} tokens={p.tokens} version={p.version}
+                  footer={tokenFooter(p, tokenUsage[p.id] ?? 0)} decks={previewDecks(p)} />
+              ))}
+            </section>
+          ))}
+        </>
+      )}
     </main>
   );
 }
@@ -321,4 +371,14 @@ function CardActions({ of, edit }: { of: string; edit: boolean }) {
       <Link href={href} className="btn"><RemixIcon />Remix</Link>
     </span>
   );
+}
+
+/** A set's footer: the fonts a typography set uses; where a colour set is used. */
+function tokenFooter(p: PresetInfo, usedBy: number): string {
+  if (p.kind === "typography") {
+    const t = normalizeTypography(p.tokens as TypographyTokens);
+    const ids = [t.title, t.body, t.numeral === "body" ? t.body : t.title];
+    return [...new Set(ids)].map((id) => fontById(id)!.name).join(", ");
+  }
+  return usedBy > 0 ? "Decks" : "Not used yet";
 }

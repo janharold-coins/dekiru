@@ -1,5 +1,8 @@
 import type { CSSProperties } from "react";
+import { FONT_VAR, type FontRole } from "./fonts";
 import { onBg } from "./theme";
+
+export type { FontRole } from "./fonts";
 
 /** Design tokens taken from the Figma file (Presentation-Decks). Values are in slide px (1920×1080). */
 export const color = {
@@ -39,9 +42,6 @@ export type BackgroundVariant = keyof typeof backgrounds;
  */
 const DESIGN_FONT = "'Cns Manrope', var(--font-manrope), Manrope";
 const AFTER = "var(--dk-script, system-ui), system-ui, sans-serif";
-
-export type FontRole = "title" | "body" | "numeral";
-export const FONT_VAR: Record<FontRole, string> = { title: "--dk-font-title", body: "--dk-font-body", numeral: "--dk-font-numeral" };
 
 export const font = {
   title: `var(${FONT_VAR.title}, ${DESIGN_FONT}), ${AFTER}`,

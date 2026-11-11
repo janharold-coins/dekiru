@@ -17,6 +17,8 @@ import { seedDecks } from "@/content/decks";
 import type { Deck } from "@/deck/types";
 import { availableLangs, enabledLangs, type TargetLang } from "@/deck/i18n";
 import { DEFAULT_THEME, pickTheme, publishedThemes, type ThemeInfo } from "./themes";
+import { cleanDeckPresets, publishedPresets, withPresets, type PresetInfo } from "./presets";
+import type { DeckPresets } from "@/deck/presets";
 import { tagsOf, writeDeckTags, type Department } from "./departments";
 
 export interface DeckInfo extends Deck {
@@ -34,6 +36,8 @@ export interface DeckInfo extends Deck {
   /** The theme of the version shown (null = default) and its live look. */
   themeId: string | null;
   theme: ThemeInfo;
+  /** Presets of the version shown, by kind → id (empty = none). Already applied to `theme.tokens`. */
+  presets: DeckPresets;
   /** Last change to the deck (draft save or publish), and who made it (name; null when unknown, e.g. seeded). */
   updatedAt?: Date;
   updatedById?: string | null;
@@ -110,7 +114,7 @@ export async function listDecks(opts: { viewerId?: string | null; includeArchive
   if (!hasDb()) {
     return Promise.all(
       seedDecks.map(async (d) => ({
-        ...d, kind: "master" as const, status: "published" as const, hasDraft: false, themeId: null, theme: DEFAULT_THEME, languages: null, tags: [],
+        ...d, kind: "master" as const, status: "published" as const, hasDraft: false, themeId: null, theme: DEFAULT_THEME, presets: {}, languages: null, tags: [],
         slides: await resolveSlides(d.slides, seedLookup),
       })),
     );
@@ -123,8 +127,8 @@ export async function listDecks(opts: { viewerId?: string | null; includeArchive
     ? new Map((await q.select({ deckId: deckMembers.deckId, role: deckMembers.role }).from(deckMembers).where(eq(deckMembers.userId, opts.viewerId))).map((m) => [m.deckId, m.role]))
     : new Map<string, "editor" | "viewer">();
   const rows = opts.viewerId && !opts.everyone ? all.filter((r) => r.kind === "master" || r.ownerId === opts.viewerId || shared.has(r.id)) : all;
-  const themes = await publishedThemes();
-  const out = (await Promise.all(rows.map((r) => load(q, r, false, themes)))).filter((d): d is NonNullable<typeof d> => Boolean(d));
+  const [themes, presetList] = await Promise.all([publishedThemes(), publishedPresets()]);
+  const out = (await Promise.all(rows.map((r) => load(q, r, false, themes, presetList)))).filter((d): d is NonNullable<typeof d> => Boolean(d));
   const ids = [...new Set([...out.map((d) => d.updatedById), ...out.filter((d) => d.kind === "copy").map((d) => d.ownerId)].filter((x): x is string => Boolean(x)))];
   const names = ids.length ? await q.select({ id: users.id, name: users.name, email: users.email }).from(users).where(inArray(users.id, ids)) : [];
   const nameOf = new Map(names.map((u) => [u.id, u.name || u.email]));
@@ -143,11 +147,11 @@ export async function getDeck(id: string, opts: { draft?: boolean } = {}): Promi
   const q = db();
   const [row] = await q.select().from(decks).where(eq(decks.id, id)).limit(1);
   if (!row) return undefined;
-  const [deck, tags] = await Promise.all([load(q, row, Boolean(opts.draft), await publishedThemes()), tagsOf([id], q)]);
+  const [deck, tags] = await Promise.all([load(q, row, Boolean(opts.draft), ...(await Promise.all([publishedThemes(), publishedPresets()]))), tagsOf([id], q)]);
   return deck && { ...deck, tags: tags.get(id) ?? [] };
 }
 
-async function load(q: Db, row: typeof decks.$inferSelect, wantDraft: boolean, themes: ThemeInfo[]): Promise<Omit<DeckInfo, "tags"> | undefined> {
+async function load(q: Db, row: typeof decks.$inferSelect, wantDraft: boolean, themes: ThemeInfo[], presetList: PresetInfo[]): Promise<Omit<DeckInfo, "tags"> | undefined> {
   const [pub, draft, approved] = await Promise.all([latestPublished(q, row.id), draftOf(q, row.id), latestApproved(q, row.id)]);
   // Editors work on the draft (else the newest sent version); everyone else sees the live one.
   // A deck that was never sent (saved as a draft from the New deck screen) shows its draft everywhere.
@@ -157,7 +161,7 @@ async function load(q: Db, row: typeof decks.$inferSelect, wantDraft: boolean, t
     id: row.id, title: row.title, kind: row.kind, ownerId: row.ownerId,
     version: `v${v.number}`, versionNumber: v.number, versionId: v.id, status: v.status, hasDraft: Boolean(draft),
     sentVersionNumber: pub?.number ?? null, approvedVersionNumber: approved?.number ?? null,
-    themeId: v.themeId ?? null, theme: pickTheme(themes, v.themeId),
+    themeId: v.themeId ?? null, theme: withPresets(pickTheme(themes, v.themeId), v.presets, presetList), presets: v.presets ?? {},
     slides: await resolveSlides(v.slides, dbLookup(q)),
     updatedAt: row.updatedAt, updatedById: draft?.createdBy ?? pub?.publishedBy ?? pub?.createdBy ?? null,
     archivedAt: row.archivedAt,
@@ -179,20 +183,27 @@ export interface Actor { userId?: string | null }
 /**
  * Edits land in the deck's single draft; it is created from the newest published version if needed.
  * `themeId`: undefined keeps the current theme; null means the default theme.
+ * `presets`: undefined keeps the current presets; null (or {}) means none.
  */
-export async function saveDraft(deckId: string, slides: SeedSlide[], who: Actor & { note?: string; themeId?: string | null } = {}) {
+export async function saveDraft(deckId: string, slides: SeedSlide[], who: Actor & { note?: string; themeId?: string | null; presets?: DeckPresets | null } = {}) {
   return db().transaction(async (tx) => {
     const existing = await draftOf(tx, deckId);
     if (existing) {
       const [v] = await tx.update(deckVersions)
-        .set({ slides, note: who.note ?? existing.note, ...(who.themeId !== undefined ? { themeId: who.themeId } : {}) })
+        .set({
+          slides, note: who.note ?? existing.note,
+          ...(who.themeId !== undefined ? { themeId: who.themeId } : {}),
+          ...(who.presets !== undefined ? { presets: cleanDeckPresets(who.presets) } : {}),
+        })
         .where(eq(deckVersions.id, existing.id)).returning();
       return v;
     }
     const [{ n }] = await tx.select({ n: max(deckVersions.number) }).from(deckVersions).where(eq(deckVersions.deckId, deckId));
-    const themeId = who.themeId !== undefined ? who.themeId : (await latestPublished(tx, deckId))?.themeId ?? null;
+    const base = who.themeId === undefined || who.presets === undefined ? await latestPublished(tx, deckId) : undefined;
+    const themeId = who.themeId !== undefined ? who.themeId : base?.themeId ?? null;
+    const presets = cleanDeckPresets(who.presets !== undefined ? who.presets : base?.presets);
     const [v] = await tx.insert(deckVersions)
-      .values({ deckId, number: (n ?? 0) + 1, status: "draft", slides, themeId, note: who.note, createdBy: who.userId ?? null })
+      .values({ deckId, number: (n ?? 0) + 1, status: "draft", slides, themeId, presets, note: who.note, createdBy: who.userId ?? null })
       .returning();
     await tx.update(decks).set({ updatedAt: new Date() }).where(eq(decks.id, deckId));
     return v;
@@ -215,7 +226,7 @@ export async function publishDraft(deckId: string, who: Actor = {}) {
 /** Creates a deck with its first published version (used by the seed and by "new deck"). */
 export async function createDeck(
   input: {
-    id: string; title: string; kind: "master" | "copy"; slides: SeedSlide[]; note?: string; themeId?: string | null;
+    id: string; title: string; kind: "master" | "copy"; slides: SeedSlide[]; note?: string; themeId?: string | null; presets?: DeckPresets | null;
     copiedFromDeckId?: string; copiedFromVersionId?: string;
     /** Languages the deck offers besides English (people's own decks; masters offer whatever they hold). Default: none. */
     languages?: TargetLang[];
@@ -233,6 +244,7 @@ export async function createDeck(
     const published = input.status !== "draft";
     const [v] = await tx.insert(deckVersions).values({
       deckId: input.id, number: 1, status: published ? "published" : "draft", slides: input.slides, note: input.note, themeId: input.themeId ?? null,
+      presets: cleanDeckPresets(input.presets),
       createdBy: who.userId ?? null, publishedAt: published ? new Date() : null, publishedBy: published ? who.userId ?? null : null,
     }).returning();
     return v;
@@ -252,7 +264,7 @@ export async function copyDeck(sourceId: string, input: { id: string; title: str
   const enabled = enabledLangs(row);
   const languages = input.keepLanguages ? availableLangs(slides).filter((l) => !enabled || enabled.includes(l)) : [];
   const v = await createDeck({
-    id: input.id, title: input.title, kind: "copy", slides, themeId: src.themeId, note: `Copied from ${sourceId} v${src.number}`,
+    id: input.id, title: input.title, kind: "copy", slides, themeId: src.themeId, presets: src.presets, note: `Copied from ${sourceId} v${src.number}`,
     copiedFromDeckId: sourceId, copiedFromVersionId: src.id, languages,
   }, who);
   // The copy starts with the source's tags; the owner can change them.

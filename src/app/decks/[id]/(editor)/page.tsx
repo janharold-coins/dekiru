@@ -10,6 +10,7 @@ import { inArray } from "drizzle-orm";
 import type { ReviewProps } from "../edit/Review";
 import { requireUser } from "@/lib/auth";
 import { publishedThemes } from "@/lib/themes";
+import { publishedPresets, withPresets } from "@/lib/presets";
 import { listDepartments } from "@/lib/departments";
 import { listComments } from "@/lib/comments";
 import { ViewAsBanner } from "../../../view-as/ViewAs";
@@ -32,7 +33,7 @@ export default async function DeckPage({ params, searchParams }: { params: Promi
     notFound();
   }
   const { deck } = found;
-  const [themes, departments] = await Promise.all([publishedThemes(), listDepartments()]);
+  const [themes, departments, presetList] = await Promise.all([publishedThemes(), listDepartments(), publishedPresets()]);
   const review = await reviewProps(id, user);
   const comments = hasDb() ? await listComments(id, user) : [];
 
@@ -62,7 +63,8 @@ export default async function DeckPage({ params, searchParams }: { params: Promi
       slides={slides}
       initialSlide={slides.some((s) => s.slide.id === slide) ? slide! : slides[0]?.slide.id ?? null}
       theme={deck.theme}
-      themes={themes.map((t) => ({ id: t.id, name: t.name, tokens: t.tokens }))}
+      // Each theme with the deck's presets on top, so switching theme in the editor keeps them.
+      themes={themes.map((t) => ({ id: t.id, name: t.name, tokens: withPresets(t, deck.presets, presetList).tokens }))}
       departments={departments}
       readOnly={!found.canEdit}
       review={review}

@@ -11,9 +11,12 @@ import type { SlideData } from "@/deck/types";
 import { appBaseURL, type SignedInUser } from "./auth";
 import { getDeck, getDeckVersions, listDecks } from "./decks";
 import { publishedThemes } from "./themes";
+import { publishedPresets } from "./presets";
+import { PRESET_KINDS, typographyLabel, type ColorTokens, type TypographyTokens } from "@/deck/presets";
+import { INKS } from "@/deck/ink";
 import {
   addSlide, canEdit, canView, checkSlides, deckRow, deckText, duplicateDeck, EditError, moveSlide, newDeck, publish,
-  removeSlide, setDeckTags, setDeckTheme, setHidden, setTranslation, updateSlide, type SlideInput,
+  removeSlide, setDeckPreset, setDeckTags, setDeckTheme, setHidden, setTranslation, updateSlide, type SlideInput,
 } from "./editing";
 import { listDepartments, resolveDepartments } from "./departments";
 import { availableLangs, LANGUAGES, TARGET_LANGS } from "@/deck/i18n";
@@ -105,7 +108,7 @@ export function registerTools(server: McpServer, user: SignedInUser) {
     const editable = canEdit(row, user);
     const deck = await getDeck(deck_id, { draft: editable });
     if (!deck) throw new EditError(`Deck "${deck_id}" has no content yet.`);
-    const checks = await checkSlides(deck.slides);
+    const checks = await checkSlides(deck.slides, deck.theme.tokens.presets?.typography);
     const rv = await reviewState(deck_id);
     const status = (r: { status: string; level: number; required: number } | null | undefined) =>
       !r ? "not reviewed" : r.status === "for_review" ? `for review (${r.level} of ${r.required} approvals)` : r.status.replace("_", " ");
@@ -114,6 +117,7 @@ export function registerTools(server: McpServer, user: SignedInUser) {
       id: deck.id, title: deck.title, kind: deck.kind, version: deck.version, tags: deck.tags.map((t) => t.name),
       showing: deck.status === "draft" ? "draft (unsent changes)" : "sent version", canEdit: editable, url: deckUrl(deck.id),
       theme: { id: deck.theme.id, name: deck.theme.name },
+      token_sets: deck.presets, // design token sets on top of the theme, by kind → set id
       languages: deck.languages === null
         ? `company master: offers every language it's translated into (${availableLangs(deck.slides).map((l) => LANGUAGES[l].english).join(", ") || "none yet"})`
         : ["English", ...deck.languages.map((l) => LANGUAGES[l].english)],
@@ -268,6 +272,34 @@ export function registerTools(server: McpServer, user: SignedInUser) {
     inputSchema: z.object({ deck_id: z.string(), theme_id: z.string().describe("From list_themes.") }),
   }, async ({ deck_id, theme_id }) => run(async () => {
     await setDeckTheme(user, deck_id, theme_id, "claude");
+    return { saved: "draft", preview: deckUrl(deck_id) };
+  }));
+
+  server.registerTool("list_token_sets", {
+    title: "List design token sets",
+    description: "Design token sets: typography (fonts: one font, or a title/body pairing) and colours (title, text, muted, accent, brand). "
+      + "A deck can apply one of each on top of its theme; the theme itself doesn't change.",
+    inputSchema: z.object({}),
+    annotations: { readOnlyHint: true },
+  }, async () => run(async () => (await publishedPresets()).map((p) => ({
+    id: p.id, kind: p.kind, name: p.name, version: p.version,
+    sets: p.kind === "typography"
+      ? typographyLabel(p.tokens as TypographyTokens)
+      : Object.fromEntries(INKS.filter((i) => (p.tokens as ColorTokens).ink[i.id]).map((i) => [i.name, (p.tokens as ColorTokens).ink[i.id]])),
+  }))));
+
+  server.registerTool("set_deck_token_set", {
+    title: "Apply a design token set to a deck",
+    description: "Apply a typography or colour design token set on top of the deck's theme (saved to the draft), or set_id null to go back "
+      + "to the theme's own fonts or colours. Only when the person asks. With a typography set, re-read overflow warnings (get_deck): "
+      + "wider fonts shrink text budgets.",
+    inputSchema: z.object({
+      deck_id: z.string(),
+      kind: z.enum(PRESET_KINDS.map((k) => k.id) as ["typography", "colors"]),
+      set_id: z.string().nullable().describe("From list_token_sets; null = the theme's own."),
+    }),
+  }, async ({ deck_id, kind, set_id }) => run(async () => {
+    await setDeckPreset(user, deck_id, kind, set_id, "claude");
     return { saved: "draft", preview: deckUrl(deck_id) };
   }));
 

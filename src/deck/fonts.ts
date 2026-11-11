@@ -7,6 +7,10 @@
  * are counted for Cns Manrope, so overflow checks scale by it. Measured in the browser on a sentence of slide
  * copy at weights 400 and 600, keeping the wider of the two (2026-11-09).
  */
+/** Which font a piece of slide text takes: see the font roles in ./tokens.ts. */
+export type FontRole = "title" | "body" | "numeral";
+export const FONT_VAR: Record<FontRole, string> = { title: "--dk-font-title", body: "--dk-font-body", numeral: "--dk-font-numeral" };
+
 export type FontId =
   | "cns-manrope" | "inter" | "dm-sans" | "plus-jakarta-sans" | "figtree" | "ibm-plex-sans"
   | "fraunces" | "source-serif-4" | "newsreader" | "playfair-display";

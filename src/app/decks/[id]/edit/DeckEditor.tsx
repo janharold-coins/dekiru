@@ -8,6 +8,7 @@ import { PreviewChecks } from "@/deck/frame/PreviewChecks";
 import { ScaledSlide } from "@/deck/frame/ScaledSlide";
 import { PlaceLayer } from "./PlaceLayer";
 import { checkOverflow } from "@/deck/overflow";
+import type { TypographyTokens } from "@/deck/presets";
 import { availableLangs, deckTranslationStatus, LANGUAGES, TARGET_LANGS, localize, overlayFromEntries, textEntries, translationState, withTranslation, type Lang, type TargetLang } from "@/deck/i18n";
 import { fieldLabel } from "@/deck/fields";
 import { themeStyle, type ThemeTokens } from "@/deck/theme";
@@ -468,6 +469,7 @@ export function DeckEditor({ deck, slides: initialSlides, initialSlide, theme: i
           key={selected?.slide.id}
           deckId={deck.id}
           item={selected}
+          typography={theme.tokens.presets?.typography}
           readOnly={readOnly}
           locked={!readOnly && Boolean(selected?.from) && !unlocked.has(selected!.slide.id)}
           onUnlock={() => selected && setUnlocked((u) => new Set(u).add(selected.slide.id))}
@@ -910,8 +912,10 @@ export function Canvas({ selected, number, lang, overlay, onPlace }: {
 
 /* ================= Content panel ================= */
 
-function ContentPanel({ deckId, item, readOnly, locked, onUnlock, onChange, onToggleHidden, canReset, onReset, onResize, width, lang, review, onReviewError, onCopy, tab, onTab, commentCount, comments }: {
-  deckId: string; onCopy: () => void; item: EditorSlide | null; readOnly: boolean; locked: boolean; onUnlock: () => void; lang: Lang;
+function ContentPanel({ deckId, item, typography, readOnly, locked, onUnlock, onChange, onToggleHidden, canReset, onReset, onResize, width, lang, review, onReviewError, onCopy, tab, onTab, commentCount, comments }: {
+  deckId: string; onCopy: () => void; item: EditorSlide | null; readOnly: boolean;
+  /** The deck's typography preset: text budgets follow its font's width. */
+  typography?: TypographyTokens; locked: boolean; onUnlock: () => void; lang: Lang;
   tab: "editor" | "comments"; onTab: (t: "editor" | "comments") => void; commentCount: number; comments: React.ReactNode;
   review: ReviewProps; onReviewError: (m: string) => void;
   onChange: (props: Record<string, unknown>) => void; onToggleHidden: () => void;
@@ -920,7 +924,7 @@ function ContentPanel({ deckId, item, readOnly, locked, onUnlock, onChange, onTo
   onResize: (w: number) => void; width: number;
 }) {
   const [confirmReset, setConfirmReset] = useState(false);
-  const warnings = item ? checkOverflow(item.slide, lang) : [];
+  const warnings = item ? checkOverflow(item.slide, lang, typography) : [];
   const trState = item && lang !== "en" ? translationState(item.slide, lang) : "fresh";
   const startResize = (e: React.PointerEvent) => {
     e.preventDefault();

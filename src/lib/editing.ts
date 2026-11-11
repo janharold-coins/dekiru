@@ -28,6 +28,8 @@ import { copyDeck, createDeck, getDeckVersions, liveSlidesOf, publishDraft, save
 import type { SignedInUser } from "./auth";
 import { canEdit, canView, deckRow } from "./access";
 import { pickTheme, publishedThemes } from "./themes";
+import { publishedPresets } from "./presets";
+import { PRESET_KINDS, type DeckPresets, type PresetKind, type TypographyTokens } from "@/deck/presets";
 import { DEFAULT_THEME_ID } from "@/deck/theme";
 import { getTemplate } from "@/content/templates";
 import { EditError } from "./errors";
@@ -61,7 +63,8 @@ async function working(id: string) {
 const lookup = liveSlidesOf;
 
 /** Resolve, render and budget-check slides. Rendering errors are returned, never thrown. */
-export async function checkSlides(slides: SeedSlide[]) {
+/** `typography`: the deck's typography preset, if any, so text budgets follow its font's width. */
+export async function checkSlides(slides: SeedSlide[], typography?: TypographyTokens | null) {
   const resolved = await resolveSlides(slides, lookup);
   return resolved.map((s) => {
     let renderError: string | null = null;
@@ -75,7 +78,7 @@ export async function checkSlides(slides: SeedSlide[]) {
         if (!/from the server but \w+ is on the client/.test(msg)) renderError = msg;
       }
     }
-    return { slide: s, renderError, overflow: checkOverflow(s) as OverflowWarning[] };
+    return { slide: s, renderError, overflow: checkOverflow(s, "en", typography) as OverflowWarning[] };
   });
 }
 
@@ -385,7 +388,7 @@ export async function listVersions(user: SignedInUser | null, deckId: string) {
       number: deckVersions.number, status: deckVersions.status, note: deckVersions.note,
       createdAt: deckVersions.createdAt, publishedAt: deckVersions.publishedAt,
       slideCount: sql<number>`jsonb_array_length(${deckVersions.slides})`.mapWith(Number),
-      themeId: deckVersions.themeId,
+      themeId: deckVersions.themeId, presets: deckVersions.presets,
       createdBy: sql<string | null>`coalesce(nullif(${editors.name}, ''), ${editors.email})`,
       publishedBy: sql<string | null>`coalesce(nullif(${publishers.name}, ''), ${publishers.email})`,
     })
@@ -410,7 +413,7 @@ export async function versionSlides(user: SignedInUser | null, deckId: string, n
 export async function restoreVersion(user: SignedInUser | null, deckId: string, number: number) {
   await editable(deckId, user);
   const { version } = await versionSlides(user, deckId, number);
-  await saveDraft(deckId, version.slides, { userId: user?.id ?? null, note: `Restored v${number}`, themeId: version.themeId ?? null });
+  await saveDraft(deckId, version.slides, { userId: user?.id ?? null, note: `Restored v${number}`, themeId: version.themeId ?? null, presets: version.presets ?? null });
 }
 
 /** Switch the deck's theme (saved to the draft, like any edit). null = the default theme. */
@@ -421,6 +424,36 @@ export async function setDeckTheme(user: SignedInUser | null, deckId: string, th
   const { slides } = await working(deckId);
   const id = themeId === DEFAULT_THEME_ID ? null : themeId;
   await saveDraft(deckId, slides, { userId: user?.id ?? null, note: `Theme: ${pickTheme(all, id).name}${via === "claude" ? " (with Claude)" : ""}`, themeId: id });
+}
+
+/**
+ * Apply a preset of one kind to the deck, on top of its theme (saved to the draft, like any edit).
+ * null = none: that part goes back to the theme's own look. The theme itself is never changed.
+ */
+export async function setDeckPreset(user: SignedInUser | null, deckId: string, kind: PresetKind, presetId: string | null, via: Via = "app") {
+  await editable(deckId, user);
+  if (!PRESET_KINDS.some((k) => k.id === kind)) throw new EditError(`"${kind}" isn't a kind of design token set (${PRESET_KINDS.map((k) => k.id).join(", ")}).`);
+  const all = await publishedPresets(kind);
+  const preset = presetId ? all.find((p) => p.id === presetId) : null;
+  if (presetId && !preset) throw new EditError(`No ${kind} set "${presetId}". Sets: ${all.map((p) => p.id).join(", ") || "none yet"}.`);
+  const { draft, published } = await getDeckVersions(deckId);
+  const current = (draft ?? published)?.presets ?? {};
+  const { slides } = await working(deckId);
+  const label = PRESET_KINDS.find((k) => k.id === kind)!.name;
+  await saveDraft(deckId, slides, {
+    userId: user?.id ?? null,
+    note: `${label}: ${preset ? preset.name : "theme's own"}${via === "claude" ? " (with Claude)" : ""}`,
+    presets: { ...current, [kind]: preset?.id },
+  });
+}
+
+/** "Typography: Editorial → none", one line per kind that differs between two versions; empty when the same. */
+async function presetChanges(before: DeckPresets | null | undefined, after: DeckPresets | null | undefined): Promise<string[]> {
+  const kinds = PRESET_KINDS.filter((k) => (before?.[k.id] ?? null) !== (after?.[k.id] ?? null));
+  if (!kinds.length) return [];
+  const all = await publishedPresets();
+  const name = (id: string | undefined) => (id ? all.find((p) => p.id === id)?.name ?? id : "none");
+  return kinds.map((k) => `${k.name}: ${name(before?.[k.id])} → ${name(after?.[k.id])}`);
 }
 
 /**
@@ -654,6 +687,7 @@ export async function draftChanges(user: SignedInUser | null, deckId: string): P
     const name = (id: string | null) => themes.find((t) => t.id === (id ?? DEFAULT_THEME_ID))?.name ?? id ?? "Default";
     out.push({ kind: "theme", detail: `${name(published.themeId)} → ${name(draft.themeId)}` });
   }
+  for (const detail of await presetChanges(published.presets, draft.presets)) out.push({ kind: "theme", detail });
   const old = new Map(before.map((s) => [s.id, s]));
   const moved = movedIds(before.map((s) => s.id), after.map((s) => s.id));
   after.forEach((s, i) => {
@@ -715,6 +749,7 @@ export async function revisionDiff(versionId: string, againstVersionId: string |
   const moved = movedIds(before.slides.map((s) => s.id), after.slides.map((s) => s.id));
   const out: RevisionDiff = { against: before.number, slides: {}, removed: [] };
   if (lang === "en" && (after.themeId ?? DEFAULT_THEME_ID) !== (before.themeId ?? DEFAULT_THEME_ID)) out.theme = "Theme changed";
+  else if (lang === "en" && (await presetChanges(before.presets, after.presets)).length) out.theme = "Typography or colours changed";
   after.slides.forEach((raw, i) => {
     const now = afterNamed[i];
     const j = wasAt.get(raw.id);

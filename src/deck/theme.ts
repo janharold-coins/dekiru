@@ -15,6 +15,10 @@
  * their designed colours. See `onBg` and `FLIP` below.
  */
 import type { CSSProperties } from "react";
+import { INK_OF, INK_VAR } from "./ink";
+import { presetStyle, type AppliedPresets } from "./presets";
+
+export { INKS, INK_VAR, type InkRole } from "./ink";
 
 export type BackgroundRole = "dark" | "dark-navy" | "light";
 
@@ -46,6 +50,12 @@ export interface ThemeTokens {
    * confidentiality line, on every slide but the cover (which has its own large logo and footer place).
    */
   chrome?: { logoShift?: number; footerShift?: number };
+  /**
+   * Presets the deck applies on top of this theme (typography, colours; see ./presets.ts). Never stored on a
+   * theme itself: decks add their resolved presets here, so everything that renders a deck's look (editor,
+   * present, share links, history) takes them along, and a share link freezes them with the theme.
+   */
+  presets?: AppliedPresets;
 }
 
 /** What each role is for, and the background tone slides on it were designed for. */
@@ -110,7 +120,7 @@ export function themeStyle(tokens: Partial<ThemeTokens> | null | undefined): CSS
   t.accent.forEach((c, i) => { vars[VAR.accent(i)] = c; });
   if (t.chrome?.logoShift) vars[VAR.logoShift] = `${t.chrome.logoShift}px`;
   if (t.chrome?.footerShift) vars[VAR.footerShift] = `${t.chrome.footerShift}px`;
-  return vars as CSSProperties;
+  return { ...vars, ...presetStyle(tokens.presets) } as CSSProperties;
 }
 
 /* ---------- text tone ---------- */
@@ -179,36 +189,6 @@ const LEVEL_OF: Record<string, FlipLevel> = {
   "#545454": "secondary", "#606060": "secondary", "#757575": "secondary", "#363636": "secondary", "#3d3d3d": "secondary",
   "#5b6572": "secondary", "#898989": "secondary", "#474747": "secondary", "#6482a5": "secondary",
   "#efa023": "accent",
-};
-
-/* ---------- ink: the named text colours a colour preset can change ---------- */
-
-/**
- * The designed text and accent colours, by name. Each reads a CSS variable (`--dk-ink-<name>`) that a colour
- * preset can set on the deck's wrapper; unset, the designed colour shows, so the approved look is unchanged.
- * White text is not an ink: it belongs to the dark backgrounds and follows the theme's text tone instead.
- * Status colours (red, green, amber), chip colours and chart shades stay fixed: they carry meaning.
- */
-export type InkRole = "title" | "text" | "muted" | "accent" | "brand";
-
-export const INKS: { id: InkRole; name: string; use: string; designed: string }[] = [
-  { id: "title", name: "Title", use: "Slide titles on light slides", designed: "#204680" },
-  { id: "text", name: "Text", use: "Body text on light slides", designed: "#17191d" },
-  { id: "muted", name: "Muted text", use: "Eyebrows, captions, descriptions", designed: "#545454" },
-  { id: "accent", name: "Accent", use: "Highlights, numbers, bullets, quote marks", designed: "#fa7312" },
-  { id: "brand", name: "Brand", use: "Key figures and markers in blue", designed: "#1f7aff" },
-];
-
-export const INK_VAR = (r: InkRole) => `--dk-ink-${r}`;
-
-/** Designed colours → the ink they are. */
-const INK_OF: Record<string, InkRole> = {
-  "#204680": "title",
-  "#000": "text", "#000000": "text", "#17191d": "text",
-  "#545454": "muted", "#606060": "muted", "#757575": "muted", "#363636": "muted", "#3d3d3d": "muted",
-  "#5b6572": "muted", "#898989": "muted", "#474747": "muted", "#6482a5": "muted",
-  "#fa7312": "accent", "#efa023": "accent",
-  "#1f7aff": "brand",
 };
 
 /**

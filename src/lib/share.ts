@@ -14,6 +14,7 @@ import { desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { deckVersions, decks, shareLinks, users } from "@/db/schema";
 import { opensByLink } from "./analytics";
+import { publishedPresets, withPresets } from "./presets";
 import { pickTheme, publishedThemes } from "./themes";
 import { resolveSlides } from "@/content/resolve";
 import { enabledLangs, onlyLangs } from "@/deck/i18n";
@@ -100,7 +101,8 @@ export async function createShareLink(deckId: string, input: CreateLinkInput, us
   const expiresAt = input.expiresInDays ? new Date(Date.now() + input.expiresInDays * 86_400_000) : null;
   const [link] = await q.insert(shareLinks).values({
     slug: newSlug(), deckId, versionId: version.id, deckTitle: deck.title, slides,
-    theme: pickTheme(await publishedThemes(), version.themeId).tokens, // frozen with the link
+    // Frozen with the link: the theme and the deck's presets on top, as they look today.
+    theme: withPresets(pickTheme(await publishedThemes(), version.themeId), version.presets, await publishedPresets()).tokens,
     approved: state.versionId === version.id ? state.approved : [], // which layers were reviewed on the day, also frozen (a draft: none)
     label: input.label?.trim() || null,
     passwordHash: password ? await hashPassword(password) : null,

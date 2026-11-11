@@ -166,7 +166,7 @@ export function ThemeEditor({ id, name: initialName, tokens: initial, live, hasD
   );
 }
 
-function Color({ label, value, onChange, disabled }: { label: string; value: string; onChange: (v: string) => void; disabled?: boolean }) {
+export function Color({ label, value, onChange, disabled }: { label: string; value: string; onChange: (v: string) => void; disabled?: boolean }) {
   const valid = /^#[0-9a-f]{6}$/i.test(value);
   return (
     <label className={`field te-color${disabled ? " off" : ""}`}>

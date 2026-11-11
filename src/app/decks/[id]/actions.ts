@@ -3,8 +3,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import {
-  addBlocks, duplicateDeck, EditError, restoreVersion, setArchived, setDeckTheme,
+  addBlocks, duplicateDeck, EditError, restoreVersion, setArchived, setDeckPreset, setDeckTheme,
 } from "@/lib/editing";
+import type { PresetKind } from "@/deck/presets";
 
 /** Make a copy. It starts in English only unless the person chose to keep the source's translations. */
 export async function copyAction(deckId: string, keepTranslations = false) {
@@ -51,4 +52,11 @@ export async function themeAction(deckId: string, themeId: string) {
   const r = await attempt(deckId, (u) => setDeckTheme(u, deckId, themeId, "app"));
   if (r.error) redirect(`/decks/${deckId}/theme?error=${encodeURIComponent(r.error)}`);
   redirect(`/decks/${deckId}`);
+}
+
+/** Apply a typography or colour preset on top of the deck's theme (draft), or go back to the theme's own (null). */
+export async function presetAction(deckId: string, kind: PresetKind, presetId: string | null) {
+  const r = await attempt(deckId, (u) => setDeckPreset(u, deckId, kind, presetId, "app"));
+  const back = `/decks/${deckId}/theme`;
+  redirect(r.error ? `${back}?error=${encodeURIComponent(r.error)}` : `${back}#${kind}`);
 }

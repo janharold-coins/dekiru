@@ -1374,3 +1374,40 @@ select.nd-input { appearance: none; -webkit-appearance: none; padding-right: 36p
 .home-subtabs button.on .home-count { background: var(--panel); color: var(--app-blue); }
 .home-subtabs button:focus-visible { outline: 2px solid var(--app-blue); outline-offset: 1px; }
 .home-subtabs .home-count { padding: 2px 6px; font-size: 11px; }
+.studio-tokens-intro { max-width: 760px; margin: 0 0 8px; }
+.studio-tokens { margin-bottom: 32px; }
+.studio-tokens .new-theme { margin: 4px 0 16px; }
+
+/* ---------- Design tokens (Studio): one card per set ---------- */
+.token-card { margin: 0 0 28px; }
+.token-body { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); background: var(--soft); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.token-specimen { padding: 56px 48px; min-height: 380px; display: flex; align-items: center; color: var(--ink); background: var(--panel); }
+.token-side { position: relative; background: var(--soft); border-left: 1px solid var(--line); }
+.token-side-in { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 8px; padding: 12px 12px 0; }
+.token-select { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); font: inherit; font-size: 15px; }
+.token-slides { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-bottom: 12px; }
+.token-slides .frame { flex: none; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.token-foot { display: flex; align-items: baseline; gap: 10px; padding: 12px 2px 0; }
+.token-name { font-size: 22px; font-weight: 600; color: var(--ink); text-decoration: none; }
+.token-name:hover { text-decoration: underline; }
+.token-meta { color: var(--mute); font-size: 15px; text-align: right; }
+@media (max-width: 900px) {
+  .token-body { grid-template-columns: 1fr; }
+  .token-side { border-left: 0; border-top: 1px solid var(--line); height: 420px; }
+  .token-specimen { padding: 32px 20px; min-height: 0; }
+}
+
+/* Typography specimen: title with its guide lines, then a lead and a small paragraph. */
+.type-specimen { width: 100%; display: flex; flex-direction: column; gap: 36px; }
+.guided { position: relative; }
+.guided .guide { position: absolute; left: 0; right: 0; height: 1px; background: var(--line-strong, var(--line)); pointer-events: none; }
+.type-title { position: relative; margin: 0; font-size: clamp(36px, 4.6vw, 64px); line-height: 1.15; letter-spacing: -0.02em; white-space: pre-line; }
+.type-columns { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+.type-lead { margin: 0; font-size: 19px; line-height: 1.6; }
+.type-small { margin: 0; font-size: 14px; line-height: 1.65; }
+@media (max-width: 640px) { .type-columns { grid-template-columns: 1fr; } }
+
+/* Colour specimen: one circle per named colour. */
+.color-specimen { list-style: none; margin: 0 auto; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 28px 36px; }
+.color-specimen li { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 110px; text-align: center; font-size: 14px; }
+.color-specimen .swatch { width: 96px; height: 96px; border-radius: 50%; box-shadow: 0 0 0 1px var(--line-strong, var(--line)); margin-bottom: 6px; }

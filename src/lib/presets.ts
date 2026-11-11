@@ -1,23 +1,51 @@
 /**
- * Presets in the database (partial themes: typography or colours, see src/deck/presets.ts): list, read,
+ * Design token sets in the database (called "presets" in the code: typography or colours, see src/deck/presets.ts): list, read,
  * draft → publish, history, restore. Works like themes (./themes.ts): decks use a preset's newest published
- * version; the editor works on its draft. Who may edit: the same people who may edit themes.
+ * version; the editor works on its draft. Who may see and edit them: Studio reviewers (admins always can).
  */
-import { and, desc, eq, isNull, max } from "drizzle-orm";
+import { and, desc, eq, isNull, max, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db, hasDb } from "@/db/client";
 import { presets, presetVersions, users } from "@/db/schema";
 import {
   DEFAULT_COLORS, DEFAULT_TYPOGRAPHY, PRESET_KINDS, checkPreset, normalizePreset,
-  type PresetKind, type PresetTokens,
+  type AppliedPresets, type DeckPresets, type PresetKind, type PresetTokens,
 } from "@/deck/presets";
 import type { SignedInUser } from "./auth";
-import { canEditThemes } from "./themes";
+import { canUseStudio } from "./studio";
+import type { ThemeInfo } from "./themes";
 
 export class PresetError extends Error {}
 
+/** Presets live in the Studio: reviewers (and admins) manage them. */
+export const canEditPresets = (u: SignedInUser | null) => canUseStudio(u);
+
 function mustEdit(u: SignedInUser | null) {
-  if (!canEditThemes(u)) throw new PresetError("Only admins and people with theme access can change presets.");
+  if (!canEditPresets(u)) throw new PresetError("Only Studio reviewers can change design tokens.");
+}
+
+/** The approved look as presets, one per kind: where new presets are measured from. They can't be deleted. */
+export const DEFAULT_PRESETS: { id: string; kind: PresetKind; name: string; tokens: PresetTokens }[] = [
+  { id: "coins-typography", kind: "typography", name: "Coins.ph", tokens: DEFAULT_TYPOGRAPHY },
+  { id: "coins-colors", kind: "colors", name: "Coins.ph", tokens: DEFAULT_COLORS },
+];
+const isDefault = (id: string) => DEFAULT_PRESETS.some((p) => p.id === id);
+const kindOrder = (k: PresetKind) => PRESET_KINDS.findIndex((x) => x.id === k);
+
+/** Creates the approved-look presets if missing (run by scripts/prepare-db.ts, like the default theme). */
+export async function seedDefaultPresets(log: (m: string) => void = console.log) {
+  const q = db();
+  for (const p of DEFAULT_PRESETS) {
+    const [row] = await q.select({ id: presets.id }).from(presets).where(eq(presets.id, p.id)).limit(1);
+    if (row) continue;
+    await q.transaction(async (tx) => {
+      await tx.insert(presets).values({ id: p.id, kind: p.kind, name: p.name });
+      await tx.insert(presetVersions).values({
+        presetId: p.id, number: 1, status: "published", tokens: normalizePreset(p.kind, p.tokens), note: "The approved Figma look", publishedAt: new Date(),
+      });
+    });
+    log(`preset ${p.id}: created v1`);
+  }
 }
 
 const isKind = (k: string): k is PresetKind => PRESET_KINDS.some((p) => p.id === k);
@@ -35,7 +63,8 @@ export async function publishedPresets(kind?: PresetKind): Promise<PresetInfo[]>
     .orderBy(presetVersions.presetId, desc(presetVersions.number));
   return rows
     .map((r) => ({ ...r, tokens: normalizePreset(r.kind, r.tokens) }))
-    .sort((a, b) => a.kind.localeCompare(b.kind) || a.name.localeCompare(b.name));
+    // Typography first, then colours; the Coins.ph preset first within each, then A–Z.
+    .sort((a, b) => kindOrder(a.kind) - kindOrder(b.kind) || Number(isDefault(b.id)) - Number(isDefault(a.id)) || a.name.localeCompare(b.name));
 }
 
 async function versionsOf(presetId: string) {
@@ -50,7 +79,7 @@ async function versionsOf(presetId: string) {
 
 async function liveRow(id: string) {
   const [row] = await db().select().from(presets).where(eq(presets.id, id)).limit(1);
-  if (!row || row.archivedAt) throw new PresetError(`No preset "${id}".`);
+  if (!row || row.archivedAt) throw new PresetError(`No design token set "${id}".`);
   return row;
 }
 
@@ -73,7 +102,7 @@ export async function savePresetDraft(user: SignedInUser | null, id: string, inp
   const q = db();
   if (input.name != null) {
     const name = input.name.trim();
-    if (!name) throw new PresetError("A preset needs a name.");
+    if (!name) throw new PresetError("A set needs a name.");
     await q.update(presets).set({ name }).where(eq(presets.id, id));
   }
   if (input.tokens === undefined) return;
@@ -128,7 +157,7 @@ export async function presetHistory(id: string) {
 export async function restorePresetVersion(user: SignedInUser | null, id: string, number: number) {
   mustEdit(user);
   const [v] = await db().select().from(presetVersions).where(and(eq(presetVersions.presetId, id), eq(presetVersions.number, number))).limit(1);
-  if (!v) throw new PresetError(`Preset "${id}" has no version ${number}.`);
+  if (!v) throw new PresetError(`Set "${id}" has no version ${number}.`);
   await savePresetDraft(user, id, { tokens: v.tokens, note: `Restored v${number}` });
 }
 
@@ -138,9 +167,9 @@ export async function restorePresetVersion(user: SignedInUser | null, id: string
  */
 export async function createPreset(user: SignedInUser | null, kind: string, name: string, tokens?: unknown) {
   mustEdit(user);
-  if (!isKind(kind)) throw new PresetError(`"${kind}" isn't a kind of preset.`);
+  if (!isKind(kind)) throw new PresetError(`"${kind}" isn't a kind of design token set (typography, colors).`);
   const title = name.trim();
-  if (!title) throw new PresetError("A preset needs a name.");
+  if (!title) throw new PresetError("A set needs a name.");
   if (tokens !== undefined) {
     const bad = checkPreset(kind, tokens);
     if (bad.length) throw new PresetError(bad.join(" "));
@@ -161,9 +190,62 @@ export async function createPreset(user: SignedInUser | null, kind: string, name
   return id;
 }
 
-/** Hide a preset from pickers. (Once decks can use presets, this refuses while any deck does.) */
+/**
+ * How many decks use each preset: in their newest sent version or their draft (a draft that picked a preset
+ * would lose it on publish if the preset were gone).
+ */
+export async function presetUsage(): Promise<Record<string, number>> {
+  if (!hasDb()) return {};
+  const rows = await db().execute(sql`
+    select p.value as preset, count(distinct v.deck_id)::int as n
+    from (
+      (select distinct on (deck_id) deck_id, presets from deck_versions where status = 'published' order by deck_id, number desc)
+      union all
+      (select deck_id, presets from deck_versions where status = 'draft')
+    ) v, jsonb_each_text(coalesce(v.presets, '{}'::jsonb)) p
+    group by 1`);
+  return Object.fromEntries((rows.rows as { preset: string; n: number }[]).map((r) => [r.preset, r.n]));
+}
+
+/** Hide a preset from pickers. Not allowed while any deck uses it (switch those decks first). */
 export async function archivePreset(user: SignedInUser | null, id: string) {
   mustEdit(user);
+  if (isDefault(id)) throw new PresetError("The Coins.ph sets can't be removed.");
   await liveRow(id);
+  const n = (await presetUsage())[id];
+  if (n) throw new PresetError(`${n} deck(s) use this set. Switch them first.`);
   await db().update(presets).set({ archivedAt: new Date() }).where(eq(presets.id, id));
+}
+
+/* ---------- decks ---------- */
+
+/** A deck's preset ids resolved to their live tokens. Archived or unknown ids are skipped (the theme's own look shows). */
+export function resolvePresets(ids: DeckPresets | null | undefined, all: PresetInfo[]): AppliedPresets | undefined {
+  if (!ids) return undefined;
+  const out: AppliedPresets = {};
+  for (const kind of ["typography", "colors"] as const) {
+    const p = ids[kind] ? all.find((x) => x.id === ids[kind] && x.kind === kind) : undefined;
+    if (p) (out as Record<PresetKind, PresetTokens>)[kind] = p.tokens;
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
+/** The deck's look: its theme with its presets on top. The theme itself is never changed. */
+export function withPresets(theme: ThemeInfo, ids: DeckPresets | null | undefined, all: PresetInfo[]): ThemeInfo {
+  const presets = resolvePresets(ids, all);
+  return presets ? { ...theme, tokens: { ...theme.tokens, presets } } : theme;
+}
+
+/** Stored form: only kinds that are set; null when none. */
+export function cleanDeckPresets(ids: DeckPresets | null | undefined): DeckPresets | null {
+  const out: DeckPresets = {};
+  for (const kind of ["typography", "colors"] as const) if (ids?.[kind]) out[kind] = ids[kind];
+  return Object.keys(out).length ? out : null;
+}
+
+/** "Editorial type, Warm colours": names of a deck's live presets, for history and labels ("" when none). */
+export function presetNames(ids: DeckPresets | null | undefined, all: PresetInfo[]): string {
+  return (["typography", "colors"] as const)
+    .map((k) => (ids?.[k] ? all.find((p) => p.id === ids[k])?.name : undefined))
+    .filter(Boolean).join(", ");
 }

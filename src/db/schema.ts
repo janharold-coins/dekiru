@@ -17,7 +17,7 @@ import {
 } from "drizzle-orm/pg-core";
 import type { SeedSlide } from "@/content/resolve";
 import type { ThemeTokens } from "@/deck/theme";
-import type { PresetKind, PresetTokens } from "@/deck/presets";
+import type { DeckPresets, PresetKind, PresetTokens } from "@/deck/presets";
 import type { SlideData } from "@/deck/types";
 
 export const role = pgEnum("role", ["admin", "manager", "member"]);
@@ -246,6 +246,8 @@ export const deckVersions = pgTable(
     slides: jsonb("slides").$type<SeedSlide[]>().notNull(),
     /** The deck's theme in this version (null = the default Coins.ph theme). Part of history, so Restore brings it back. */
     themeId: text("theme_id").references(() => themes.id),
+    /** Presets on top of the theme, by kind → preset id (null/absent = none). Part of history, like the theme. */
+    presets: jsonb("presets").$type<DeckPresets>(),
     /** What changed — shown in version history and approval requests. */
     note: text("note"),
     createdBy: uuid("created_by").references(() => users.id),
